@@ -1,31 +1,14 @@
 #include <iostream>
-#include <fstream>
 
-#include "../include/Network.hpp"
-#include "../include/Triple.hpp"
-#include "../include/TripleAlpha.hpp"
-#include "../include/AlphaMemory.hpp"
-#include "../include/JoinNode.hpp"
-#include "../include/AlphaBetaAdapter.hpp"
+#include "../include/Rete.hpp"
 
 using namespace rete;
 
-int main(int argc, char** args)
+/**
+    This Test implements the example from chapter "2.4.1 Avoiding Duplicate Tokens"
+*/
+int main()
 {
-    // std::cout << argc << std::endl;
-    // for (int i = 0; i < argc; i++)
-    // {
-    //     std::cout << args[i] << std::endl;
-    // }
-
-    bool saveToFile = false;
-    std::string filename = "";
-    if (argc == 2)
-    {
-        saveToFile = true;
-        filename = args[1];
-    }
-
     Network net;
 
     // setup network
@@ -52,10 +35,8 @@ int main(int argc, char** args)
     j1->getBetaMemory()->addChild(j2); b2->getAlphaMemory()->addChild(j2);
 
 
-    // add stuff
-    // (B1 self B1)
+    // add knowledge
     Triple::Ptr t1(new Triple("B1", "self", "B1"));
-    // (B1 color red)
     Triple::Ptr t2(new Triple("B1", "color", "red"));
 
     std::cout << "Activate t1" << std::endl;
@@ -63,13 +44,6 @@ int main(int argc, char** args)
     std::cout << "Activate t2" << std::endl;
     root->activate(t2);
 
-
-    if (saveToFile)
-    {
-        std::ofstream file(filename);
-        file << net.toDot();
-        file.close();
-    }
-
-    return 0;
+    if (j2->getBetaMemory()->size() == 1) return 0;
+    return 1;
 }

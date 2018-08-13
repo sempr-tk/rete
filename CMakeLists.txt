@@ -21,6 +21,13 @@ set(SRC_FILES
 
 add_library(rete SHARED ${SRC_FILES})
 
+# add tests
+add_executable(AvoidDuplicate_241 test/AvoidDuplicate_241.cpp)
+target_link_libraries(AvoidDuplicate_241 rete)
+add_test(NAME AvoidDuplicate_241 COMMAND AvoidDuplicate_241)
 
 add_executable(test_rete test/main.cpp)
 target_link_libraries(test_rete rete)
+add_test(NAME main COMMAND test_rete)
+
+enable_testing()

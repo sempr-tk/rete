@@ -37,6 +37,8 @@ public:
     void addChild(BetaNodePtr);
     void getChildren(std::vector<BetaNodePtr>& children);
 
+    size_t size() const;
+
 
     Iterator begin();
     Iterator end();

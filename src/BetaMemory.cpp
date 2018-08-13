@@ -28,6 +28,10 @@ void BetaMemory::getChildren(std::vector<BetaNode::Ptr>& children)
     for (auto c : children_) children.push_back(c);
 }
 
+size_t BetaMemory::size() const
+{
+    return tokens_.size();
+}
 
 BetaMemory::Iterator BetaMemory::begin()
 {

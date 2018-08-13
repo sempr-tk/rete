@@ -9,11 +9,17 @@ TripleAlpha::TripleAlpha(Triple::Field f, const std::string& v)
 }
 
 
-void TripleAlpha::activate(WME::Ptr wme)
+void TripleAlpha::activate(WME::Ptr wme, PropagationFlag flag)
 {
+    if (flag == PropagationFlag::RETRACT)
+    {
+        // shortcut: without any (expensive) check, just propagate!
+        propagate(wme, PropagationFlag::RETRACT);
+    }
+
     if (Triple::Ptr triple = std::dynamic_pointer_cast<Triple>(wme))
     {
-        if (triple->getField(field_) == value_) propagate(wme);
+        if (triple->getField(field_) == value_) propagate(wme, flag);
     }
 }
 

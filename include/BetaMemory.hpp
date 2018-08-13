@@ -5,6 +5,7 @@
 #include <memory>
 
 // #include "BetaNode.hpp"
+#include "defs.hpp"
 #include "Node.hpp"
 #include "Token.hpp"
 
@@ -31,8 +32,19 @@ public:
             t.parent = t_old
             t.wme = w
         to this BetaMemory, and leftActivates all child-BetaNodes.
+        Or, if the PropagationFlag::RETRACT is used instead of PropagationFlag::ASSERT:
+        Find all stored tokens with t.parent = t_old and removes them.
     */
-    void leftActivate(Token::Ptr, WME::Ptr);
+    void leftActivate(Token::Ptr, WME::Ptr, PropagationFlag);
+
+    /**
+        BetaMemories also need to react when a BetaNode is right-activated for removal of an WME!
+        Remove all Tokens with token.wme == wme
+    */
+    void rightRemoval(WME::Ptr);
+
+    /**
+    */
 
     /**
         Adds a child BetaNode that will be left-activated upon changes.

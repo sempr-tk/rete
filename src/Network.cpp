@@ -24,9 +24,9 @@ namespace {
 
 namespace rete {
 
-void Network::DummyAlpha::activate(WME::Ptr wme)
+void Network::DummyAlpha::activate(WME::Ptr wme, PropagationFlag flag)
 {
-    propagate(wme);
+    propagate(wme, flag);
 }
 
 bool Network::DummyAlpha::operator == (const AlphaNode& other) const

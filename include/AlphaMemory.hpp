@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "defs.hpp"
 #include "Node.hpp"
 #include "WME.hpp"
 #include "BetaNode.hpp"
@@ -24,14 +25,14 @@ class AlphaMemory : public Node {
     std::string getDOTAttr() const override;
 
 protected:
-    void propagate(WME::Ptr);
+    void propagate(WME::Ptr, PropagationFlag);
 
 public:
     using Container = std::unordered_set<WME::Ptr>;
     using Iterator = Container::iterator;
     using Ptr = std::shared_ptr<AlphaMemory>;
     size_t size() const;
-    void activate(WME::Ptr);
+    void activate(WME::Ptr, PropagationFlag);
 
     /**
         Adds a BetaNode to the list of children, which will get right-activated when this

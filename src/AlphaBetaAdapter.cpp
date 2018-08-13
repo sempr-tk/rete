@@ -8,12 +8,12 @@ AlphaBetaAdapter::AlphaBetaAdapter(AlphaMemory::Ptr alpha)
 {
 }
 
-void AlphaBetaAdapter::rightActivate(WME::Ptr wme)
+void AlphaBetaAdapter::rightActivate(WME::Ptr wme, PropagationFlag flag)
 {
-    bmem_->leftActivate(nullptr, wme);
+    bmem_->leftActivate(nullptr, wme, flag);
 }
 
-void AlphaBetaAdapter::leftActivate(Token::Ptr)
+void AlphaBetaAdapter::leftActivate(Token::Ptr, PropagationFlag)
 {
     // if you run into this exception you've used this class totally wrong...
     // lookup the rete algorithm and how to deal with the first stage of beta nodes!

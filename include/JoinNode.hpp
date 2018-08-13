@@ -13,8 +13,8 @@ class JoinNode : public BetaNode {
     std::string getDOTAttr() const override;
 public:
     JoinNode(BetaMemory::Ptr, AlphaMemoryPtr);
-    void rightActivate(WME::Ptr) override;
-    void leftActivate(Token::Ptr) override;
+    void rightActivate(WME::Ptr, PropagationFlag) override;
+    void leftActivate(Token::Ptr, PropagationFlag) override;
 
     /**
         Check of a token and a wme together fulfill the join condition. Override this method to implement the conditions.

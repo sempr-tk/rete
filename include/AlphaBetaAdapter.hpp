@@ -20,12 +20,12 @@ public:
     /**
         Adds a fresh token to the BetaMemory
     */
-    void rightActivate(WME::Ptr) override;
+    void rightActivate(WME::Ptr, PropagationFlag) override;
 
     /**
         Throws an std::exception(). The AlphaBetaAdapter should never get left-activated
     */
-    void leftActivate(Token::Ptr) override;
+    void leftActivate(Token::Ptr, PropagationFlag) override;
 
 };
 

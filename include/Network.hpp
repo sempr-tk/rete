@@ -18,7 +18,7 @@ class Network {
     class DummyAlpha : public AlphaNode {
     public:
         using Ptr = std::shared_ptr<DummyAlpha>;
-        void activate(WME::Ptr) override;
+        void activate(WME::Ptr, PropagationFlag) override;
         virtual bool operator == (const AlphaNode& other) const override;
     };
 

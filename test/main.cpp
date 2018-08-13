@@ -59,9 +59,9 @@ int main(int argc, char** args)
     Triple::Ptr t2(new Triple("B1", "color", "red"));
 
     std::cout << "Activate t1" << std::endl;
-    root->activate(t1);
+    root->activate(t1, rete::ASSERT);
     std::cout << "Activate t2" << std::endl;
-    root->activate(t2);
+    root->activate(t2, rete::ASSERT);
 
 
     if (saveToFile)

@@ -18,7 +18,7 @@ class TripleAlpha : public AlphaNode {
 public:
     TripleAlpha(Triple::Field field, const std::string& value);
 
-    void activate(WME::Ptr) override;
+    void activate(WME::Ptr, PropagationFlag) override;
     bool operator == (const AlphaNode& other) const override;
 };
 

@@ -15,14 +15,14 @@ void AlphaNode::getChildren(std::vector<AlphaNode::Ptr>& children)
 }
 
 
-void AlphaNode::propagate(WME::Ptr wme)
+void AlphaNode::propagate(WME::Ptr wme, PropagationFlag flag)
 {
     for (auto child :children_)
     {
-        child->activate(wme);
+        child->activate(wme, flag);
     }
 
-    if (amem_) amem_->activate(wme);
+    if (amem_) amem_->activate(wme, flag);
 }
 
 bool AlphaNode::hasAlphaMemory() const

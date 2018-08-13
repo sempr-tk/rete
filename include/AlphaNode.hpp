@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 
+#include "defs.hpp"
 #include "Node.hpp"
 #include "WME.hpp"
 #include "AlphaMemory.hpp"
@@ -17,7 +18,7 @@ namespace rete {
 */
 class AlphaNode : public Node {
     std::string getDOTAttr() const override;
-    
+
 public:
     using Ptr = std::shared_ptr<AlphaNode>;
     /**
@@ -31,7 +32,7 @@ public:
         succeeds the implementation of this method must call propagate(wme) in order to propagate
         the wme further to its children.
     */
-    virtual void activate(WME::Ptr) = 0;
+    virtual void activate(WME::Ptr, PropagationFlag) = 0;
 
     /**
         If requested, the AlphaNode may maintain an AlphaMemory.
@@ -55,7 +56,7 @@ protected:
     /**
         Calls activate(wme) on all registered child nodes.
     */
-    void propagate(WME::Ptr);
+    void propagate(WME::Ptr, PropagationFlag);
 
 private:
     AlphaMemory::Ptr amem_;

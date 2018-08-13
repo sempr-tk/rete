@@ -7,19 +7,26 @@
 
 namespace rete {
 
-void AlphaMemory::activate(WME::Ptr wme)
+void AlphaMemory::activate(WME::Ptr wme, PropagationFlag flag)
 {
-    // std::cout << "AlphaMemory " << this << " activated: " << wme.get() << std::endl;
-    // TODO: check for duplicates? be aware: currently only ptr-comparison in set!
-    wmes_.insert(wme);
-    propagate(wme);
+    switch (flag) {
+    case PropagationFlag::ASSERT:
+        // TODO: check for duplicates? be aware: currently only ptr-comparison in set!
+        wmes_.insert(wme);
+        break;
+    case PropagationFlag::RETRACT:
+        wmes_.erase(wme);
+        break;
+    }
+    
+    propagate(wme, flag);
 }
 
-void AlphaMemory::propagate(WME::Ptr wme)
+void AlphaMemory::propagate(WME::Ptr wme, PropagationFlag flag)
 {
     for (auto child : children_)
     {
-        child->rightActivate(wme);
+        child->rightActivate(wme, flag);
     }
 }
 

@@ -3,6 +3,7 @@
 
 #include <memory>
 
+#include "defs.hpp"
 #include "Node.hpp"
 #include "WME.hpp"
 #include "Token.hpp"
@@ -32,12 +33,12 @@ public:
     /**
         Called upon changes in the connected AlphaMemory.
     */
-    virtual void rightActivate(WME::Ptr) = 0;
+    virtual void rightActivate(WME::Ptr, PropagationFlag) = 0;
 
     /**
         Called upon changes in the connected BetaMemory.
     */
-    virtual void leftActivate(Token::Ptr) = 0;
+    virtual void leftActivate(Token::Ptr, PropagationFlag) = 0;
 
     /**
         Get access to the associated beta memory node.

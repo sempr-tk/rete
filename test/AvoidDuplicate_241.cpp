@@ -40,9 +40,9 @@ int main()
     Triple::Ptr t2(new Triple("B1", "color", "red"));
 
     std::cout << "Activate t1" << std::endl;
-    root->activate(t1);
+    root->activate(t1, rete::ASSERT);
     std::cout << "Activate t2" << std::endl;
-    root->activate(t2);
+    root->activate(t2, rete::ASSERT);
 
     if (j2->getBetaMemory()->size() == 1) return 0;
     return 1;

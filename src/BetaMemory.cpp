@@ -43,4 +43,14 @@ BetaMemory::Iterator BetaMemory::end()
     return tokens_.end();
 }
 
+std::string BetaMemory::getDOTAttr() const
+{
+    std::string record = "";
+    for (auto t : tokens_)
+    {
+        record += "|" + t->toString();
+    }
+    return "[shape=record, label=\"{BetaMemory" + record + "}\"]";
+}
+
 } /* rete */

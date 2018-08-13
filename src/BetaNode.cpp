@@ -13,4 +13,9 @@ BetaMemory::Ptr BetaNode::getBetaMemory() const
     return bmem_;
 }
 
+std::string BetaNode::getDOTAttr() const
+{
+    return "[label=BetaNode]";
+}
+
 } /* rete */

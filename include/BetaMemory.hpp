@@ -5,6 +5,7 @@
 #include <memory>
 
 // #include "BetaNode.hpp"
+#include "Node.hpp"
 #include "Token.hpp"
 
 namespace rete {
@@ -15,9 +16,11 @@ namespace rete {
 /**
     The BetaMemory stores the results of a BetaNode and allows the connection to other BetaNodes.
 */
-class BetaMemory {
+class BetaMemory : public Node {
     std::vector<Token::Ptr> tokens_;
     std::vector<BetaNodePtr> children_;
+
+    std::string getDOTAttr() const override;
 public:
     using Container = std::vector<Token::Ptr>;
     using Iterator = Container::iterator;

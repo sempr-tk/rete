@@ -1,5 +1,6 @@
 #include "../include/AlphaMemory.hpp"
 #include "../include/BetaComparator.hpp"
+#include "../include/Util.hpp"
 
 #include <algorithm>
 #include <iostream> // debug
@@ -51,5 +52,16 @@ AlphaMemory::Iterator AlphaMemory::end()
 {
     return wmes_.end();
 }
+
+std::string AlphaMemory::getDOTAttr() const
+{
+    std::string record = "";
+    for (auto w : wmes_)
+    {
+        record += "|" + util::dotEscape(w->toString());
+    }
+    return "[shape=record, label=\"{AlphaMemory" + record + "}\"]";
+}
+
 
 } /* rete */

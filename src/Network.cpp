@@ -11,19 +11,16 @@
 #include <string>
 
 namespace {
-    std::string quote(const std::string& str)
+    std::string drawEdge(rete::Node::Ptr source, rete::Node::Ptr target)
     {
-        return "\"" + str + "\"";
+        return source->getDOTId() + " -> " + target->getDOTId() + ";\n";
     }
 
-    std::string ptrToStr(void* ptr)
+    std::string drawNode(rete::Node::Ptr node)
     {
-        std::stringstream ss;
-        ss << ptr;
-        return ss.str();
+        return node->getDOTId() + " " + node->getDOTAttr() + ";\n";
     }
 }
-
 
 namespace rete {
 
@@ -75,7 +72,8 @@ std::string Network::toDot() const
             auto amem = last->getAlphaMemory();
             amems.insert(amem); // remember for second phase
             // draw edge
-            dot += quote("ANode " + ptrToStr(last.get())) + " -> " + quote("AMem " + ptrToStr(amem.get())) + ";\n";
+            dot += drawNode(amem);
+            dot += drawEdge(last, amem);
         }
 
         // get children
@@ -87,12 +85,13 @@ std::string Network::toDot() const
         {
             if (visitedANodes.find(c) == visitedANodes.end())
             {
+                dot += drawNode(c);
                 visitedANodes.insert(c);
                 toVisitANodes.push_back(c);
             }
 
             // but for every child, draw last -> child
-            dot += quote("ANode " + ptrToStr(last.get())) + " -> " + quote("ANode " + ptrToStr(c.get())) + ";\n";
+            dot += drawEdge(last, c);
         }
     }
 
@@ -108,15 +107,14 @@ std::string Network::toDot() const
         for (auto c : children)
         {
             // draw mem -> child
-            dot += quote("AMem " + ptrToStr(amem.get())) + " -> " +
-            quote("BNode " + ptrToStr(c.get())) + ";\n";
-            
+            dot += drawEdge(amem, c);
+
             if (visitedBNodes.find(c) == visitedBNodes.end())
             {
                 // add to the nodes to visit
+                dot += drawNode(c);
                 visitedBNodes.insert(c);
                 toVisitBNodes.push_back(c);
-
             }
         }
     }
@@ -129,22 +127,22 @@ std::string Network::toDot() const
         toVisitBNodes.pop_back();
 
         // draw last -> memory
-        dot += quote("BNode " + ptrToStr(last.get())) + " -> " +
-                quote("BMem " + ptrToStr(last->getBetaMemory().get())) + ";\n";
+        dot += drawNode(last->getBetaMemory());
+        dot += drawEdge(last, last->getBetaMemory());
 
         // draw memory -> children
         std::vector<BetaNode::Ptr> children;
         last->getBetaMemory()->getChildren(children);
         for (auto c : children)
         {
-            dot += quote("BMem " + ptrToStr(last->getBetaMemory().get())) + " -> " +
-                    quote("BNode " + ptrToStr(c.get())) + ";\n";
-
             if (visitedBNodes.find(c) == visitedBNodes.end())
             {
+                dot += drawNode(c);
                 visitedBNodes.insert(c);
                 toVisitBNodes.push_back(c);
             }
+
+            dot += drawEdge(last->getBetaMemory(), c);
         }
     }
 

@@ -20,4 +20,10 @@ void AlphaBetaAdapter::leftActivate(Token::Ptr)
     throw std::exception();
 }
 
+std::string AlphaBetaAdapter::getDOTAttr() const
+{
+    return "[label=\"AB-Adapter\"]";
+}
+
+
 } /* rete */

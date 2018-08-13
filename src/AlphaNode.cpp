@@ -43,5 +43,9 @@ AlphaMemory::Ptr AlphaNode::getAlphaMemory() const
     return amem_;
 }
 
+std::string AlphaNode::getDOTAttr() const
+{
+    return "[label=AlphaNode]";
+}
 
 } /* rete */

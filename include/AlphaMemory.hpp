@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "Node.hpp"
 #include "WME.hpp"
 #include "BetaNode.hpp"
 
@@ -16,9 +17,11 @@ namespace rete {
 
     The AlphaMemory is created and used by AlphaNodes.
 */
-class AlphaMemory {
+class AlphaMemory : public Node {
     std::unordered_set<WME::Ptr> wmes_;
     std::vector<BetaNode::Ptr> children_;
+
+    std::string getDOTAttr() const override;
 
 protected:
     void propagate(WME::Ptr);

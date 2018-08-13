@@ -1,4 +1,5 @@
 #include "../include/TripleAlpha.hpp"
+#include "../include/Util.hpp"
 
 namespace rete {
 
@@ -27,6 +28,18 @@ bool TripleAlpha::operator == (const AlphaNode& other) const
     // not even a TripleAlpha node.
     return false;
 }
+
+std::string TripleAlpha::getDOTAttr() const
+{
+    std::string field = "";
+    if (field_ == Triple::SUBJECT) field = "sub";
+    if (field_ == Triple::PREDICATE) field = "pred";
+    if (field_ == Triple::OBJECT) field = "obj";
+
+    return "[label=\"TripleCheck\\n (" + util::dotEscape(field) + " == " +
+            util::dotEscape(value_) + ")\"]";
+}
+
 
 
 } /* rete */

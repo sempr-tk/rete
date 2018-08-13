@@ -12,6 +12,7 @@ namespace rete {
     BetaMemory) and transforms als WMEs to tokens.
 */
 class AlphaBetaAdapter : public BetaNode {
+    std::string getDOTAttr() const override;
 public:
     using Ptr = std::shared_ptr<AlphaBetaAdapter>;
     AlphaBetaAdapter(AlphaMemory::Ptr);

@@ -15,9 +15,11 @@ set(SRC_FILES
     src/BetaNode.cpp
     src/JoinNode.cpp
     src/Network.cpp
+    src/Node.cpp
     src/Token.cpp
     src/Triple.cpp
     src/TripleAlpha.cpp
+    src/Util.cpp
 )
 
 add_library(rete SHARED ${SRC_FILES})

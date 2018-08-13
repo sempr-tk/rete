@@ -3,6 +3,7 @@
 
 #include <memory>
 
+#include "Node.hpp"
 #include "WME.hpp"
 #include "Token.hpp"
 #include "BetaMemory.hpp"
@@ -18,7 +19,8 @@ namespace rete {
     the results of a previously checked chain of conditions (--> Token) with the results of
     "atomic" tests on single WMEs.
 */
-class BetaNode {
+class BetaNode : public Node {
+    std::string getDOTAttr() const override;
 protected:
     AlphaMemoryPtr parentAlpha_;
     BetaMemory::Ptr parentBeta_;

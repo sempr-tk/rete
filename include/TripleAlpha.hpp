@@ -13,6 +13,8 @@ namespace rete {
 class TripleAlpha : public AlphaNode {
     Triple::Field field_;
     std::string value_;
+
+    std::string getDOTAttr() const override;
 public:
     TripleAlpha(Triple::Field field, const std::string& value);
 

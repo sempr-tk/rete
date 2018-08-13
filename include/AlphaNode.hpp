@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 
+#include "Node.hpp"
 #include "WME.hpp"
 #include "AlphaMemory.hpp"
 
@@ -14,7 +15,9 @@ namespace rete {
     Alpha nodes make up the first part of the rete network: Every alpha node performs a single
     check on a WME and propagates it forward if it succeeds.
 */
-class AlphaNode {
+class AlphaNode : public Node {
+    std::string getDOTAttr() const override;
+    
 public:
     using Ptr = std::shared_ptr<AlphaNode>;
     /**

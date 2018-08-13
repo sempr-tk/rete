@@ -7,10 +7,14 @@ set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
 include_directories(include)
 
 set(SRC_FILES
+    src/AlphaBetaAdapter.cpp
     src/AlphaMemory.cpp
     src/AlphaNode.cpp
     src/BetaMemory.cpp
     src/BetaNode.cpp
+    src/JoinNode.cpp
+    src/Network.cpp
+    src/Token.cpp
     src/Triple.cpp
     src/TripleAlpha.cpp
 )

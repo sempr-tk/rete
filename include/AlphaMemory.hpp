@@ -24,6 +24,8 @@ protected:
     void propagate(WME::Ptr);
 
 public:
+    using Container = std::unordered_set<WME::Ptr>;
+    using Iterator = Container::iterator;
     using Ptr = std::shared_ptr<AlphaMemory>;
     size_t size() const;
     void activate(WME::Ptr);
@@ -33,6 +35,14 @@ public:
         AlphaMemory is updated.
     */
     void addChild(BetaNode::Ptr);
+
+    /**
+        Get the list of children
+    */
+    void getChildren(std::vector<BetaNode::Ptr>& children);
+
+    Iterator begin();
+    Iterator end();
 };
 
 } /* rete */

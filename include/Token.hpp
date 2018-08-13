@@ -2,6 +2,7 @@
 #define RETE_TOKEN_HPP
 
 #include <memory>
+#include <string>
 
 #include "WME.hpp"
 
@@ -17,6 +18,9 @@ struct Token {
 
     Token::Ptr parent;
     WME::Ptr wme;
+
+    std::string toString() const;
+
 };
 
 } /* rete */

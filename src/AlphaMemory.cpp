@@ -6,23 +6,45 @@ namespace rete {
 
 void AlphaMemory::activate(WME::Ptr wme)
 {
-    std::cout << "AlphaMemory " << this << " activated: " << wme.get() << std::endl;
+    // std::cout << "AlphaMemory " << this << " activated: " << wme.get() << std::endl;
     // TODO: check for duplicates? be aware: currently only ptr-comparison in set!
     wmes_.insert(wme);
     propagate(wme);
 }
 
-// bool AlphaMemory::operator == (const AlphaNode& other) const
-// {
-//     // if other is an AlphaMemory, the node is equivalent.
-//     // there should always be 1 alphamemory-child maximum.
-//     return (nullptr != dynamic_cast<const AlphaMemory*>(&other));
-// }
+void AlphaMemory::propagate(WME::Ptr wme)
+{
+    for (auto child : children_)
+    {
+        child->rightActivate(wme);
+    }
+}
+
+void AlphaMemory::addChild(BetaNode::Ptr beta)
+{
+    children_.push_back(beta);
+}
+
+void AlphaMemory::getChildren(std::vector<BetaNode::Ptr>& children)
+{
+    children.reserve(children_.size());
+    for (auto c : children_) children.push_back(c);
+}
 
 
 size_t AlphaMemory::size() const
 {
     return wmes_.size();
+}
+
+AlphaMemory::Iterator AlphaMemory::begin()
+{
+    return wmes_.begin();
+}
+
+AlphaMemory::Iterator AlphaMemory::end()
+{
+    return wmes_.end();
 }
 
 } /* rete */

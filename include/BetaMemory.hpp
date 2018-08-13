@@ -2,22 +2,26 @@
 #define RETE_BETAMEMORY_HPP_
 
 #include <vector>
+#include <memory>
 
 // #include "BetaNode.hpp"
 #include "Token.hpp"
 
-
 namespace rete {
 
     class BetaNode;
+    typedef std::shared_ptr<BetaNode> BetaNodePtr;
 
 /**
     The BetaMemory stores the results of a BetaNode and allows the connection to other BetaNodes.
 */
 class BetaMemory {
     std::vector<Token::Ptr> tokens_;
-    std::vector<BetaNode::Ptr> children_;
+    std::vector<BetaNodePtr> children_;
 public:
+    using Container = std::vector<Token::Ptr>;
+    using Iterator = Container::iterator;
+
     using Ptr = std::shared_ptr<BetaMemory>;
     /**
         Given a Token t_old and a WME w, adds a new Token t with
@@ -30,7 +34,12 @@ public:
     /**
         Adds a child BetaNode that will be left-activated upon changes.
     */
-    void addChild(BetaNode::Ptr);
+    void addChild(BetaNodePtr);
+    void getChildren(std::vector<BetaNodePtr>& children);
+
+
+    Iterator begin();
+    Iterator end();
 };
 
 } /* rete */

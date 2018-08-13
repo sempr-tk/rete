@@ -25,6 +25,7 @@ public:
     };
 
     const std::string& getField(Field) const;
+    std::string toString() const override;
 };
 
 } /* rete */

@@ -8,6 +8,13 @@ void AlphaNode::addChild(AlphaNode::Ptr node)
     children_.push_back(node);
 }
 
+void AlphaNode::getChildren(std::vector<AlphaNode::Ptr>& children)
+{
+    children.reserve(children_.size());
+    for (auto c : children_) children.push_back(c);
+}
+
+
 void AlphaNode::propagate(WME::Ptr wme)
 {
     for (auto child :children_)

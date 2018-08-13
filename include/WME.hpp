@@ -11,7 +11,12 @@ namespace rete {
 class WME {
 public:
     using Ptr = std::shared_ptr<WME>;
-    virtual ~WME() = default;
+    virtual ~WME() {};
+
+    /**
+        For visualization only
+    */
+    virtual std::string toString() const = 0;
 };
 
 } /* rete */

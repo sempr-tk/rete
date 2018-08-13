@@ -21,6 +21,7 @@ public:
         Child notes will get activated with the results of their parents.
     */
     void addChild(AlphaNode::Ptr);
+    void getChildren(std::vector<AlphaNode::Ptr>& children);
 
     /**
         Activate gets called whenever a new WME arrives and needs to be checked. If the check

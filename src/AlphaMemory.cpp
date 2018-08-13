@@ -1,5 +1,7 @@
 #include "../include/AlphaMemory.hpp"
+#include "../include/BetaComparator.hpp"
 
+#include <algorithm>
 #include <iostream> // debug
 
 namespace rete {
@@ -23,6 +25,9 @@ void AlphaMemory::propagate(WME::Ptr wme)
 void AlphaMemory::addChild(BetaNode::Ptr beta)
 {
     children_.push_back(beta);
+
+    // sort to avoid duplicate tokens in join nodes!
+    std::sort(children_.begin(), children_.end(), BetaComparator());
 }
 
 void AlphaMemory::getChildren(std::vector<BetaNode::Ptr>& children)

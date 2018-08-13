@@ -10,6 +10,7 @@ set(SRC_FILES
     src/AlphaBetaAdapter.cpp
     src/AlphaMemory.cpp
     src/AlphaNode.cpp
+    src/BetaComparator.cpp
     src/BetaMemory.cpp
     src/BetaNode.cpp
     src/JoinNode.cpp

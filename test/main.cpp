@@ -55,6 +55,8 @@ int main(int argc, char** args)
     // add stuff
     // (B1 self B1)
     Triple::Ptr t1(new Triple("B1", "self", "B1"));
+    // a duplicate
+    Triple::Ptr tdup(new Triple("B1", "self", "B1"));
     // (B1 color red)
     Triple::Ptr t2(new Triple("B1", "color", "red"));
 
@@ -62,11 +64,29 @@ int main(int argc, char** args)
     root->activate(t1, rete::ASSERT);
     std::cout << "Activate t2" << std::endl;
     root->activate(t2, rete::ASSERT);
-
+    std::cout << "Activate tdup" << std::endl;
+    root->activate(tdup, rete::ASSERT);
 
     if (saveToFile)
     {
-        std::ofstream file(filename);
+        std::ofstream file("added_" + filename);
+        file << net.toDot();
+        file.close();
+    }
+
+    // remove by pointer (easy)
+    // root->activate(t1, rete::RETRACT);
+    // remove by value (hard)
+    std::cout << "remove by value" << std::endl;
+    // Triple::Ptr tr(new Triple("B1", "self", "B1"));
+    Triple::Ptr tr(new Triple("B1", "color", "red"));
+    root->activate(tr, rete::RETRACT);
+
+    std::cout << "manual test: " << (*t1 == *tr) << std::endl;
+
+    if (saveToFile)
+    {
+        std::ofstream file("removed_" + filename);
         file << net.toDot();
         file.close();
     }

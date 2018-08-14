@@ -9,17 +9,25 @@ namespace rete {
 
 void AlphaMemory::activate(WME::Ptr wme, PropagationFlag flag)
 {
-    switch (flag) {
-    case PropagationFlag::ASSERT:
-        // TODO: check for duplicates? be aware: currently only ptr-comparison in set!
-        wmes_.insert(wme);
-        break;
-    case PropagationFlag::RETRACT:
-        wmes_.erase(wme);
-        break;
+    if (flag == PropagationFlag::ASSERT)
+    {
+        auto result = wmes_.insert(wme);
+        if (result.second)
+        {
+            // only propagate insertion of actually inserted (no duplicate!)
+            propagate(wme, flag);
+        }
     }
-    
-    propagate(wme, flag);
+    else if (flag == PropagationFlag::RETRACT)
+    {
+        auto it = wmes_.find(wme);
+        if (it != wmes_.end())
+        {
+            wmes_.erase(it);
+            // only propagate if actually removed
+            propagate(wme, flag);
+        }
+    }
 }
 
 void AlphaMemory::propagate(WME::Ptr wme, PropagationFlag flag)

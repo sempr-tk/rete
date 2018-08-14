@@ -20,6 +20,8 @@ set(SRC_FILES
     src/Triple.cpp
     src/TripleAlpha.cpp
     src/Util.cpp
+    src/WME.cpp
+    src/WMEComparator.cpp
 )
 
 add_library(rete SHARED ${SRC_FILES})

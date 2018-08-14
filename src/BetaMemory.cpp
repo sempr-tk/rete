@@ -22,14 +22,23 @@ void BetaMemory::leftActivate(Token::Ptr t, WME::Ptr wme, PropagationFlag flag)
     }
     else if (flag == PropagationFlag::RETRACT)
     {
-        // when the BetaMemory is leftActivated for removal, the WME does not matter!
-        // indeed, the previous node might not have done a check at all -- why should it? Checks are
-        // expensive, and all we need to do is remove all the tokens that depend on the token we
-        // were given for removal
+        /*
+            When a beta memory is left-activated for removal, different things may be the case:
+                1. Only the token is given, and wme is nullptr, because the given token has been removed by the parent node --> remove all token which have this token as a parent
+                2. Only the wme is given, because the parent node was an AlphaBetaAdapter. Remove all tokens whose head is the wme
+                3. Both token and wme are given --  TODO what to do? delete where (t AND w) or delete where (t OR w)?
+                4. None are given -- TODO what to do?
+        */
+        if ((t && wme) || (!t && !wme)) throw std::exception(); // not implemented. case 3 & 4
+
         std::vector<Token::Ptr> toRemove;
         for (auto mt : tokens_)
         {
-            if (mt->parent == t) toRemove.push_back(t);
+            if ((!t || mt->parent == t) &&  // if t is given it must match
+                (!wme || *mt->wme == *wme))   // if wme is given it must match (compare by value!)
+            {
+                toRemove.push_back(mt);
+            }
         }
 
         for (auto mt : toRemove)
@@ -51,7 +60,7 @@ void BetaMemory::rightRemoval(WME::Ptr wme)
     std::vector<Token::Ptr> toRemove;
     for (auto t : tokens_)
     {
-        if (t->wme == wme) toRemove.push_back(t);
+        if (*t->wme == *wme) toRemove.push_back(t);
     }
 
     for (auto t : toRemove)

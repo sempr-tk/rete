@@ -26,6 +26,8 @@ public:
 
     const std::string& getField(Field) const;
     std::string toString() const override;
+
+    bool operator == (const WME& other) const override;
 };
 
 } /* rete */

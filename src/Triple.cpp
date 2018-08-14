@@ -23,4 +23,18 @@ std::string Triple::toString() const
     return "(" + subject + ", " + predicate + ", " + object + ")";
 }
 
+
+bool Triple::operator == (const WME& other) const
+{
+    if (this == &other) return true;
+    if (const Triple* t = dynamic_cast<const Triple*>(&other))
+    {
+        return (subject == t->subject &&
+                predicate == t->predicate &&
+                object == t->object);
+    }
+    return false;
+}
+
+
 } /* rete */

@@ -2,12 +2,14 @@
 #define RETE_ALPHAMEMORY_HPP_
 
 #include <unordered_set>
+#include <set>
 #include <vector>
 
 #include "defs.hpp"
 #include "Node.hpp"
 #include "WME.hpp"
 #include "BetaNode.hpp"
+#include "WMEComparator.hpp"
 
 namespace rete {
 
@@ -19,7 +21,8 @@ namespace rete {
     The AlphaMemory is created and used by AlphaNodes.
 */
 class AlphaMemory : public Node {
-    std::unordered_set<WME::Ptr> wmes_;
+    std::set<WME::Ptr, WMEComparator> wmes_;
+    // std::unordered_set<WME::Ptr, std::hash<WME::Ptr>, WMEComparator> wmes_;
     std::vector<BetaNode::Ptr> children_;
 
     std::string getDOTAttr() const override;
@@ -28,7 +31,8 @@ protected:
     void propagate(WME::Ptr, PropagationFlag);
 
 public:
-    using Container = std::unordered_set<WME::Ptr>;
+    // using Container = std::unordered_set<WME::Ptr>;
+    using Container = decltype(wmes_);
     using Iterator = Container::iterator;
     using Ptr = std::shared_ptr<AlphaMemory>;
     size_t size() const;

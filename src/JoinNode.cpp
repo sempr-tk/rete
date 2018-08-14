@@ -1,7 +1,6 @@
 #include "../include/JoinNode.hpp"
 #include "../include/AlphaMemory.hpp"
 
-#include <iostream> // debug only
 
 namespace rete {
 
@@ -41,12 +40,10 @@ void JoinNode::leftActivate(Token::Ptr token, PropagationFlag flag)
     }
 
     // check all WMEs in the alpha memory if they match this token
-    std::cout << "JoinNode leftActivate" << std::endl;
     for (auto wme : *parentAlpha_)
     {
         if (isValidCombination(token, wme))
         {
-            std::cout << "JoinNode adds: " << wme->toString() + ", " + token->toString() << std::endl;
             bmem_->leftActivate(token, wme, flag);
         }
     }

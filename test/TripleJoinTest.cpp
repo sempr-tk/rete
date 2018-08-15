@@ -1,36 +1,13 @@
 #include <iostream>
 #include <fstream>
 
-#include "../include/Network.hpp"
-#include "../include/Triple.hpp"
-#include "../include/TripleAlpha.hpp"
-#include "../include/AlphaMemory.hpp"
-#include "../include/JoinNode.hpp"
-#include "../include/AlphaBetaAdapter.hpp"
-#include "../include/TripleConsistency.hpp"
-#include "../include/TripleJoin.hpp"
+#include "../include/Rete.hpp"
 
 using namespace rete;
 
-int main(int argc, char** args)
+int main()
 {
-    // std::cout << argc << std::endl;
-    // for (int i = 0; i < argc; i++)
-    // {
-    //     std::cout << args[i] << std::endl;
-    // }
-
-    bool saveToFile = false;
-    std::string filename = "";
-    if (argc == 2)
-    {
-        saveToFile = true;
-        filename = args[1];
-    }
-
     Network net;
-
-
     // setup network
     // (?x foo ?y) (?y foo ?z)
 
@@ -53,12 +30,11 @@ int main(int argc, char** args)
     net.getRoot()->activate(t3, rete::ASSERT);
     net.getRoot()->activate(t2, rete::ASSERT);
 
-    if (saveToFile)
-    {
-        std::ofstream file(filename);
-        file << net.toDot();
-        file.close();
-    }
 
-    return 0;
+    // there shall be only two matches:
+    // [(A foo B) (B foo C)]
+    // and
+    // [(B foo C) (C foo D)]
+    if (join->getBetaMemory()->size() == 2) return 0;
+    return 1;
 }

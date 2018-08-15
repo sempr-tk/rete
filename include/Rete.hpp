@@ -12,5 +12,6 @@
 #include "Triple.hpp"
 #include "TripleAlpha.hpp"
 #include "TripleConsistency.hpp"
+#include "TripleJoin.hpp"
 #include "Util.hpp"
 #include "WME.hpp"

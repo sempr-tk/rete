@@ -31,7 +31,7 @@ int main()
     AlphaBetaAdapter::Ptr ab(new AlphaBetaAdapter());
     BetaNode::connect(ab, nullptr, a2->getAlphaMemory());
 
-    JoinNode::Ptr j1(new JoinNode());
+    TripleJoin::Ptr j1(new TripleJoin(0, Triple::SUBJECT, Triple::SUBJECT));
     BetaNode::connect(j1, ab->getBetaMemory(), b2->getAlphaMemory());
 
     JoinNode::Ptr j2(new JoinNode());

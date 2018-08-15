@@ -20,6 +20,7 @@ set(SRC_FILES
     src/Triple.cpp
     src/TripleAlpha.cpp
     src/TripleConsistency.cpp
+    src/TripleJoin.cpp
     src/Util.cpp
     src/WME.cpp
     src/WMEComparator.cpp
@@ -35,6 +36,10 @@ add_test(NAME AvoidDuplicate_241 COMMAND AvoidDuplicate_241)
 add_executable(NoDuplicateInAlpha test/NoDuplicateInAlpha.cpp)
 target_link_libraries(NoDuplicateInAlpha rete)
 add_test(NAME NoDuplicateInAlpha COMMAND NoDuplicateInAlpha)
+
+add_executable(TripleJoinTest test/TripleJoinTest.cpp)
+target_link_libraries(TripleJoinTest rete)
+add_test(NAME TripleJoinTest COMMAND TripleJoinTest)
 
 add_executable(test_rete test/main.cpp)
 target_link_libraries(test_rete rete)

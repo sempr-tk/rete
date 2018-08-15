@@ -5,7 +5,7 @@ namespace rete {
 Triple::Triple( const std::string& s,
                 const std::string& p,
                 const std::string& o)
-    : subject(s), predicate(p), object(o)
+    : concat_(s + p + o), subject(s), predicate(p), object(o)
 {
 }
 
@@ -24,16 +24,13 @@ std::string Triple::toString() const
 }
 
 
-bool Triple::operator == (const WME& other) const
+bool Triple::operator < (const WME& other) const
 {
-    if (this == &other) return true;
     if (const Triple* t = dynamic_cast<const Triple*>(&other))
     {
-        return (subject == t->subject &&
-                predicate == t->predicate &&
-                object == t->object);
+        return concat_ < t->concat_;
     }
-    return false;
+    return true;
 }
 
 

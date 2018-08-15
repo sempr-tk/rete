@@ -5,7 +5,7 @@ namespace rete {
 
 bool WME::operator == (const WME& other) const
 {
-    return (this == &other);
+    return (this == &other) || (!(*this < other) && !(other < *this));
 }
 
 } /* rete */

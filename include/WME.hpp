@@ -19,16 +19,19 @@ public:
     virtual std::string toString() const = 0;
 
     /**
-        Check for equality. If we want to remove a WME by value, without knowing the exact instance
-        that has been added previously, we need to test if two WMEs represent the same knowledge.
-
-        The base-implementation is an identity check, if (this == &other). Maybe it is better to
-        track WMEs in a separate layer outside the actual net to prevent multiple addition? Maybe,
-        when adding inferred WMEs to the network, we need to track through which Tokens they were
-        inferred, and they can be inferred through multiple? However, even in that case we probably
-        need a better comparison than (this == &other) on a pointer level.
+        In order to keep unique sets of WMEs and find identical ones, we need a less-than
+        comparison for them.
+        Note: Of course no WME can know all other types of WMEs and provide a strict ordering between all of them. But since the first layer of alpha nodes are usually TypeNodes (which are implicit in this implementation), we can assume that the AlphaMemories only contain exactly one type of WME. So if MyWMEType implements the operator < only for other MyWMETypes correctly we should be fine. I think in other cases it should return "1", so that (a < b) && (b < a) shows both the conflict and the inequality.
     */
-    virtual bool operator == (const WME& other) const;
+    virtual bool operator < (const WME& other) const = 0;
+
+    /**
+        Check for equality between two WMEs. First checks the memory addresses, then uses the
+        operator < to
+            return !(a < b) && !(b < a);
+
+    */
+    bool operator == (const WME& other) const;
 };
 
 } /* rete */

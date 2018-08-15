@@ -23,6 +23,8 @@ public:
         Default impl returns the pointer address.
     */
     virtual std::string getDOTId() const;
+
+    virtual ~Node();
 };
 
 } /* rete */

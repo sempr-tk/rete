@@ -3,8 +3,7 @@
 
 namespace rete {
 
-AlphaBetaAdapter::AlphaBetaAdapter(AlphaMemory::Ptr alpha)
-    : BetaNode(nullptr, alpha)
+AlphaBetaAdapter::AlphaBetaAdapter()
 {
 }
 

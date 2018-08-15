@@ -28,7 +28,14 @@ protected:
     BetaMemory::Ptr bmem_;
 public:
     using Ptr = std::shared_ptr<BetaNode>;
-    BetaNode(BetaMemory::Ptr, AlphaMemoryPtr);
+    // BetaNode(BetaMemory::Ptr, AlphaMemoryPtr);
+    BetaNode();
+
+    /**
+        Connects a BetaNode with the given memories. Lets the BetaNode remember the memories for
+        later lookup and also adds the BetaNode as a child of the memories to forward new matches.
+    */
+    static void connect(BetaNode::Ptr, BetaMemory::Ptr, AlphaMemoryPtr);
 
     /**
         Called upon changes in the connected AlphaMemory.

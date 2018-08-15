@@ -4,8 +4,7 @@
 
 namespace rete {
 
-JoinNode::JoinNode(BetaMemory::Ptr beta, AlphaMemoryPtr alpha)
-    : BetaNode(beta, alpha)
+JoinNode::JoinNode()
 {
 }
 

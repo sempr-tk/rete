@@ -24,11 +24,11 @@ int main()
     a1->initAlphaMemory();
     b1->initAlphaMemory();
 
-    AlphaBetaAdapter::Ptr ab(new AlphaBetaAdapter(a1->getAlphaMemory()));
-    a1->getAlphaMemory()->addChild(ab);
+    AlphaBetaAdapter::Ptr ab(new AlphaBetaAdapter());
+    BetaNode::connect(ab, nullptr, a1->getAlphaMemory());
 
-    JoinNode::Ptr j1(new JoinNode(ab->getBetaMemory(), b1->getAlphaMemory()));
-    ab->getBetaMemory()->addChild(j1); b1->getAlphaMemory()->addChild(j1);
+    JoinNode::Ptr j1(new JoinNode());
+    BetaNode::connect(j1, ab->getBetaMemory(), b1->getAlphaMemory());
 
 
     // add knowledge

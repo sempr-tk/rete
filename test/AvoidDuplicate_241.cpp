@@ -28,14 +28,14 @@ int main()
     a2->initAlphaMemory();
     b2->initAlphaMemory();
 
-    AlphaBetaAdapter::Ptr ab(new AlphaBetaAdapter(a2->getAlphaMemory()));
-    a2->getAlphaMemory()->addChild(ab);
+    AlphaBetaAdapter::Ptr ab(new AlphaBetaAdapter());
+    BetaNode::connect(ab, nullptr, a2->getAlphaMemory());
 
-    JoinNode::Ptr j1(new JoinNode(ab->getBetaMemory(), b2->getAlphaMemory()));
-    ab->getBetaMemory()->addChild(j1); b2->getAlphaMemory()->addChild(j1);
+    JoinNode::Ptr j1(new JoinNode());
+    BetaNode::connect(j1, ab->getBetaMemory(), b2->getAlphaMemory());
 
-    JoinNode::Ptr j2(new JoinNode(j1->getBetaMemory(), b2->getAlphaMemory()));
-    j1->getBetaMemory()->addChild(j2); b2->getAlphaMemory()->addChild(j2);
+    JoinNode::Ptr j2(new JoinNode());
+    BetaNode::connect(j2, j1->getBetaMemory(), b2->getAlphaMemory());
 
 
     // add knowledge

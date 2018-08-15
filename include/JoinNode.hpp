@@ -12,7 +12,7 @@ namespace rete {
 class JoinNode : public BetaNode {
     std::string getDOTAttr() const override;
 public:
-    JoinNode(BetaMemory::Ptr, AlphaMemoryPtr);
+    JoinNode();
     void rightActivate(WME::Ptr, PropagationFlag) override;
     void leftActivate(Token::Ptr, PropagationFlag) override;
 

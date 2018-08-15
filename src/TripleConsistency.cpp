@@ -36,15 +36,7 @@ bool TripleConsistency::operator == (const AlphaNode& other) const
 
 std::string TripleConsistency::getDOTAttr() const
 {
-    auto conv = [](Triple::Field f) -> std::string
-    {
-        if (f == Triple::SUBJECT) return "?sub";
-        if (f == Triple::PREDICATE) return "?pred";
-        if (f == Triple::OBJECT) return "?obj";
-        return "";
-    };
-
-    return "[label=\"TripleCheck\\n(" + conv(field1_) + " == " + conv(field2_) + ")\"]";
+    return "[label=\"TripleCheck\\n(" + Triple::fieldName(field1_) + " == " + Triple::fieldName(field2_) + ")\"]";
 }
 
 } /* rete */

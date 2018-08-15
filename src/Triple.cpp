@@ -34,4 +34,12 @@ bool Triple::operator < (const WME& other) const
 }
 
 
+std::string Triple::fieldName(Triple::Field f)
+{
+    if (f == Triple::SUBJECT) return "?sub";
+    if (f == Triple::PREDICATE) return "?pred";
+    if (f == Triple::OBJECT) return "?obj";
+    return "";
+}
+
 } /* rete */

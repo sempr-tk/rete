@@ -30,6 +30,8 @@ public:
     std::string toString() const override;
 
     bool operator < (const WME& other) const override;
+
+    static std::string fieldName(Triple::Field);
 };
 
 } /* rete */

@@ -37,11 +37,7 @@ bool TripleAlpha::operator == (const AlphaNode& other) const
 
 std::string TripleAlpha::getDOTAttr() const
 {
-    std::string field = "";
-    if (field_ == Triple::SUBJECT) field = "?sub";
-    if (field_ == Triple::PREDICATE) field = "?pred";
-    if (field_ == Triple::OBJECT) field = "?obj";
-
+    std::string field = Triple::fieldName(field_);
     return "[label=\"TripleCheck\\n (" + util::dotEscape(field) + " == " +
             util::dotEscape(value_) + ")\"]";
 }

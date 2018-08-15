@@ -19,6 +19,7 @@ set(SRC_FILES
     src/Token.cpp
     src/Triple.cpp
     src/TripleAlpha.cpp
+    src/TripleConsistency.cpp
     src/Util.cpp
     src/WME.cpp
     src/WMEComparator.cpp

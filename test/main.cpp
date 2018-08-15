@@ -7,6 +7,7 @@
 #include "../include/AlphaMemory.hpp"
 #include "../include/JoinNode.hpp"
 #include "../include/AlphaBetaAdapter.hpp"
+#include "../include/TripleConsistency.hpp"
 
 using namespace rete;
 
@@ -36,14 +37,21 @@ int main(int argc, char** args)
             (?y color red)
     */
     auto root = net.getRoot();
-    TripleAlpha::Ptr a1(new TripleAlpha(Triple::PREDICATE, "self")); root->addChild(a1);
-    TripleAlpha::Ptr b1(new TripleAlpha(Triple::PREDICATE, "color")); root->addChild(b1);
-    TripleAlpha::Ptr b2(new TripleAlpha(Triple::OBJECT, "red")); b1->addChild(b2);
-    a1->initAlphaMemory();
+    TripleAlpha::Ptr a1(new TripleAlpha(Triple::PREDICATE, "self"));
+    TripleConsistency::Ptr a2(new TripleConsistency(Triple::SUBJECT, Triple::OBJECT));
+    root->addChild(a1);
+    a1->addChild(a2);
+
+    TripleAlpha::Ptr b1(new TripleAlpha(Triple::PREDICATE, "color"));
+    TripleAlpha::Ptr b2(new TripleAlpha(Triple::OBJECT, "red"));
+    root->addChild(b1);
+    b1->addChild(b2);
+
+    a2->initAlphaMemory();
     b2->initAlphaMemory();
 
-    AlphaBetaAdapter::Ptr ab(new AlphaBetaAdapter(a1->getAlphaMemory()));
-    a1->getAlphaMemory()->addChild(ab);
+    AlphaBetaAdapter::Ptr ab(new AlphaBetaAdapter(a2->getAlphaMemory()));
+    a2->getAlphaMemory()->addChild(ab);
 
     JoinNode::Ptr j1(new JoinNode(ab->getBetaMemory(), b2->getAlphaMemory()));
     ab->getBetaMemory()->addChild(j1); b2->getAlphaMemory()->addChild(j1);
@@ -55,6 +63,7 @@ int main(int argc, char** args)
     // add stuff
     // (B1 self B1)
     Triple::Ptr t1(new Triple("B1", "self", "B1"));
+    Triple::Ptr t1f(new Triple("B1", "self", "foo"));
     // a duplicate
     Triple::Ptr tdup(new Triple("B1", "self", "B1"));
     // (B1 color red)
@@ -62,6 +71,8 @@ int main(int argc, char** args)
 
     std::cout << "Activate t1" << std::endl;
     root->activate(t1, rete::ASSERT);
+    std::cout << "Activate t1f" << std::endl;
+    root->activate(t1f, rete::ASSERT);
     std::cout << "Activate t2" << std::endl;
     root->activate(t2, rete::ASSERT);
     std::cout << "Activate tdup" << std::endl;

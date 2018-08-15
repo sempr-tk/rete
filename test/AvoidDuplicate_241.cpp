@@ -20,13 +20,16 @@ int main()
     */
     auto root = net.getRoot();
     TripleAlpha::Ptr a1(new TripleAlpha(Triple::PREDICATE, "self")); root->addChild(a1);
+    TripleConsistency::Ptr a2(new TripleConsistency(Triple::SUBJECT, Triple::OBJECT));
+    a1->addChild(a2);
+
     TripleAlpha::Ptr b1(new TripleAlpha(Triple::PREDICATE, "color")); root->addChild(b1);
     TripleAlpha::Ptr b2(new TripleAlpha(Triple::OBJECT, "red")); b1->addChild(b2);
-    a1->initAlphaMemory();
+    a2->initAlphaMemory();
     b2->initAlphaMemory();
 
-    AlphaBetaAdapter::Ptr ab(new AlphaBetaAdapter(a1->getAlphaMemory()));
-    a1->getAlphaMemory()->addChild(ab);
+    AlphaBetaAdapter::Ptr ab(new AlphaBetaAdapter(a2->getAlphaMemory()));
+    a2->getAlphaMemory()->addChild(ab);
 
     JoinNode::Ptr j1(new JoinNode(ab->getBetaMemory(), b2->getAlphaMemory()));
     ab->getBetaMemory()->addChild(j1); b2->getAlphaMemory()->addChild(j1);

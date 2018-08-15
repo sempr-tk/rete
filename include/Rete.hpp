@@ -11,5 +11,6 @@
 #include "Token.hpp"
 #include "Triple.hpp"
 #include "TripleAlpha.hpp"
+#include "TripleConsistency.hpp"
 #include "Util.hpp"
 #include "WME.hpp"

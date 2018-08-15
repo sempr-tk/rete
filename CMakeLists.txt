@@ -31,6 +31,10 @@ add_executable(AvoidDuplicate_241 test/AvoidDuplicate_241.cpp)
 target_link_libraries(AvoidDuplicate_241 rete)
 add_test(NAME AvoidDuplicate_241 COMMAND AvoidDuplicate_241)
 
+add_executable(NoDuplicateInAlpha test/NoDuplicateInAlpha.cpp)
+target_link_libraries(NoDuplicateInAlpha rete)
+add_test(NAME NoDuplicateInAlpha COMMAND NoDuplicateInAlpha)
+
 add_executable(test_rete test/main.cpp)
 target_link_libraries(test_rete rete)
 add_test(NAME main COMMAND test_rete)

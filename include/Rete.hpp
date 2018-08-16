@@ -8,6 +8,8 @@
 #include "JoinNode.hpp"
 #include "Network.hpp"
 #include "Node.hpp"
+#include "Production.hpp"
+#include "ProductionNode.hpp"
 #include "Token.hpp"
 #include "Triple.hpp"
 #include "TripleAlpha.hpp"

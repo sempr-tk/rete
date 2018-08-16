@@ -9,8 +9,23 @@
 #include "../include/AlphaBetaAdapter.hpp"
 #include "../include/TripleConsistency.hpp"
 #include "../include/TripleJoin.hpp"
+#include "../include/ProductionNode.hpp"
 
 using namespace rete;
+
+
+class DummyProduction : public Production {
+    void execute(Token::Ptr token) override
+    {
+        std::cout << "DummyProduction activated with token " << token->toString() << std::endl;
+    }
+
+    std::string getName() const override
+    {
+        return "Dummy";
+    }
+};
+
 
 int main(int argc, char** args)
 {
@@ -44,6 +59,13 @@ int main(int argc, char** args)
     auto join = std::make_shared<TripleJoin>(0, Triple::OBJECT, Triple::SUBJECT);
     BetaNode::connect(join, adapter->getBetaMemory(), foo->getAlphaMemory());
 
+
+    auto dummy = std::make_shared<DummyProduction>();
+    auto dummyNode = std::make_shared<ProductionNode>(dummy);
+
+    auto agenda = std::make_shared<Agenda>();
+    ProductionNode::connect(dummyNode, join->getBetaMemory(), agenda);
+
     // put in some data
     auto t1 = std::make_shared<Triple>("A", "foo", "B");
     auto t2 = std::make_shared<Triple>("B", "foo", "C");
@@ -52,6 +74,16 @@ int main(int argc, char** args)
     net.getRoot()->activate(t1, rete::ASSERT);
     net.getRoot()->activate(t3, rete::ASSERT);
     net.getRoot()->activate(t2, rete::ASSERT);
+
+
+    while (!agenda->empty())
+    {
+        auto item = agenda->front();
+        agenda->pop_front();
+
+        item.second->execute(item.first);
+    }
+
 
     if (saveToFile)
     {

@@ -1,5 +1,6 @@
 #include "../include/BetaMemory.hpp"
 #include "../include/BetaNode.hpp"
+#include "../include/ProductionNode.hpp"
 
 #include <algorithm>
 
@@ -18,6 +19,11 @@ void BetaMemory::leftActivate(Token::Ptr t, WME::Ptr wme, PropagationFlag flag)
         for (auto child : children_)
         {
             child->leftActivate(tNew, PropagationFlag::ASSERT);
+        }
+
+        for (auto p : productions_)
+        {
+            p->activate(tNew, PropagationFlag::ASSERT);
         }
     }
     else if (flag == PropagationFlag::RETRACT)
@@ -50,6 +56,11 @@ void BetaMemory::leftActivate(Token::Ptr t, WME::Ptr wme, PropagationFlag flag)
             {
                 child->leftActivate(mt, PropagationFlag::RETRACT);
             }
+
+            for (auto p : productions_)
+            {
+                p->activate(mt, PropagationFlag::RETRACT);
+            }
         }
 
     }
@@ -72,6 +83,11 @@ void BetaMemory::rightRemoval(WME::Ptr wme)
         {
             child->leftActivate(t, PropagationFlag::RETRACT);
         }
+
+        for (auto p : productions_)
+        {
+            p->activate(t, PropagationFlag::RETRACT);
+        }
     }
 
 }
@@ -85,6 +101,17 @@ void BetaMemory::getChildren(std::vector<BetaNode::Ptr>& children)
 {
     children.reserve(children_.size());
     for (auto c : children_) children.push_back(c);
+}
+
+void BetaMemory::addProduction(ProductionNode::Ptr p)
+{
+    productions_.push_back(p);
+}
+
+void BetaMemory::getProductions(std::vector<ProductionNode::Ptr>& children)
+{
+    children.reserve(productions_.size());
+    for (auto c : productions_) children.push_back(c);
 }
 
 size_t BetaMemory::size() const

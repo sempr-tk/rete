@@ -5,6 +5,7 @@
 #include "../include/AlphaNode.hpp"
 #include "../include/BetaMemory.hpp"
 #include "../include/BetaNode.hpp"
+#include "../include/ProductionNode.hpp"
 
 
 #include <sstream>
@@ -36,7 +37,7 @@ bool Network::DummyAlpha::operator == (const AlphaNode& other) const
 
 
 Network::Network()
-    : root_(new Network::DummyAlpha())
+    : root_(new Network::DummyAlpha()), agenda_(new Agenda())
 {
 }
 
@@ -129,6 +130,17 @@ std::string Network::toDot() const
         // draw last -> memory
         dot += drawNode(last->getBetaMemory());
         dot += drawEdge(last, last->getBetaMemory());
+
+        // for the memory, draw all productions
+        std::vector<ProductionNode::Ptr> prodNodes;
+        last->getBetaMemory()->getProductions(prodNodes);
+        for (auto prodNode : prodNodes)
+        {
+            // assumption: no further checks necessary, every ProductionNode belongs to exactly one
+            // BetaMemory
+            dot += drawNode(prodNode);
+            dot += drawEdge(last->getBetaMemory(), prodNode);
+        }
 
         // draw memory -> children
         std::vector<BetaNode::Ptr> children;

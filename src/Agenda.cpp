@@ -22,6 +22,8 @@ bool AgendaItemComparator::operator() (const AgendaItem& a, const AgendaItem& b)
 
     // if tokens differ, use them for the ordering
     if (std::get<0>(a) != std::get<0>(b)) return std::get<0>(a) < std::get<0>(b); // just pointer comparison...
+    // NOTE: For comparison of tokens I only use pointer-comparison here. The assumption is that they will be different -- else the rete network is malformed and there are two equivalent BetaNodes. For a clean Agenda it might be necessary to relax the token-comparision to by-value (with token->equals(other)). This is implemented in removeEquivalent(AgendaItem)
+
     // if tokens are the same, at least the production node might be different...
     if (std::get<1>(a) != std::get<1>(b)) return std::get<1>(a) < std::get<1>(b);
     // else... there is no difference. Pointer equality for both entries.
@@ -37,6 +39,27 @@ void Agenda::add(AgendaItem item)
 bool Agenda::remove(AgendaItem item)
 {
     return (queue_.erase(item) > 0);
+}
+
+bool Agenda::removeEquivalent(AgendaItem item)
+{
+    auto matches = [&item](const AgendaItem& other) {
+        if (std::get<2>(item) != std::get<2>(other)) return false; // different flag
+        if (std::get<1>(item) != std::get<1>(other)) return false; // different production-ptr
+        return std::get<0>(item)->equals(*std::get<0>(other)); // token equality
+    };
+
+    // search for a match one by one
+    for (auto entry : queue_)
+    {
+        if (matches(entry)) {
+            // erase first match and return
+            queue_.erase(entry);
+            return true;
+        }
+    }
+
+    return false;
 }
 
 

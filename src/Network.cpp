@@ -46,6 +46,10 @@ AlphaNode::Ptr Network::getRoot()
     return root_;
 }
 
+Agenda::Ptr Network::getAgenda()
+{
+    return agenda_;
+}
 
 std::string Network::toDot() const
 {

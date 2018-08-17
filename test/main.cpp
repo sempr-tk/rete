@@ -9,7 +9,7 @@
 #include "../include/AlphaBetaAdapter.hpp"
 #include "../include/TripleConsistency.hpp"
 #include "../include/TripleJoin.hpp"
-#include "../include/ProductionNode.hpp"
+#include "../include/AgendaNode.hpp"
 
 using namespace rete;
 
@@ -61,10 +61,9 @@ int main(int argc, char** args)
 
 
     auto dummy = std::make_shared<DummyProduction>();
-    auto dummyNode = std::make_shared<ProductionNode>(dummy);
+    auto dummyNode = std::make_shared<AgendaNode>(dummy, net.getAgenda());
 
-    auto agenda = std::make_shared<Agenda>();
-    ProductionNode::connect(dummyNode, join->getBetaMemory(), agenda);
+    join->getBetaMemory()->addProduction(dummyNode);
 
     // put in some data
     auto t1 = std::make_shared<Triple>("A", "foo", "B");
@@ -76,12 +75,14 @@ int main(int argc, char** args)
     net.getRoot()->activate(t2, rete::ASSERT);
 
 
+    auto agenda = net.getAgenda();
+    if (agenda->empty()) std::cout << "Agenda is empty." << std::endl;
     while (!agenda->empty())
     {
         auto item = agenda->front();
         agenda->pop_front();
 
-        item.second->execute(item.first);
+        std::get<1>(item)->execute(std::get<0>(item));
     }
 
 

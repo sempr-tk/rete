@@ -34,6 +34,7 @@ class Network {
 public:
     Network();
     AlphaNode::Ptr getRoot();
+    Agenda::Ptr getAgenda();
 
     /**
         Traverses the graph of nodes and returns it in the dot-format for visualization

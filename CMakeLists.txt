@@ -8,6 +8,7 @@ include_directories(include)
 
 set(SRC_FILES
     src/Agenda.cpp
+    src/AgendaNode.cpp
     src/AlphaBetaAdapter.cpp
     src/AlphaMemory.cpp
     src/AlphaNode.cpp

@@ -8,17 +8,22 @@ bool AgendaItemComparator::operator() (const AgendaItem& a, const AgendaItem& b)
 {
     // need a strict ordering, where !(a < b) && !(b < a) if equiv. to a == b
     // so a mere priority-comparison is not enough.
-    int prioA = a.second->getPriority();
-    int prioB = b.second->getPriority();
+    int prioA = std::get<1>(a)->getPriority();
+    int prioB = std::get<1>(b)->getPriority();
 
     // if they differ, just use them:
     if (prioA != prioB) return prioA > prioB;
 
     // special treatment if priorities are equal:
+    // RETRACT before ASSERT:
+    PropagationFlag flagA = std::get<2>(a);
+    PropagationFlag flagB = std::get<2>(b);
+    if (flagA != flagB) return (flagA == PropagationFlag::RETRACT ? true : false);
+
     // if tokens differ, use them for the ordering
-    if (a.first != b.first) return a.first < b.first; // just pointer comparison...
+    if (std::get<0>(a) != std::get<0>(b)) return std::get<0>(a) < std::get<0>(b); // just pointer comparison...
     // if tokens are the same, at least the production node might be different...
-    if (a.second != b.second) return a.second < b.second;
+    if (std::get<1>(a) != std::get<1>(b)) return std::get<1>(a) < std::get<1>(b);
     // else... there is no difference. Pointer equality for both entries.
     return false;
 }
@@ -29,14 +34,9 @@ void Agenda::add(AgendaItem item)
     queue_.insert(item);
 }
 
-void Agenda::add(Token::Ptr token, Production::Ptr node)
+bool Agenda::remove(AgendaItem item)
 {
-    queue_.insert({token, node});
-}
-
-void Agenda::remove(AgendaItem item)
-{
-    queue_.erase(item);
+    return (queue_.erase(item) > 0);
 }
 
 

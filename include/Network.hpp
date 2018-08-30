@@ -1,8 +1,11 @@
 #ifndef RETE_NETWORK_HPP
 #define RETE_NETWORK_HPP
 
+#include <vector>
+
 #include "AlphaNode.hpp"
 #include "Agenda.hpp"
+#include "ProductionNode.hpp"
 
 namespace rete {
 
@@ -29,6 +32,7 @@ class Network {
     // the root node, where the whole network is hinged on
     DummyAlpha::Ptr root_;
 
+    // the net-global agenda for production nodes.
     Agenda::Ptr agenda_;
 
 public:

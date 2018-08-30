@@ -12,14 +12,18 @@ set(SRC_FILES
     src/AlphaBetaAdapter.cpp
     src/AlphaMemory.cpp
     src/AlphaNode.cpp
+    src/AssertedEvidence.cpp
+    src/BackedWME.cpp
     src/BetaComparator.cpp
     src/BetaMemory.cpp
     src/BetaNode.cpp
+    src/InferredEvidence.cpp
     src/JoinNode.cpp
     src/Network.cpp
     src/Node.cpp
     src/Production.cpp
     src/ProductionNode.cpp
+    src/Reasoner.cpp
     src/Token.cpp
     src/Triple.cpp
     src/TripleAlpha.cpp

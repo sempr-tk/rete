@@ -2,8 +2,10 @@
 #define RETE_PRODUCTION_HPP_
 
 #include <memory>
+#include <vector>
 
 #include "Token.hpp"
+#include "defs.hpp"
 
 namespace rete {
 
@@ -23,9 +25,15 @@ public:
         Realize the consequences. This method is called when a match for this production hits the
         top of the agenda.
 
-        TODO: how to assert and retract WMEs from within this method?
+        The PropagationFlag states if the given token is a new match (ASSERT) or is currently being
+        removed (RETRACT). The third argument is a reference to a vector of WMEs which allows the
+        production to ASSERT WMEs based on the given token. This is *only* used when the
+        PropagationFlag is ASSERT, since every inferred WME needs to track where it came from: From
+        which match, and which token. Inferred WMEs that no longer hold due to a removed token are
+        handled by the reasoner, and for negations / no-value checks use a corresponding node in
+        the Rete network.
     */
-    virtual void execute(Token::Ptr) = 0;
+    virtual void execute(Token::Ptr, PropagationFlag, std::vector<WME::Ptr>& inferred) = 0;
 
 
     int getPriority() const;

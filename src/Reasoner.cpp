@@ -2,7 +2,7 @@
 
 #include "../include/InferredEvidence.hpp"
 
-#include <iostream>
+// #include <iostream>
 
 namespace rete {
 
@@ -38,14 +38,15 @@ void Reasoner::performInferenceStep()
     else if (flag == rete::RETRACT)
     {
         // what to do?
-        // --> find all WMEs that are backed by this evidence (token & production) and remove the corresponding evidence! TODO
+        // --> find all WMEs that are backed by this evidence (token & production) and remove the corresponding evidence!
+        // TODO: Traversing ALL wmes seems a bit heavy, can this be improved in any way? I remember that the reference paper mentioned references at WMEs in which tokens they are used etc, for a tree-based removal (?). Can this be transferred to the reasoner-world, too? Or used for some indexing?
         Evidence::Ptr evidence(new InferredEvidence(token, production));
         for (auto it = backedWMEs_.begin(); it != backedWMEs_.end();)
         {
             it->removeEvidence(evidence);
             if (!it->isBacked())
             {
-                std::cout << it->getWME()->toString() << " is no longer backed!" << std::endl;
+                // std::cout << it->getWME()->toString() << " is no longer backed!" << std::endl;
                 rete_.getRoot()->activate(it->getWME(), rete::RETRACT);
                 it = backedWMEs_.erase(it);
             } else {
@@ -84,7 +85,7 @@ void Reasoner::removeEvidence(WME::Ptr wme, Evidence::Ptr evidence)
         it->removeEvidence(evidence);
         if (!it->isBacked())
         {
-            std::cout << it->getWME()->toString() << " is no longer backed!" << std::endl;
+            // std::cout << it->getWME()->toString() << " is no longer backed!" << std::endl;
 
             // lost all evidence --> remove WME!
             rete_.getRoot()->activate(it->getWME(), rete::RETRACT);
@@ -93,7 +94,7 @@ void Reasoner::removeEvidence(WME::Ptr wme, Evidence::Ptr evidence)
     }
     else
     {
-        std::cout << wme->toString() << " not found in BackedWMEs" << std::endl;
+        // std::cout << wme->toString() << " not found in BackedWMEs" << std::endl;
     }
 }
 

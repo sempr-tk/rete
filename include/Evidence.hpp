@@ -13,6 +13,7 @@ class Evidence {
 public:
     using Ptr = std::shared_ptr<Evidence>;
     virtual bool operator == (const Evidence& other) const = 0;
+    virtual ~Evidence() = default;
 };
 
 } /* rete */

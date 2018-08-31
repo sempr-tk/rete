@@ -16,7 +16,7 @@ WME::Ptr BackedWME::getWME() const
 
 bool BackedWME::isBacked() const
 {
-    return evidences_.empty();
+    return !evidences_.empty();
 }
 
 void BackedWME::addEvidence(Evidence::Ptr e) const

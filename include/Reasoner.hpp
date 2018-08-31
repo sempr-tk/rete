@@ -35,6 +35,11 @@ public:
     void performInference();
 
     /**
+        Performs a single step of inference by processing only the first entry in the agenda.
+    */
+    void performInferenceStep();
+
+    /**
         Adds the evidence for the the WME to the system. If the WME was not yet known, it is
         processed through the Rete network and the internal agenda is updated. Does *not*
         automatically infer knowledge.

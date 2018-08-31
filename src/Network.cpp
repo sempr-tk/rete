@@ -53,7 +53,9 @@ Agenda::Ptr Network::getAgenda()
 
 std::string Network::toDot() const
 {
-    std::string dot = "digraph graphname { \n";
+    std::string dot = "digraph graphname { \n" \
+                      "graph [fontname = \"Ubuntu Mono\"]\n" \
+                      "node  [fontname = \"Ubuntu Mono\"]\n";
 
     // 2 phases: alpha net, and beta net
     // phase 1:

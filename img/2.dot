@@ -1,0 +1,19 @@
+digraph graphname { 
+graph [fontname = "Ubuntu Mono"]
+node  [fontname = "Ubuntu Mono"]
+"0x1c61cf0" [label="TripleCheck\n (?pred == rdfs:subClassOf)"];
+"0x1c61c20" -> "0x1c61cf0";
+"0x1c61d70" [shape=record, label="{AlphaMemory|(A, rdfs:subClassOf, B)|(C, rdfs:subClassOf, D)}"];
+"0x1c61cf0" -> "0x1c61d70";
+"0x1c61d70" -> "0x1c61ef0";
+"0x1c61ef0" [label="TripleJoin\n0.?obj == ?sub"];
+"0x1c61d70" -> "0x1c61e00";
+"0x1c61e00" [label="AB-Adapter"];
+"0x1c61e40" [shape=record, label="{BetaMemory|(A, rdfs:subClassOf, B)|(C, rdfs:subClassOf, D)}"];
+"0x1c61e00" -> "0x1c61e40";
+"0x1c61e40" -> "0x1c61ef0";
+"0x1c61f40" [shape=record, label="{BetaMemory}"];
+"0x1c61ef0" -> "0x1c61f40";
+"0x1c620f0" [label="AgendaNode\nInferTriple (? rdfs:subClassOf ?)"];
+"0x1c61f40" -> "0x1c620f0";
+}

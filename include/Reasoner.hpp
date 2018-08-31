@@ -47,11 +47,11 @@ public:
     void addEvidence(WME::Ptr wme, Evidence::Ptr evidence);
 
     /**
-        Removed the evidence for the WME. If there are no more evidences for it, the WME is
+        Removes the evidence for the WME. If there are no more evidences for it, the WME is
         retracted from the Rete network, and more inferred WMEs that relied on the WME are removed,
-        too. No productions are executed -- this only clears the memories from deprecated
-        WMEs/tokens. Due to negative nodes some productions may now have new matches, and are put
-        on the agenda.
+        too. Retraction of tokens are put on the agenda, too.
+        Due to negative nodes some productions may now have new matches, and are also put on the
+        agenda.
     */
     void removeEvidence(WME::Ptr, Evidence::Ptr evidence);
 

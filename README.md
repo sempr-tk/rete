@@ -66,3 +66,178 @@ dot -Tpng network.dot > network.png
 ```
 which will give you something like this:
 ![Alt text](example.png)
+
+
+
+## Reasoning
+
+Our main use case for the rete network is not only pattern matching, but _reasoning_. The rete algorithm is used to find matches for the preconditions of the rules, which are then executed to infer new WMEs that are added to the network, etc.
+
+To manage the known facts and multiple sources (assertions or inference chains) for them, a few more classes are implemented in a more or less generic way:
+
+### rete::Evidence
+
+Evidences, or rather **proof**s  (*Todo: Change the name?*) are the reasons why a WME is still kept in the knowledge base. They can be **AssertedEvidence** which is given externally, or **InferredEvidence** which describes which production created the WME from which match. Keeping track of evidences has two major advantages:
+
+1. It allows us to inspect where some knowledge comes from. We can now follow the chain of inference back to its origin, and display which rules and matches lead to the final result.
+2. When multiple rules and/or matches result in the same inferred WME and one source/evidence is retracted, we can still keep it.
+
+Of course, this bookkeeping results in some overhead, but is IMHO necessary to correctly handle the removal of formerly valid knowledge.
+
+### rete::BackedWME
+
+A wrapper for WMEs that adds a list of evidences to it.
+
+### rete::Reasoner
+
+The reasoner contains two things: A rete network and a set of BackedWMEs. It allows us to add and remove evidences, and adds/retracts WMEs to/from the network when necessary. It also provides methods to perform the inference. To do so, it simply takes the first item on the networks agenda, executes it and, if a token was asserted, takes inferred WMEs from the production and adds them to the knowledge base, with the token and the production as evidence.
+
+"Executing an AgendaItem" means to call the `execute` method of its production with the provided token and the propagation flag. In case the flag is "ASSERTED" we are performing normal forward inference, and the production is allowed to infer new WMEs. When the flag is "RETRACTED" this is not possible, as the only token we have as a "reason" is currently being removed from the knowledge base. If you want to infer knowledge from the absence of WMEs / tokens, consider implementing negative nodes in the rete network.
+
+
+
+## Reasoning with RDF triples
+
+Up to this point everything has been rather generic, without actual, sensible representation of knowledge or consequences etc. My main focus with this algorithm is to implement some reasoning on RDF triples, so I present some classes for this here. But you can implement your own stuff, completely unrelated to RDF triples, of course.
+
+### WMEs and nodes
+
+The knowledge representation and some of the nodes used to check conditions have already been described before: TripleAlpha, TripleConsitency and TripleJoin are used to construct the network and find patterns in the set of Triples. To infer a new triple as a consequence of a match, you can use the `InferTriple`-Node.
+
+The following code example implements the rule:
+`[(?a rdfs:subClassOf ?b), (?b rdfs:subClassOf ?c) -> (?a rdfs:subClassOf ?c)]`
+
+It then adds the facts: `(A rdfs:subClassOf B)` , `(B rdfs:subClassOf C)` and `(C rdfs:subClassOf D)`. This results in the inferred triples:
+
+```
+(A rdfs:subClassOf C)
+(A rdfs:subClassOf D)
+(B rdfs:subClassOf D)
+```
+
+And when the triple `(B rdfs:subClassOf C)` is removed, all three inferred triples get removed, too.
+
+Code (see [SubClassExample.cpp](test/SubClassExample.cpp)):
+
+```c++
+#include <iostream>
+#include <fstream>
+
+// your include paths will obviously differ.
+#include "../include/Network.hpp"
+#include "../include/Triple.hpp"
+#include "../include/TripleAlpha.hpp"
+#include "../include/AlphaMemory.hpp"
+#include "../include/JoinNode.hpp"
+#include "../include/AlphaBetaAdapter.hpp"
+#include "../include/TripleConsistency.hpp"
+#include "../include/TripleJoin.hpp"
+#include "../include/AgendaNode.hpp"
+#include "../include/InferTriple.hpp"
+
+#include "../include/Reasoner.hpp"
+#include "../include/AssertedEvidence.hpp"
+
+using namespace rete;
+
+
+void save(Network& net, const std::string& filename)
+{
+    std::ofstream out(filename);
+    out << net.toDot();
+    out.close();
+}
+
+int main()
+{
+    Reasoner reasoner;
+    Network& net = reasoner.net();
+
+    // setup network
+    //        C1                     C2
+    // (?a rdfs:subClassOf ?b) (?b rdfs:subClassOf ?c)
+
+    // predicate check
+    auto foo = std::make_shared<TripleAlpha>(Triple::PREDICATE, "rdfs:subClassOf");
+    net.getRoot()->addChild(foo);
+    foo->initAlphaMemory();
+
+    // adapter for first (and only) join
+    auto adapter = std::make_shared<AlphaBetaAdapter>();
+    BetaNode::connect(adapter, nullptr, foo->getAlphaMemory());
+
+    // join where object of the most recent wme in the token matches the subject of the wme in the
+    //bin                                    |--- C1.?b ------|----- C2.?b -----|
+    auto join = std::make_shared<TripleJoin>(0, Triple::OBJECT, Triple::SUBJECT);
+    BetaNode::connect(join, adapter->getBetaMemory(), foo->getAlphaMemory());
+
+
+    // the consequence: construct (C1.?a  rdfs:subClassOf  C2.?c)
+    InferTriple::Ptr infer(new InferTriple(
+        {1, Triple::SUBJECT},
+        "rdfs:subClassOf",
+        {0, Triple::OBJECT}
+    ));
+
+    // create an AgendaNode for the production
+    auto inferNode = std::make_shared<AgendaNode>(infer, net.getAgenda());
+    join->getBetaMemory()->addProduction(inferNode);
+
+    // put in some data
+    auto t1 = std::make_shared<Triple>("A", "rdfs:subClassOf", "B");
+    auto t2 = std::make_shared<Triple>("B", "rdfs:subClassOf", "C");
+    auto t3 = std::make_shared<Triple>("C", "rdfs:subClassOf", "D");
+
+    AssertedEvidence::Ptr source(new AssertedEvidence("some named graph or just anything"));
+    reasoner.addEvidence(t1, source);
+    reasoner.addEvidence(t2, source);
+    reasoner.addEvidence(t3, source);
+
+    save(net, "0.dot");  // before inference
+    reasoner.performInference();
+    save(net, "1.dot");  // after inference
+    reasoner.removeEvidence(t2, source); // remove "B foo C"
+    reasoner.performInference();
+    save(net, "2.dot"); // after removing t2
+
+    return 0;
+}
+```
+
+
+
+The exported dot-files document the state of the rete network.
+
+After inserting the facts, but before performing inference:
+
+![img](img/0.dot.png)
+
+You can see all known triples in the AlphaMemory: Only the ones we added manually are present. But notice that the network already found two matches for our rule and added them to the last BetaMemory (read tokens from right to left). Those matches instantiate/trigger/execute the rule as follows:
+
+```
+(A rdfs:subClassOf B), (B rdfs:subClassOf C) -> (A rdfs:subClassOf C)
+(B rdfs:subClassOf C), (C rdfs:subClassOf D) -> (B rdfs:subClassOf D)
+```
+
+This is only the first step. With those new facts more inference can be done, namely:
+
+```
+(A rdfs:subClassOf C), (C rdfs:subClassOf D) -> (A rdfs:subClassOf D)
+(A rdfs:subClassOf B), (B rdfs:subClassOf D) -> (A rdfs:subClassOf D)
+```
+
+As you can see, we have created a situation where one fact `(A rdfs:subClassOf D)` is inferred on two different ways. This is the state of the network after performing inference:
+
+![img](img/1.dot.png)
+
+
+
+If we now remove our asserted triple `(B rdfs:subClassOf C)` the whole construct collapses and no inferences can be made. The evidences are removed one after the other, until the network is reset to this:
+
+![img](img/2.dot.png)
+
+
+
+> **TODO**: The reasoner does not provide an interface to access the inferred triples yet, an does not have a way to export changes (added and retracted inferences)
+>
+> **TODO**: Also, a parser for rules still needs to be implemented.

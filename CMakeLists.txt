@@ -18,6 +18,7 @@ set(SRC_FILES
     src/BetaMemory.cpp
     src/BetaNode.cpp
     src/InferredEvidence.cpp
+    src/InferTriple.cpp
     src/JoinNode.cpp
     src/Network.cpp
     src/Node.cpp

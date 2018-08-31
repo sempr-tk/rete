@@ -10,6 +10,7 @@
 #include "../include/TripleConsistency.hpp"
 #include "../include/TripleJoin.hpp"
 #include "../include/AgendaNode.hpp"
+#include "../include/InferTriple.hpp"
 
 #include "../include/Reasoner.hpp"
 #include "../include/AssertedEvidence.hpp"
@@ -17,26 +18,12 @@
 using namespace rete;
 
 
-class DummyProduction : public Production {
-public:
-    DummyProduction() : Production(0) {}
-
-    void execute(Token::Ptr token, PropagationFlag flag, std::vector<WME::Ptr>& inferred) override
-    {
-        std::cout << "DummyProduction activated for " << (flag == rete::ASSERT ? "ASSERT" : "RETRACT") << " with token " << token->toString() << std::endl;
-
-        Triple::Ptr t(new Triple(
-            "D", "foo", "A"
-        ));
-        inferred.push_back(t);
-    }
-
-    std::string getName() const override
-    {
-        return "Dummy";
-    }
-};
-
+void save(Network& net, const std::string& filename)
+{
+    std::ofstream out(filename);
+    out << net.toDot();
+    out.close();
+}
 
 int main(int argc, char** args)
 {
@@ -72,10 +59,20 @@ int main(int argc, char** args)
     BetaNode::connect(join, adapter->getBetaMemory(), foo->getAlphaMemory());
 
 
-    auto dummy = std::make_shared<DummyProduction>();
-    auto dummyNode = std::make_shared<AgendaNode>(dummy, net.getAgenda());
+    // auto infer = std::make_shared<InferTriple>(
+    //     {{1, Triple::SUBJECT}},
+    //     "foo",
+    //     {{0, Triple::OBJECT}}
+    // );
 
-    join->getBetaMemory()->addProduction(dummyNode);
+    InferTriple::Ptr infer(new InferTriple(
+        {1, Triple::SUBJECT},
+        "foo",
+        {0, Triple::OBJECT}
+    ));
+
+    auto inferNode = std::make_shared<AgendaNode>(infer, net.getAgenda());
+    join->getBetaMemory()->addProduction(inferNode);
 
     // put in some data
     auto t1 = std::make_shared<Triple>("A", "foo", "B");
@@ -87,31 +84,28 @@ int main(int argc, char** args)
     reasoner.addEvidence(t3, source);
     reasoner.addEvidence(t2, source);
 
-    // net.getRoot()->activate(t1, rete::ASSERT);
-    // net.getRoot()->activate(t3, rete::ASSERT);
-    // net.getRoot()->activate(t2, rete::ASSERT);
+
+
+    save(net, "0.dot");
+    reasoner.performInference();
+    save(net, "1.dot");
+    reasoner.removeEvidence(t2, source); // remove "B foo C"
+    reasoner.performInference();
+    save(net, "2.dot");
 
 
 
     // auto agenda = net.getAgenda();
-    // if (agenda->empty()) std::cout << "Agenda is empty." << std::endl;
     // while (!agenda->empty())
     // {
-    //     auto item = agenda->front();
-    //     agenda->pop_front();
-    //
-    //     std::vector<WME::Ptr> inferred;
-    //     std::get<1>(item)->execute(std::get<0>(item), std::get<2>(item), inferred);
+    //     reasoner.performInferenceStep();
     // }
 
-    reasoner.performInference();
 
 
     if (saveToFile)
     {
-        std::ofstream file(filename);
-        file << net.toDot();
-        file.close();
+        save(net, filename);
     }
 
     return 0;

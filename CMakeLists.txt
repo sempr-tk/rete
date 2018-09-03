@@ -33,7 +33,16 @@ set(SRC_FILES
     src/Util.cpp
     src/WME.cpp
     src/WMEComparator.cpp
+
+    src/RuleParser.cpp
+    src/RuleParserAST.cpp
+
+    # ebnf parsing
+    parserlib/source/ast.cpp
+    parserlib/source/parser.cpp
 )
+include_directories(${CMAKE_SOURCE_DIR}/parserlib/source)
+
 
 add_library(rete SHARED ${SRC_FILES})
 

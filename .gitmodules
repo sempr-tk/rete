@@ -1,0 +1,3 @@
+[submodule "parserlib"]
+	path = parserlib
+	url = https://github.com/axilmar/parserlib.git

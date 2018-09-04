@@ -1,6 +1,7 @@
 #include "../include/BetaMemory.hpp"
 #include "../include/BetaNode.hpp"
 #include "../include/ProductionNode.hpp"
+#include "../include/Util.hpp"
 
 #include <algorithm>
 
@@ -134,7 +135,7 @@ std::string BetaMemory::getDOTAttr() const
     std::string record = "";
     for (auto t : tokens_)
     {
-        record += "|" + t->toString();
+        record += "|" + util::dotEscape(t->toString());
     }
     return "[shape=record, label=\"{BetaMemory" + record + "}\"]";
 }

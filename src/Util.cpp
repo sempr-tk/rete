@@ -22,6 +22,19 @@ std::string dotEscape(const std::string& str)
         cpy.replace(i, 1, "\\\"");
         i += 2;
     }
+
+    for (size_t i = 0; (i = cpy.find("<", i)) != std::string::npos;)
+    {
+        cpy.replace(i, 1, "\\<");
+        i += 2;
+    }
+
+    for (size_t i = 0; (i = cpy.find(">", i)) != std::string::npos;)
+    {
+        cpy.replace(i, 1, "\\>");
+        i += 2;
+    }
+
     return cpy;
 }
 

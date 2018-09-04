@@ -20,7 +20,7 @@ const std::string& Triple::getField(Field f) const
 
 std::string Triple::toString() const
 {
-    return "(" + subject + ", " + predicate + ", " + object + ")";
+    return "(" + subject + " " + predicate + " " + object + ")";
 }
 
 

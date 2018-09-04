@@ -2,6 +2,7 @@
 #include "../parserlib/source/parserlib.hpp"
 #include "../include/RuleParserAST.hpp"
 #include "../include/Rete.hpp"
+#include "../include/InferTriple.hpp"
 
 #include <map>
 #include <tuple>
@@ -382,6 +383,58 @@ void construct(ast::Rule& rule, Network& net)
         ++conditionCount;
     } // end loop over condition triples
 
+
+    // 4. add the consequences to the end of the condition-chain (the betaMemory we kept track of)
+    auto consequences = rule.effects_->triples_.objects();
+    for (auto consequence : consequences)
+    {
+        auto sub = consequence->subject_;
+        auto pred = consequence->predicate_;
+        auto obj = consequence->object_;
+
+        InferTriple::ConstructHelper s, p, o;
+
+        if (sub->isVariable())
+        {
+            auto it = variableLocation.find(sub->value_);
+            if (it == variableLocation.end()) throw std::exception(); // unbound var in effect
+            size_t tokenIndex = conditionCount - (it->second.first + 1);
+            s.init(tokenIndex, it->second.second);
+        }
+        else
+        {
+            s.init(sub->value_);
+        }
+
+        if (pred->isVariable())
+        {
+            auto it = variableLocation.find(pred->value_);
+            if (it == variableLocation.end()) throw std::exception(); // unbound var in effect
+            size_t tokenIndex = conditionCount - (it->second.first + 1);
+            p.init(tokenIndex, it->second.second);
+        }
+        else
+        {
+            p.init(pred->value_);
+        }
+
+        if (obj->isVariable())
+        {
+            auto it = variableLocation.find(obj->value_);
+            if (it == variableLocation.end()) throw std::exception(); // unbound var in effect
+            size_t tokenIndex = conditionCount - (it->second.first + 1);
+            o.init(tokenIndex, it->second.second);
+        }
+        else
+        {
+            o.init(obj->value_);
+        }
+
+        // create the InferTriple production
+        InferTriple::Ptr infer(new InferTriple(s, p, o));
+        AgendaNode::Ptr inferNode(new AgendaNode(infer, net.getAgenda()));
+        betaMemory->addProduction(inferNode);
+    }
 }
 
 

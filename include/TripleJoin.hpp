@@ -4,6 +4,9 @@
 #include "JoinNode.hpp"
 #include "Triple.hpp"
 
+#include <tuple>
+#include <vector>
+
 namespace rete {
 
 /**
@@ -29,18 +32,34 @@ namespace rete {
                               [...]
 */
 class TripleJoin : public JoinNode {
-    size_t tokenIndex_;
-    Triple::Field leftField_, rightField_;
+    typedef std::tuple<size_t, Triple::Field, Triple::Field> check_t;
+    std::vector<check_t> checks_;
+
+    bool performCheck(check_t&, Token::Ptr, WME::Ptr) const;
 
     std::string getDOTAttr() const override;
 public:
     using Ptr = std::shared_ptr<TripleJoin>;
     /**
+        Constructs a TripleJoin with exactly one check to perform. To add more conditions (matches
+        between some Triple::Field somewhere in the token and a Triple::Field in WME in the alpha
+        memory) use 'addCheck'.
+
         \param tokenIndex selects a Triple for the check from the token.
         \param left selects the field of the Triple chosen by the tokenIndex from the BetaMemory.
         \param right selects the field of the Triple from the AlphaMemory.
     */
     TripleJoin(size_t tokenIndex, Triple::Field left, Triple::Field right);
+
+    /**
+        TripleJoin without any checks.
+    */
+    TripleJoin();
+
+    /**
+        Adds another join-condition. All must succeed for the join to be valid.
+    */
+    void addCheck(check_t);
 
     /**
         Checks if the Triple::Field (left) of the i'th WME in the Token (i = tokenIndex) is
@@ -53,6 +72,8 @@ public:
             ...
     */
     bool isValidCombination(Token::Ptr, WME::Ptr) override;
+
+    bool operator == (const BetaNode& other) const override;
 };
 
 } /* rete */

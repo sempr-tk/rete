@@ -27,7 +27,7 @@ int main()
     AlphaBetaAdapter::Ptr ab(new AlphaBetaAdapter());
     BetaNode::connect(ab, nullptr, a1->getAlphaMemory());
 
-    JoinNode::Ptr j1(new JoinNode());
+    JoinNode::Ptr j1(new JoinUnconditional());
     BetaNode::connect(j1, ab->getBetaMemory(), b1->getAlphaMemory());
 
 

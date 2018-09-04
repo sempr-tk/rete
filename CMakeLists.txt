@@ -20,6 +20,7 @@ set(SRC_FILES
     src/InferredEvidence.cpp
     src/InferTriple.cpp
     src/JoinNode.cpp
+    src/JoinUnconditional.cpp
     src/Network.cpp
     src/Node.cpp
     src/Production.cpp

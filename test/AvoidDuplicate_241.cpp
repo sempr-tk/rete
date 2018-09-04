@@ -34,7 +34,7 @@ int main()
     TripleJoin::Ptr j1(new TripleJoin(0, Triple::SUBJECT, Triple::SUBJECT));
     BetaNode::connect(j1, ab->getBetaMemory(), b2->getAlphaMemory());
 
-    JoinNode::Ptr j2(new JoinNode());
+    JoinNode::Ptr j2(new JoinUnconditional());
     BetaNode::connect(j2, j1->getBetaMemory(), b2->getAlphaMemory());
 
 

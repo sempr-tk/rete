@@ -7,7 +7,9 @@ namespace rete {
 
 
 /**
-    A basic JoinNode: For every token in a BetaMemory and WME in an AlphaMemory, performs a given check on every combination of Token and WME and, if it succeeds, stores a new Token containing both in its BetaMemory. The default implementation does no check at all and thus creates the complete cross product.
+    A basic JoinNode: For every token in a BetaMemory and WME in an AlphaMemory, performs a given
+    check on every combination of Token and WME and, if it succeeds, stores a new Token containing
+    both in its BetaMemory.
 */
 class JoinNode : public BetaNode {
     std::string getDOTAttr() const override;
@@ -17,9 +19,10 @@ public:
     void leftActivate(Token::Ptr, PropagationFlag) override;
 
     /**
-        Check of a token and a wme together fulfill the join condition. Override this method to implement the conditions.
+        Check if a token and a wme together fulfill the join condition. Override this method to
+        implement the conditions.
     */
-    virtual bool isValidCombination(Token::Ptr, WME::Ptr);
+    virtual bool isValidCombination(Token::Ptr, WME::Ptr) = 0;
 };
 
 } /* rete */

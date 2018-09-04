@@ -52,6 +52,13 @@ public:
     */
     BetaMemory::Ptr getBetaMemory() const;
 
+    /**
+        Compare if two BetaNodes are equivalent. This check is only based on the concrete node and
+        does *not* take the network topology into account, because it is to be used when
+        constructing the network, before connecting the node in question.
+    */
+    virtual bool operator == (const BetaNode& other) const = 0;
+
 };
 
 } /* rete */

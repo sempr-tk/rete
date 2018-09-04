@@ -3,15 +3,26 @@
 namespace rete {
 
 TripleJoin::TripleJoin(size_t tokenIndex, Triple::Field left, Triple::Field right)
-    : tokenIndex_(tokenIndex), leftField_(left), rightField_(right)
+{
+    checks_.push_back(check_t{tokenIndex, left, right});
+}
+
+TripleJoin::TripleJoin()
 {
 }
 
-bool TripleJoin::isValidCombination(Token::Ptr token, WME::Ptr rightWME)
+void TripleJoin::addCheck(check_t check)
 {
-    // travel along the token to the correct position
-    size_t cnt = tokenIndex_;
-    Token::Ptr refToken = token;
+    checks_.push_back(check);
+}
+
+bool TripleJoin::performCheck(check_t& check, Token::Ptr leftToken, WME::Ptr rightWME) const
+{
+    size_t cnt = std::get<0>(check);
+    Triple::Field leftField = std::get<1>(check);
+    Triple::Field rightField = std::get<2>(check);
+
+    Token::Ptr refToken = leftToken;
     while (cnt > 0 && refToken)
     {
         refToken = refToken->parent;
@@ -32,14 +43,45 @@ bool TripleJoin::isValidCombination(Token::Ptr token, WME::Ptr rightWME)
     if (!rightTriple) throw std::exception();
 
     // now, lets do the actual check:
-    return leftTriple->getField(leftField_) == rightTriple->getField(rightField_);
+    return leftTriple->getField(leftField) == rightTriple->getField(rightField);
+}
+
+bool TripleJoin::isValidCombination(Token::Ptr token, WME::Ptr rightWME)
+{
+    for (auto c : checks_)
+    {
+        if (!performCheck(c, token, rightWME)) return false;
+    }
+    return true;
 }
 
 std::string TripleJoin::getDOTAttr() const
 {
-    std::string left = std::to_string(tokenIndex_) + "." + Triple::fieldName(leftField_);
-    std::string right = Triple::fieldName(rightField_);
-    return "[label=\"TripleJoin\\n" + left + " == " + right + "\"]";
+    std::string label = "[label=\"TripleJoin";
+    for (auto c : checks_)
+    {
+        label += "\\n";
+        std::string left = std::to_string(std::get<0>(c)) + "." + Triple::fieldName(std::get<1>(c));
+        std::string right = Triple::fieldName(std::get<2>(c));
+        label += left + " == " + right;
+    }
+    label += "\"]";
+
+    return label;
+}
+
+bool TripleJoin::operator == (const BetaNode& other) const
+{
+    auto otherJoin = dynamic_cast<const TripleJoin*>(&other);
+    if (!otherJoin) return false;
+
+    if (otherJoin->checks_.size() != this->checks_.size()) return false;
+    for (size_t i = 0; i < checks_.size(); i++)
+    {
+        if (otherJoin->checks_[i] != this->checks_[i]) return false;
+    }
+
+    return true;
 }
 
 } /* rete */

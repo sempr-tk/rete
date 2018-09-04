@@ -48,13 +48,6 @@ void JoinNode::leftActivate(Token::Ptr token, PropagationFlag flag)
     }
 }
 
-bool JoinNode::isValidCombination(Token::Ptr, WME::Ptr)
-{
-    // basic implementation, to be overridden.
-    // --> create the full cross-product of beta and alpha memory
-    return true;
-}
-
 std::string JoinNode::getDOTAttr() const
 {
     return "[label=JoinNode]";

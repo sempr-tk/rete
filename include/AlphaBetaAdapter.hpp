@@ -27,6 +27,7 @@ public:
     */
     void leftActivate(Token::Ptr, PropagationFlag) override;
 
+    bool operator == (const BetaNode& other) const override;
 };
 
 } /* rete */

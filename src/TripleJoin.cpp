@@ -26,6 +26,7 @@ bool TripleJoin::performCheck(check_t& check, Token::Ptr leftToken, WME::Ptr rig
     while (cnt > 0 && refToken)
     {
         refToken = refToken->parent;
+        cnt--;
     }
 
     // if the token index is wrong the network is invalid...

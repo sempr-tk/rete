@@ -19,14 +19,19 @@ public:
         field to access part of the matching token.
     */
     class ConstructHelper {
-        const bool isPredefined_;
-        const std::string string_;
-        const int tokenOffset_;
-        const Triple::Field field_;
+        bool isPredefined_;
+        std::string string_;
+        int tokenOffset_;
+        Triple::Field field_;
     public:
         ConstructHelper(const std::string& predefined);
         ConstructHelper(const char* predefined);
         ConstructHelper(int offset, Triple::Field field);
+
+        ConstructHelper();
+        void init(const std::string& predefined);
+        void init(const char* predefined);
+        void init(int offset, Triple::Field field);
 
         std::string constructFrom(Token::Ptr token) const;
 

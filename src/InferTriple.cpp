@@ -19,6 +19,30 @@ InferTriple::ConstructHelper::ConstructHelper(int offset, Triple::Field field)
 {
 }
 
+InferTriple::ConstructHelper::ConstructHelper()
+    : isPredefined_(true), string_(""), tokenOffset_(0), field_(Triple::SUBJECT)
+{
+}
+
+void InferTriple::ConstructHelper::init(const std::string& predefined)
+{
+    isPredefined_ = true;
+    string_ = predefined;
+}
+
+void InferTriple::ConstructHelper::init(const char* predefined)
+{
+    isPredefined_ = true;
+    string_ = std::string(predefined);
+}
+
+void InferTriple::ConstructHelper::init(int offset, Triple::Field field)
+{
+    isPredefined_ = false;
+    tokenOffset_ = offset;
+    field_ = field;
+}
+
 std::string InferTriple::ConstructHelper::constructFrom(Token::Ptr token) const
 {
     if (isPredefined_) return string_;
@@ -41,7 +65,7 @@ std::string InferTriple::ConstructHelper::constructFrom(Token::Ptr token) const
 std::string InferTriple::ConstructHelper::getName() const
 {
     if (isPredefined_) return string_;
-    return "?";
+    return std::to_string(tokenOffset_) + "." + Triple::fieldName(field_);
 }
 
 

@@ -22,13 +22,26 @@ public:
 
     void construct(pl::ast_stack&) override
     {
+        /**
+            The pl::ast_container has member variables defining which part of the string we are
+            parsing we currently inspect, so we use it here to save this part for convenience.
+        */
         value_.insert(value_.begin(), m_begin.m_it, m_end.m_it);
     }
 };
 
+class TripleElement : public String {
+public:
+    bool isVariable() const
+    {
+        return value_.size() > 1 && value_[0] == '?';
+    }
+};
+
+
 class Triple : public pl::ast_container {
 public:
-    pl::ast_ptr<String> subject_, predicate_, object_;
+    pl::ast_ptr<TripleElement> subject_, predicate_, object_;
 
     friend std::ostream& operator << (std::ostream&, Triple&);
 };
@@ -45,7 +58,7 @@ public:
 
 class Rules : public pl::ast_container {
 public:
-    pl::ast_list<Rule> rules_;    
+    pl::ast_list<Rule> rules_;
 };
 
 } /* ast */

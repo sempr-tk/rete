@@ -30,10 +30,24 @@ void save(Network& net, const std::string& filename)
 int main()
 {
     RuleParser p;
+    Reasoner r;
 
-    // p.parseRules( "[name: (?a rdfs:subClassOf ?b), (?b rdfs:subClassOf ?c) -> (?a rdfs:subClassOf ?c)]");
+    p.parseRules(
+        "[(?a <subClassOf> ?b), (?b <subClassOf> ?c) -> (?a <subClassOf> ?c)]" \
+        "[(?a <subClassOf> ?b), (?b <subClassOf> ?c), (?a <foo> <bar>) -> (?a <foo> <bar>)]" \
+        "[(?x <subClassOf> ?y), (?z <foo> <bar>) -> (<something> <very> <strange>)]",
+    r.net());
 
-    p.parseRules( "[(_:a <b> \n <c>), \n (<c> <b> <e>) -> \n \t(<a> <b> <e>)]\n");
+    Triple::Ptr t1(new Triple("<a>", "<subClassOf>", "<b>"));
+    Triple::Ptr t2(new Triple("<b>", "<subClassOf>", "<c>"));
+    Triple::Ptr t3(new Triple("<c>", "<foo>", "<bar>"));
+
+    r.addEvidence(t1, AssertedEvidence::Ptr(new AssertedEvidence("")));
+    r.addEvidence(t2, AssertedEvidence::Ptr(new AssertedEvidence("")));
+    r.addEvidence(t3, AssertedEvidence::Ptr(new AssertedEvidence("")));
+
+
+    save(r.net(), "parsed.dot");
 
     return 0;
 }

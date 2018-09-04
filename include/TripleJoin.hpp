@@ -32,7 +32,10 @@ namespace rete {
                               [...]
 */
 class TripleJoin : public JoinNode {
+public:
     typedef std::tuple<size_t, Triple::Field, Triple::Field> check_t;
+    
+private:
     std::vector<check_t> checks_;
 
     bool performCheck(check_t&, Token::Ptr, WME::Ptr) const;

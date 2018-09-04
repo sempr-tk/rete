@@ -35,6 +35,11 @@ bool Network::DummyAlpha::operator == (const AlphaNode& other) const
     return (dynamic_cast<const Network::DummyAlpha*>(&other) != nullptr);
 }
 
+std::string Network::DummyAlpha::getDOTAttr() const
+{
+    return "[label=Root]";
+}
+
 
 Network::Network()
     : root_(new Network::DummyAlpha()), agenda_(new Agenda())
@@ -66,6 +71,7 @@ std::string Network::toDot() const
     std::vector<AlphaNode::Ptr> toVisitANodes;
 
     toVisitANodes.push_back(root_);
+    dot += drawNode(root_);
 
     while (!toVisitANodes.empty())
     {

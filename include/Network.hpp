@@ -26,7 +26,8 @@ class Network {
     public:
         using Ptr = std::shared_ptr<DummyAlpha>;
         void activate(WME::Ptr, PropagationFlag) override;
-        virtual bool operator == (const AlphaNode& other) const override;
+        bool operator == (const AlphaNode& other) const override;
+        std::string getDOTAttr() const override;
     };
 
     // the root node, where the whole network is hinged on

@@ -22,6 +22,16 @@ void BetaNode::connect(BetaNode::Ptr node, BetaMemory::Ptr bmem, AlphaMemory::Pt
 }
 
 
+BetaMemory::Ptr BetaNode::getParentBeta() const
+{
+    return parentBeta_;
+}
+
+AlphaMemory::Ptr BetaNode::getParentAlpha() const
+{
+    return parentAlpha_;
+}
+
 BetaMemory::Ptr BetaNode::getBetaMemory() const
 {
     return bmem_;

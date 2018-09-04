@@ -53,6 +53,16 @@ public:
     BetaMemory::Ptr getBetaMemory() const;
 
     /**
+        Get the parent alpha memory
+    */
+    AlphaMemoryPtr getParentAlpha() const;
+
+    /**
+        Get the parent beta memory
+    */
+    BetaMemory::Ptr getParentBeta() const;
+
+    /**
         Compare if two BetaNodes are equivalent. This check is only based on the concrete node and
         does *not* take the network topology into account, because it is to be used when
         constructing the network, before connecting the node in question.

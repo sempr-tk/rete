@@ -64,8 +64,8 @@ You can convert the dot-file to a png using
 ```
 dot -Tpng network.dot > network.png
 ```
-which will give you something like this:
-![Alt text](example.png)
+which will give you something like this (old picture, see sections RuleParser/Reasoner for newer images):
+![Alt text](img/example.png)
 
 
 
@@ -239,5 +239,60 @@ If we now remove our asserted triple `(B rdfs:subClassOf C)` the whole construct
 
 
 > **TODO**: The reasoner does not provide an interface to access the inferred triples yet, an does not have a way to export changes (added and retracted inferences)
->
-> **TODO**: Also, a parser for rules still needs to be implemented.
+
+
+
+### RuleParser
+
+Of course, constructing the network manually in the is cumbersome. It would be way more convenient to write rules in a simple, text based structure, and let the network be constructed automatically from those rules. This is where the  `rete::RuleParser` comes in: It takes a string as an input, parses is according to the grammar described below, and constructs a rete network from the input, reusing nodes when possible (with limitations).
+
+The grammar is defined in EBNF, for the complete definition see `RuleParser.cpp`. The main parts of it are as follows:
+
+```
+subject   ::= variable | iriref | blank_node_label
+predicate ::= variable | iriref
+object    ::= variable | iriref | blank_node_label | literal
+
+triple    ::= '(' subject predicate object ')'
+triples   ::= triple (',' triple)*
+rule      ::= '[' triples '->' triples ']'
+rules     ::= rule+
+```
+
+
+
+As an example, some non-sense rules and the created network are shown below:
+
+```c++
+int main()
+{
+  RuleParser p;
+  Reasoner reasoner;
+  Network& net = reasoner.net();
+
+  p.parseRules(
+   "[(?a <subClassOf> ?b), (?b <subClassOf> ?c) -> (?a <subClassOf> ?c)]" \
+   \
+   "[(?x <subClassOf> ?y), (?y <subClassOf> ?z),(?z <knows> ?p), (?p <type> <person>)" \
+   "  -> (?x <knowsPerson> ?p)]" \
+   \
+   "[(?foo <type> <person>), (<person> <subClassOf> ?class) -> (?foo <type> ?class)]",
+   reasoner.net()
+  );
+  save(net, "complexExample.dot");
+  return 0;
+}
+```
+
+The three rules, stating that
+
+1. If a is subclass of b, and b subclass of c then a is subclass of c, too.
+2. If the conditions in 1. hold, and c (here: z) 'knows' a person p, then a (here: x) 'knows' p, too.
+3. if foo is a person, and person is a subclass of some class, then foo is of that class, too.
+
+result in the following network:
+
+![img](img/complexExample.png)
+
+
+

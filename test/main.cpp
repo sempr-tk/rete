@@ -30,24 +30,21 @@ void save(Network& net, const std::string& filename)
 int main()
 {
     RuleParser p;
-    Reasoner r;
+    Reasoner reasoner;
+    Network& net = reasoner.net();
 
     p.parseRules(
         "[(?a <subClassOf> ?b), (?b <subClassOf> ?c) -> (?a <subClassOf> ?c)]" \
-        "[(?a <subClassOf> ?b), (?b <subClassOf> ?c), (?a <foo> <bar>) -> (?a <foo> <bar>)]" \
-        "[(?x <subClassOf> ?y), (?z <foo> <bar>) -> (<something> <very> <strange>)]",
-    r.net());
-
-    Triple::Ptr t1(new Triple("<a>", "<subClassOf>", "<b>"));
-    Triple::Ptr t2(new Triple("<b>", "<subClassOf>", "<c>"));
-    Triple::Ptr t3(new Triple("<c>", "<foo>", "<bar>"));
-
-    r.addEvidence(t1, AssertedEvidence::Ptr(new AssertedEvidence("")));
-    r.addEvidence(t2, AssertedEvidence::Ptr(new AssertedEvidence("")));
-    r.addEvidence(t3, AssertedEvidence::Ptr(new AssertedEvidence("")));
+        \
+        "[(?x <subClassOf> ?y), (?y <subClassOf> ?z),(?z <knows> ?p), (?p <type> <person>)" \
+        "  -> (?x <knowsPerson> ?p)]" \
+        \
+        "[(?someone <type> <person>), (<person> <subClassOf> ?class) -> (?someone <type> ?class)]",
+        reasoner.net()
+    );
 
 
-    save(r.net(), "parsed.dot");
+    save(net, "complexExample.dot");
 
     return 0;
 }

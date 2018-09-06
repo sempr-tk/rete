@@ -38,6 +38,13 @@ public:
     */
     void removeEvidence(Evidence::Ptr) const;
 
+    /**
+        Allow iteration over evidences
+    */
+    typedef decltype(evidences_.begin()) Iterator;
+    Iterator begin() const;
+    Iterator end() const;
+
 
     /**
         Compare two BackedWMEs by simply checking if the WME is the same

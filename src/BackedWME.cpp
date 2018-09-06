@@ -35,6 +35,16 @@ void BackedWME::removeEvidence(Evidence::Ptr e) const
 }
 
 
+BackedWME::Iterator BackedWME::begin() const
+{
+    return evidences_.begin();
+}
+
+BackedWME::Iterator BackedWME::end() const
+{
+    return evidences_.end();
+}
+
 bool BackedWME::SameWME::operator() (const BackedWME& a, const BackedWME& b) const
 {
     return *a.wme_ < *b.wme_;

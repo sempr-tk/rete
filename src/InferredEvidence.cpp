@@ -20,4 +20,9 @@ std::string InferredEvidence::toString() const
     return "Inferred by " + production_->getName() + " from " + token_->toString();
 }
 
+Token::Ptr InferredEvidence::token() const
+{
+    return token_;
+}
+
 } /* rete */

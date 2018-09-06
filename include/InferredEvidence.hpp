@@ -15,6 +15,8 @@ public:
     bool operator == (const Evidence& other) const override;
 
     std::string toString() const override;
+
+    Token::Ptr token() const;
 };
 
 } /* rete */

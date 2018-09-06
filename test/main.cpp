@@ -34,17 +34,23 @@ int main()
     Network& net = reasoner.net();
 
     p.parseRules(
-        "[(?a <subClassOf> ?b), (?b <subClassOf> ?c) -> (?a <subClassOf> ?c)]" \
-        \
-        "[(?x <subClassOf> ?y), (?y <subClassOf> ?z),(?z <knows> ?p), (?p <type> <person>)" \
-        "  -> (?x <knowsPerson> ?p)]" \
-        \
-        "[(?someone <type> <person>), (<person> <subClassOf> ?class) -> (?someone <type> ?class)]",
+        "[(?a <equivalent> ?b), (?x <type> ?a) -> (?x <type> ?b)]" \
+        "[(?a <equivalent> ?b) -> (?b <equivalent> ?a)]",
         reasoner.net()
     );
 
 
-    save(net, "complexExample.dot");
+
+    auto source = std::make_shared<AssertedEvidence>("");
+    auto t1 = std::make_shared<Triple>("<A>", "<equivalent>", "<B>");
+    reasoner.addEvidence(t1, source);
+
+    save(net, "equiv0.dot");
+    reasoner.performInference();
+    save(net, "equiv1.dot");
+    reasoner.removeEvidence(t1, source);
+    reasoner.performInference();
+    save(net, "equiv2.dot");
 
     return 0;
 }

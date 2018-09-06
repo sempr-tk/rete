@@ -35,7 +35,8 @@ int main()
 
     p.parseRules(
         "[(?a <equivalent> ?b), (?x <type> ?a) -> (?x <type> ?b)]" \
-        "[(?a <equivalent> ?b) -> (?b <equivalent> ?a)]",
+        "[(?a <equivalent> ?b) -> (?b <equivalent> ?a)]"\
+        "[(<A> <equivalent> <B>) -> (<its> <a> <test>)]",
         reasoner.net()
     );
 

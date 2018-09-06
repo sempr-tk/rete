@@ -15,4 +15,9 @@ bool AssertedEvidence::operator==(const Evidence& other) const
     return o->source_ == source_;
 }
 
+std::string AssertedEvidence::toString() const
+{
+    return "Asserted(" + source_ + ")";
+}
+
 } /* rete */

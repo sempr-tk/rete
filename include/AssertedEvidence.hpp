@@ -11,7 +11,9 @@ class AssertedEvidence : public Evidence {
     const std::string source_;
 public:
     AssertedEvidence(const std::string&);
-    bool operator == (const Evidence& other) const;
+    bool operator == (const Evidence& other) const override;
+
+    std::string toString() const override;
 };
 
 } /* rete */

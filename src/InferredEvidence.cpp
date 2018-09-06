@@ -15,4 +15,9 @@ bool InferredEvidence::operator==(const Evidence& other) const
     return token_ == o->token_ && production_ == o->production_;
 }
 
+std::string InferredEvidence::toString() const
+{
+    return "Inferred by " + production_->getName() + " from " + token_->toString();
+}
+
 } /* rete */

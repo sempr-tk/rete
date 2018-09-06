@@ -14,6 +14,8 @@ public:
     using Ptr = std::shared_ptr<Evidence>;
     virtual bool operator == (const Evidence& other) const = 0;
     virtual ~Evidence() = default;
+
+    virtual std::string toString() const = 0;
 };
 
 } /* rete */

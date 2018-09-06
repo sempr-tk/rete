@@ -12,7 +12,9 @@ class InferredEvidence : public Evidence {
     const Production::Ptr production_;
 public:
     InferredEvidence(const Token::Ptr& token, const Production::Ptr& production);
-    bool operator == (const Evidence& other) const;
+    bool operator == (const Evidence& other) const override;
+
+    std::string toString() const override;
 };
 
 } /* rete */

@@ -136,7 +136,7 @@ void Reasoner::cleanupInferenceLoops(WME::Ptr entryPoint)
         for (auto wme : notHolding)
         {
             std::cout << "  " << wme->toString() << std::endl;
-            remove(entryPoint);
+            remove(wme);
         }
 
     }

@@ -1,0 +1,40 @@
+before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq g++ cmake
+
+stages:
+    - build
+    - test
+
+
+build:
+    stage: build
+    script:
+    - git submodule init
+    - git submodule update
+    - mkdir build && cd build
+    - cmake ..
+    - make -j8
+    artifacts:
+        paths:
+        - build/
+        expire_in: 1 hour
+
+test:
+    stage: test
+    script:
+    - cd build
+    - make test
+
+
+
+software_catalogue_entry:
+    image: d-reg.hb.dfki.de:5000/ubuntu:overview_generator
+    stage: deploy
+    script:
+    - apt update
+    - apt install -y wget
+    - wget http://bob.dfki.uni-bremen.de/software_overview/generate.sh
+    - sh generate.sh $CI_PROJECT_NAMESPACE $CI_PROJECT_NAME $CI_PROJECT_URL
+    only:
+    - master

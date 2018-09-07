@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<package>
+    <description brief="rete matching and rule reasoning">
+        This project implements the guts of an rete matching algorithm: All the base classes for
+        Alpha- and Beta-Nodes and -Memories, WorkingMemoryElements, Tokens and ProductionNodes.
+        A sample implementation of the abstract classes is given to process RDF Triples.
+
+        Furthermore, it contains a rule reasoner based on the rete network that keeps track of the
+        origins of facts (WMEs) and can handle retraction of facts.
+    </description>
+
+    <author>Nils Niemann/nils.niemann@dfki.de</author>
+    <maintainer>Nils Niemann/nils.niemann@dfki.de</maintainer>
+    <license>New BSD</license>
+    <url>https://git.hb.dfki.de/nniemann/rete</url>
+
+    <keywords>
+        <keyword>reasoning</keyword>
+        <keyword>rete</keyword>
+        <keyword>rules</keyword>
+        <keyword>inference</keyword>
+        <keyword>pattern matching</keyword>
+    </keywords>
+    <stage>-1</stage>
+
+    <activity>active</activity>
+</package>

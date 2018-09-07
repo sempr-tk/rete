@@ -2,6 +2,7 @@
 #define RETE_REASONER_HPP_
 
 #include <set>
+#include <functional>
 
 #include "Network.hpp"
 #include "BackedWME.hpp"
@@ -19,6 +20,7 @@ namespace rete {
 class Reasoner {
     std::set<BackedWME, BackedWME::SameWME> backedWMEs_;
     Network rete_;
+    std::function<void(WME::Ptr, rete::PropagationFlag)> callback_;
 public:
 
     /**
@@ -55,7 +57,10 @@ public:
     */
     void removeEvidence(WME::Ptr, Evidence::Ptr evidence);
 
-    // TODO: provide some kind of changelog or callback
+    /**
+        Set a function to call when a new value is inferred or removed
+    */
+    void setCallback(std::function<void(WME::Ptr, rete::PropagationFlag)>);
 
 private:
 

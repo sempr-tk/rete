@@ -12,6 +12,11 @@ Network& Reasoner::net()
     return rete_;
 }
 
+void Reasoner::setCallback(std::function<void(WME::Ptr, rete::PropagationFlag)> fn)
+{
+    callback_ = fn;
+}
+
 void Reasoner::performInferenceStep()
 {
     auto agenda = rete_.getAgenda();
@@ -50,6 +55,7 @@ void Reasoner::performInferenceStep()
             {
                 std::cout << it->getWME()->toString() << " is no longer backed! FOO" << std::endl;
                 rete_.getRoot()->activate(it->getWME(), rete::RETRACT);
+                if (callback_) callback_(it->getWME(), rete::RETRACT);
                 it = backedWMEs_.erase(it);
             } else {
                 std::cout << it->getWME()->toString() << " is still backed FOO:" << std::endl;
@@ -79,6 +85,14 @@ void Reasoner::addEvidence(WME::Ptr wme, Evidence::Ptr evidence)
     BackedWME nBacked(wme);
     auto p = backedWMEs_.insert(nBacked);
     p.first->addEvidence(evidence); // whether new or old, add the evidence.
+
+    // callback
+    if (p.second)
+    {
+        // its a new one!
+        if(callback_) callback_(wme, rete::ASSERT);
+    }
+
     // announce to rete
     rete_.getRoot()->activate(wme, rete::ASSERT);
 }
@@ -96,6 +110,9 @@ void Reasoner::removeEvidence(WME::Ptr wme, Evidence::Ptr evidence)
 
             // lost all evidence --> remove WME!
             rete_.getRoot()->activate(it->getWME(), rete::RETRACT);
+
+            if (callback_) callback_(it->getWME(), rete::RETRACT);
+
             backedWMEs_.erase(it);
         } else {
             std::cout << it->getWME()->toString() << " is still backed:" << std::endl;
@@ -202,6 +219,8 @@ void Reasoner::remove(WME::Ptr fact)
     backedWMEs_.erase(backed);
 
     rete_.getRoot()->activate(fact, rete::RETRACT);
+
+    if (callback_) callback_(fact, rete::RETRACT);
 }
 
 } /* rete */

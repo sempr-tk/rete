@@ -36,11 +36,18 @@ int main()
     p.parseRules(
         "[(?a <equivalent> ?b), (?x <type> ?a) -> (?x <type> ?b)]" \
         "[(?a <equivalent> ?b) -> (?b <equivalent> ?a)]"\
-        "[(<A> <equivalent> <B>) -> (<its> <a> <test>)]",
+        "[(<A> <equivalent> <B>) -> (<its> <a> <test>)]" \
+        "[(<its> <a> <test>) -> (<its> <a> <test>)]",
         reasoner.net()
     );
 
+    auto print = [](WME::Ptr wme, rete::PropagationFlag flag)
+    {
+        std::cout   << (flag == rete::ASSERT ? "asserted " : "retracted ")
+                    << wme->toString() << std::endl;
+    };
 
+    reasoner.setCallback(print);
 
     auto source = std::make_shared<AssertedEvidence>("");
     auto t1 = std::make_shared<Triple>("<A>", "<equivalent>", "<B>");

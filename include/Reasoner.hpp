@@ -1,11 +1,13 @@
 #ifndef RETE_REASONER_HPP_
 #define RETE_REASONER_HPP_
 
+#include <map>
 #include <set>
 #include <functional>
 
 #include "Network.hpp"
 #include "BackedWME.hpp"
+#include "EvidenceComparator.hpp"
 
 namespace rete {
 
@@ -21,6 +23,11 @@ class Reasoner {
     std::set<BackedWME, BackedWME::SameWME> backedWMEs_;
     Network rete_;
     std::function<void(WME::Ptr, rete::PropagationFlag)> callback_;
+
+    /**
+        Index to easily find all WMEs that are backed by a given evidence.
+    */
+    std::map<Evidence::Ptr, std::vector<WME::Ptr>, EvidenceComparator> evidenceToWME_;
 public:
 
     /**
@@ -56,6 +63,16 @@ public:
         agenda.
     */
     void removeEvidence(WME::Ptr, Evidence::Ptr evidence);
+
+    /**
+        Remove the given evidence from every WME that was backed by it.
+        You want to use this method when you remove a complete source for WMEs, e.g. an
+        OWL-document with many triples is unloaded, or the internal rete engine notices that a
+        previously matching pattern has to be retracted and everything that was backed by it must
+        be removed. If you just want to modify a source, say, remove a single triple from a larger
+        document, use 'removeEvidence(WME::Ptr, Evidence::Ptr)'.
+    */
+    void removeEvidence(Evidence::Ptr evidence);
 
     /**
         Set a function to call when a new value is inferred or removed

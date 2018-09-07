@@ -4,6 +4,7 @@
 #include "../include/AssertedEvidence.hpp"
 
 #include <iostream>
+#include <algorithm>
 
 namespace rete {
 
@@ -43,29 +44,10 @@ void Reasoner::performInferenceStep()
     }
     else if (flag == rete::RETRACT)
     {
-
-        // what to do?
-        // --> find all WMEs that are backed by this evidence (token & production) and remove the corresponding evidence!
-        // TODO: Traversing ALL wmes seems a bit heavy, can this be improved in any way? I remember that the reference paper mentioned references at WMEs in which tokens they are used etc, for a tree-based removal (?). Can this be transferred to the reasoner-world, too? Or used for some indexing?
+        // remove this evidence completely, which triggers updates in the rete net and therefore in
+        // the agenda, too
         Evidence::Ptr evidence(new InferredEvidence(token, production));
-        for (auto it = backedWMEs_.begin(); it != backedWMEs_.end();)
-        {
-            it->removeEvidence(evidence);
-            if (!it->isBacked())
-            {
-                std::cout << it->getWME()->toString() << " is no longer backed! FOO" << std::endl;
-                rete_.getRoot()->activate(it->getWME(), rete::RETRACT);
-                if (callback_) callback_(it->getWME(), rete::RETRACT);
-                it = backedWMEs_.erase(it);
-            } else {
-                std::cout << it->getWME()->toString() << " is still backed FOO:" << std::endl;
-                for (auto ev : *it)
-                {
-                    std::cout << "  " << ev->toString() << std::endl;
-                }
-                ++it;
-            }
-        }
+        removeEvidence(evidence);
     }
 }
 
@@ -89,12 +71,38 @@ void Reasoner::addEvidence(WME::Ptr wme, Evidence::Ptr evidence)
     // callback
     if (p.second)
     {
-        // its a new one!
+        // its a new WME!
         if(callback_) callback_(wme, rete::ASSERT);
     }
 
+    // remember that the evidence is used to back the WME (indexing)
+    evidenceToWME_[evidence].push_back(wme);
+
     // announce to rete
     rete_.getRoot()->activate(wme, rete::ASSERT);
+}
+
+void Reasoner::removeEvidence(Evidence::Ptr evidence)
+{
+    auto it = evidenceToWME_.find(evidence);
+    if (it == evidenceToWME_.end())
+    {
+        // this evidence backs nothing.
+    }
+    else
+    {
+        // completely remove the evidence from the index, but we still need to work with all the
+        // WMEs that are backed by it. Removing the entry before iterating shortens the checks in
+        // removeEvidence(wme, evidence) when the index is updated.
+        std::vector<WME::Ptr> wmes;
+        it->second.swap(wmes);
+        evidenceToWME_.erase(it);
+
+        for (auto wme : wmes)
+        {
+            removeEvidence(wme, evidence);
+        }
+    }
 }
 
 void Reasoner::removeEvidence(WME::Ptr wme, Evidence::Ptr evidence)
@@ -104,27 +112,30 @@ void Reasoner::removeEvidence(WME::Ptr wme, Evidence::Ptr evidence)
     if (it != backedWMEs_.end())
     {
         it->removeEvidence(evidence);
+
+        // also, update the index:
+        auto indexIt = evidenceToWME_.find(evidence);
+        if (indexIt != evidenceToWME_.end())
+        {
+            auto vIt = std::remove_if(indexIt->second.begin(), indexIt->second.end(),
+                                        [wme](WME::Ptr w) -> bool
+                                        {
+                                            return *w == *wme;
+                                        }
+                                    );
+            indexIt->second.erase(vIt, indexIt->second.end());
+        }
+
+        // now, can we already remove the WME?
         if (!it->isBacked())
         {
-            std::cout << it->getWME()->toString() << " is no longer backed!" << std::endl;
-
             // lost all evidence --> remove WME!
-            rete_.getRoot()->activate(it->getWME(), rete::RETRACT);
-
-            if (callback_) callback_(it->getWME(), rete::RETRACT);
-
+            rete_.getRoot()->activate(wme, rete::RETRACT);
+            if (callback_) callback_(wme, rete::RETRACT);
             backedWMEs_.erase(it);
         } else {
-            std::cout << it->getWME()->toString() << " is still backed:" << std::endl;
-            for (auto ev : *it)
-            {
-                std::cout << "  " << ev->toString() << std::endl;
-            }
-
-            std::cout << "But really? Lets check!" << std::endl;
-            cleanupInferenceLoops(it->getWME());
-
-            ++it;
+            // the WME seems to be still backed -- but really? check and clean up loops!
+            cleanupInferenceLoops(wme);
         }
     }
     else
@@ -148,8 +159,7 @@ void Reasoner::cleanupInferenceLoops(WME::Ptr entryPoint)
     bool holds = checkIfFactHolds(entryPoint, notHolding);
     if (!holds)
     {
-        // TODO
-        std::cout << "FOUND A CIRCLE! " << entryPoint->toString() << " does not hold anymore, as well as: " << std::endl;
+        std::cout << "FOUND A CIRCLE! These WMEs do not hold anymore:" << std::endl;
         for (auto wme : notHolding)
         {
             std::cout << "  " << wme->toString() << std::endl;

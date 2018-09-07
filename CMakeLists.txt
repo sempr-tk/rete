@@ -17,6 +17,7 @@ set(SRC_FILES
     src/BetaComparator.cpp
     src/BetaMemory.cpp
     src/BetaNode.cpp
+    src/EvidenceComparator.cpp
     src/InferredEvidence.cpp
     src/InferTriple.cpp
     src/JoinNode.cpp

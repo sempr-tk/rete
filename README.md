@@ -80,7 +80,7 @@ To manage the known facts and multiple sources (assertions or inference chains) 
 Evidences, or rather **proof**s  (*Todo: Change the name?*) are the reasons why a WME is still kept in the knowledge base. They can be **AssertedEvidence** which is given externally, or **InferredEvidence** which describes which production created the WME from which match. Keeping track of evidences has two major advantages:
 
 1. It allows us to inspect where some knowledge comes from. We can now follow the chain of inference back to its origin, and display which rules and matches lead to the final result.
-2. When multiple rules and/or matches result in the same inferred WME and one source/evidence is retracted, we can still keep it.
+2. When multiple rules and/or matches result in the same inferred WME and one source/evidence is retracted, we can still keep it. _(It is a bit more complicated than this, please read_ **Managing inferred knowledge** _below)_
 
 Of course, this bookkeeping results in some overhead, but is IMHO necessary to correctly handle the removal of formerly valid knowledge.
 
@@ -94,7 +94,54 @@ The reasoner contains two things: A rete network and a set of BackedWMEs. It all
 
 "Executing an AgendaItem" means to call the `execute` method of its production with the provided token and the propagation flag. In case the flag is "ASSERTED" we are performing normal forward inference, and the production is allowed to infer new WMEs. When the flag is "RETRACTED" this is not possible, as the only token we have as a "reason" is currently being removed from the knowledge base. If you want to infer knowledge from the absence of WMEs / tokens, consider implementing negative nodes in the rete network.
 
+### Managing inferred knowledge
 
+When working in a completely monotonic domain, i.e. you only ever add facts to your knowledge base but never remove them, managing the knowledge is easy as you just have to keep a list of the inferred statements. But in general things are not monotonic: A robot environment changes, things appear and disappear, and maybe you even have some rules that infer things when there is _no match_ for some pattern. As soon as you add a fact that leads to a positive match of that pattern you will need to retract a fact. But not so fast! Do you _really_ need to retract it, or are there different paths to infer the fact, and some of them might still be valid?
+
+To handle this problem, the reasoner keeps track of the different sources for a WME. When removing one source, one evidence for a WME the intuitive way is to check if there is still another evidence remaining, and if yes, do not remove it. But this is not entirely correct: We have to consider loops in the inference chain. One simple example is an "equivalent" relation, a symmetric property:
+
+```
+(?a <equivalent> ?b) -> (?b <equivalent> ?a)
+```
+
+When you add the fact `(<A> <equivalent> <B>)` you get the following evidences:
+
+```
+(<A> <equivalent> <B>) <- asserted
+(<B> <equivalent> <A>) <- (<A> <equivalent> <B>)
+(<A> <equivalent> <B>) <- (<B> <equivalent> <A>)
+```
+
+If you now remove the assertion, both facts have remaining evidence -- but they form a cycle.
+
+```
+(<B> <equivalent> <A>) <- (<A> <equivalent> <B>)
+(<A> <equivalent> <B>) <- (<B> <equivalent> <A>)
+```
+
+There can be other, more complex examples. Maybe you have some rules that implicitly express that if any of `n` facts hold, all the others hold, too, through a cycle:
+
+```
+[1] -> [2]
+[2] -> [3]
+...
+[10] -> [1]
+```
+
+And you may have other rules to infer some of these facts:
+
+```
+[X] -> [5]
+```
+
+As soon as you add `[X]`, the whole cycle will be inferred. And when you remove `[X]` again, this cycle must be detected and torn down.
+
+Therefore, whenever an evidence is removed, be it from the outside or internally through inferencing, a  check is performed starting from the fact for which the evidence is removed. The goal is not to traverse the whole graph and find all cycles, but to confirm that the one affected fact is still grounded in assertions. To do so, the following algorithm is implemented:
+
+Assume that the fact does not hold and check if any of its evidences is still valid under this assumption.  If any of it is we are good, and do not need to remove the fact. If none is, all the evidences for the fact rely in some way on the fact itself, so we have a cycle to tear down.
+An evidence is valid if it is an AssertedEvidence, or an InferredEvidence for which all WMEs/facts involved still hold. To check the facts in the InferredEvidence, the algorithm recurses, adding the facts to this list of facts we assume to not hold, in order to break any cycle. If a fact is found to be valid it is again removed from the list. At the end of the algorithm we know if the fact we wanted to check is still valid, and if not we also have a list of facts that do not hold anymore and are part of the cycle that held the original fact alive. All those facts are removed from the reasoner and the rete network, and thus evidences containing these facts are removed, too, and the whole process recurses until the network is consistent again, where all inferred facts can be tracked down to external assertions.
+
+Yes this is overhead. But necessary.
 
 ## Reasoning with RDF triples
 

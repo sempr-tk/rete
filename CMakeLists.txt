@@ -61,6 +61,18 @@ add_executable(TripleJoinTest test/TripleJoinTest.cpp)
 target_link_libraries(TripleJoinTest rete)
 add_test(NAME TripleJoinTest COMMAND TripleJoinTest)
 
+add_executable(RemoveCycle1 test/RemoveCycle1.cpp)
+target_link_libraries(RemoveCycle1 rete)
+add_test(NAME RemoveCycle1 COMMAND RemoveCycle1)
+
+add_executable(RemoveCycle2 test/RemoveCycle2.cpp)
+target_link_libraries(RemoveCycle2 rete)
+add_test(NAME RemoveCycle2 COMMAND RemoveCycle2)
+
+add_executable(RemoveCycle3 test/RemoveCycle3.cpp)
+target_link_libraries(RemoveCycle3 rete)
+add_test(NAME RemoveCycle3 COMMAND RemoveCycle3)
+
 add_executable(test_rete test/main.cpp)
 target_link_libraries(test_rete rete)
 add_test(NAME main COMMAND test_rete)

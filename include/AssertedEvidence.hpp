@@ -12,6 +12,7 @@ class AssertedEvidence : public Evidence {
 public:
     AssertedEvidence(const std::string&);
     bool operator == (const Evidence& other) const override;
+    bool operator < (const Evidence& other) const override;
 
     std::string toString() const override;
 };

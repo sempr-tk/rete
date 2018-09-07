@@ -13,6 +13,7 @@ class InferredEvidence : public Evidence {
 public:
     InferredEvidence(const Token::Ptr& token, const Production::Ptr& production);
     bool operator == (const Evidence& other) const override;
+    bool operator < (const Evidence& other) const override;
 
     std::string toString() const override;
 

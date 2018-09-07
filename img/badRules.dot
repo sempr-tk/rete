@@ -1,0 +1,53 @@
+digraph graphname { 
+graph [fontname = "Ubuntu Mono"]
+node  [fontname = "Ubuntu Mono"]
+"0x72ac20" [label=Root];
+"0x72d120" [label="TripleCheck\n (?pred == \<foo\>)"];
+"0x72ac20" -> "0x72d120";
+"0x72d3e0" [label="TripleCheck\n (?pred == \<bar\>)"];
+"0x72ac20" -> "0x72d3e0";
+"0x72d6a0" [label="TripleCheck\n (?pred == \<baz\>)"];
+"0x72ac20" -> "0x72d6a0";
+"0x72eb90" [label="TripleCheck\n (?pred == \<zab\>)"];
+"0x72ac20" -> "0x72eb90";
+"0x72ebf0" [shape=record, label="{AlphaMemory}"];
+"0x72eb90" -> "0x72ebf0";
+"0x72e460" [shape=record, label="{AlphaMemory}"];
+"0x72d6a0" -> "0x72e460";
+"0x72d4b0" [shape=record, label="{AlphaMemory}"];
+"0x72d3e0" -> "0x72d4b0";
+"0x72d1c0" [shape=record, label="{AlphaMemory}"];
+"0x72d120" -> "0x72d1c0";
+"0x72d1c0" -> "0x72d2e0";
+"0x72d2e0" [label="AB-Adapter"];
+"0x72d1c0" -> "0x72ea30";
+"0x72ea30" [label="TripleJoin\n0.?sub == ?obj"];
+"0x72d4b0" -> "0x72d510";
+"0x72d510" [label="TripleJoin\n0.?obj == ?sub"];
+"0x72d4b0" -> "0x72e9b0";
+"0x72e9b0" [label="AB-Adapter"];
+"0x72e460" -> "0x72e4e0";
+"0x72e4e0" [label="TripleJoin\n0.?obj == ?sub"];
+"0x72ebf0" -> "0x72ec50";
+"0x72ec50" [label="TripleJoin\n1.?obj == ?sub"];
+"0x72ecb0" [shape=record, label="{BetaMemory}"];
+"0x72ec50" -> "0x72ecb0";
+"0x72ef00" [label="AgendaNode\nInferTriple (1.?sub \<foozab\> 0.?obj)"];
+"0x72ecb0" -> "0x72ef00";
+"0x72e540" [shape=record, label="{BetaMemory}"];
+"0x72e4e0" -> "0x72e540";
+"0x72e3e0" [label="AgendaNode\nInferTriple (2.?sub \<foobaz\> 0.?obj)"];
+"0x72e540" -> "0x72e3e0";
+"0x72e950" [shape=record, label="{BetaMemory}"];
+"0x72e9b0" -> "0x72e950";
+"0x72e950" -> "0x72ea30";
+"0x72d570" [shape=record, label="{BetaMemory}"];
+"0x72d510" -> "0x72d570";
+"0x72d570" -> "0x72e4e0";
+"0x72ead0" [shape=record, label="{BetaMemory}"];
+"0x72ea30" -> "0x72ead0";
+"0x72ead0" -> "0x72ec50";
+"0x72d320" [shape=record, label="{BetaMemory}"];
+"0x72d2e0" -> "0x72d320";
+"0x72d320" -> "0x72d510";
+}

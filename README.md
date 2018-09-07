@@ -343,3 +343,63 @@ result in the following network:
 
 
 
+#### Efficient rule design
+
+When designing your own rules, you should be aware of how they get evaluated, and how to optimize the process. The main point to focus on is that the rules are constructed from left to right, and that this is also the order of evaluation of the conditions and consequences inside a rule -- but you should not make assumptions on the evaluation of the rules themselves. The nodes that describe the conditions are shared between the rules.
+
+What does this mean for an efficient rule design?
+
+1. Avoid unconditional joins: Every time you introduce a condition with no previously used variables you create an unconditional join, which can be quite costly, as it creates matches from the cross-product of the two sets of sub-matches.
+2. If you implement builtins that do a lot of processing you might want to place them at the end of the rule (if possible), so that they only get evaluated when a lot of other conditions already match and the chance for a complete match is high.
+3. When multiple rules use the same conditions, make sure they are in the same order and at the start of the rule! Only then can the parser reuse the subnetwork when during construction of the rete.
+
+I have no good example for the first point yet, and the second one should be clear. For the third take a look at the `GoodAndBadRules.cpp`:
+
+```c++
+int main()
+{
+    RuleParser p;
+    Reasoner reasoner;
+
+    /**
+        Bad rule design! The first two conditions in the second rule are swapped, 
+        so a different joint node will be created, the sub-network duplicated.
+    */
+    p.parseRules(
+        "[(?a <foo> ?b), (?b <bar> ?c), (?c <baz> ?d) -> (?a <foobaz> ?d)]"
+        "[(?b <bar> ?c), (?a <foo> ?b), (?c <zab> ?d) -> (?a <foozab> ?d)]",
+        reasoner.net()
+    );
+
+    save(reasoner.net(), "badRules.dot");
+
+    // -----
+
+    RuleParser p2;
+    Reasoner reasoner2;
+
+    /**
+        Good rule design: The first two conditions match in the two rules, so this 
+        subnetwork is reused.
+    */
+    p2.parseRules(
+        "[(?a <foo> ?b), (?b <bar> ?c), (?c <baz> ?d) -> (?a <foobaz> ?d)]"
+        "[(?a <foo> ?b), (?b <bar> ?c), (?c <zab> ?d) -> (?a <foozab> ?d)]",
+        reasoner2.net()
+    );
+
+    save(reasoner2.net(), "goodRules.dot");
+
+    return 0;
+}
+```
+
+This code creates two networks with two rules, where only the third condition is different, and in one case the first two conditions are swapped in the second rule. The resulting networks look quite different:
+
+![badRules](img/badRules.dot.png)
+
+![goodrules](img/goodRules.dot.png)
+
+
+
+I think you can recognize which network is more efficient. :slightly_smiling_face:

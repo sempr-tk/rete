@@ -1,4 +1,0 @@
-Name: rete
-Description: Rete network structure and rule reasoner
-Version: 0.1.0
-Libs: -lrete

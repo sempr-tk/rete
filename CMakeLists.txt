@@ -62,8 +62,9 @@ install(
     LIBRARY DESTINATION lib
 )
 
+configure_file("rete.pc.in" "rete.pc" @ONLY)
 install(
-    FILES "rete.pc"
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/rete.pc"
     DESTINATION lib/pkgconfig
 )
 

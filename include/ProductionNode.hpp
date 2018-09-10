@@ -27,6 +27,8 @@ public:
         Called when a Token is asserted/retracted.
     */
     virtual void activate(Token::Ptr, PropagationFlag) = 0;
+
+    void tearDown() override;
 };
 
 

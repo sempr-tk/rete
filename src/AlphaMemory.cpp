@@ -79,4 +79,13 @@ std::string AlphaMemory::getDOTAttr() const
 }
 
 
+void AlphaMemory::tearDown()
+{
+    for (auto child : children_)
+    {
+        child->tearDown();
+    }
+    children_.clear();
+}
+
 } /* rete */

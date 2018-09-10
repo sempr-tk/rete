@@ -42,4 +42,13 @@ std::string BetaNode::getDOTAttr() const
     return "[label=BetaNode]";
 }
 
+void BetaNode::tearDown()
+{
+    if (bmem_)
+    {
+        bmem_->tearDown();
+        bmem_.reset();
+    }
+}
+
 } /* rete */

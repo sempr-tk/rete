@@ -140,4 +140,19 @@ std::string BetaMemory::getDOTAttr() const
     return "[shape=record, label=\"{BetaMemory" + record + "}\"]";
 }
 
+void BetaMemory::tearDown()
+{
+    for (auto child : children_)
+    {
+        child->tearDown();
+    }
+    children_.clear();
+
+    for (auto production : productions_)
+    {
+        production->tearDown();
+    }
+    productions_.clear();
+}
+
 } /* rete */

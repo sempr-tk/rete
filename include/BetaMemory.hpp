@@ -57,7 +57,7 @@ public:
 
     /**
         In principle, ProductionNodes are handled the same way as BetaNodes -- I just made the
-        mistake to assume that every BetaNode owns a BetaMemory. So now the ProductionNode class 
+        mistake to assume that every BetaNode owns a BetaMemory. So now the ProductionNode class
         does not really match the BetaNode...TODO: I should probably fix this when implementing
         negative nodes?
     */
@@ -66,9 +66,10 @@ public:
 
     size_t size() const;
 
-
     Iterator begin();
     Iterator end();
+
+    void tearDown() override;
 };
 
 } /* rete */

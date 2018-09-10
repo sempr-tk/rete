@@ -46,6 +46,15 @@ Network::Network()
 {
 }
 
+Network::~Network()
+{
+    // tear down the nodes
+    root_->tearDown();
+
+    // clear the agenda
+    while (!agenda_->empty()) agenda_->pop_front();
+}
+
 AlphaNode::Ptr Network::getRoot()
 {
     return root_;

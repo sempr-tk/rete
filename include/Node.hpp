@@ -24,6 +24,11 @@ public:
     */
     virtual std::string getDOTId() const;
 
+    /**
+    Recursively breaks all connections in the network.
+    */
+    virtual void tearDown() = 0;
+
     virtual ~Node();
 };
 

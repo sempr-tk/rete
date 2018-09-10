@@ -52,6 +52,8 @@ public:
     */
     virtual bool operator == (const AlphaNode& other) const = 0;
 
+    void tearDown() override;
+
 protected:
     /**
         Calls activate(wme) on all registered child nodes.

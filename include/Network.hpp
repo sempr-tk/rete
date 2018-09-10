@@ -38,6 +38,13 @@ class Network {
 
 public:
     Network();
+
+    /**
+        On destruction of the Network, all nodes get disconnected.
+        Since they are managed by smart pointers, everything should clean itself up.
+    */
+    ~Network();
+
     AlphaNode::Ptr getRoot();
     Agenda::Ptr getAgenda();
 

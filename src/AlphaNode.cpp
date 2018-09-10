@@ -48,4 +48,20 @@ std::string AlphaNode::getDOTAttr() const
     return "[label=AlphaNode]";
 }
 
+void AlphaNode::tearDown()
+{
+    for (auto child : children_)
+    {
+        child->tearDown();
+    }
+    children_.clear();
+
+    if (amem_)
+    {
+        amem_->tearDown();
+        amem_.reset();
+    }
+
+}
+
 } /* rete */

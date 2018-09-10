@@ -51,6 +51,8 @@ public:
 
     Iterator begin();
     Iterator end();
+
+    void tearDown() override;
 };
 
 } /* rete */

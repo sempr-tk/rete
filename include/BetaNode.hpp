@@ -69,6 +69,8 @@ public:
     */
     virtual bool operator == (const BetaNode& other) const = 0;
 
+
+    void tearDown() override;
 };
 
 } /* rete */

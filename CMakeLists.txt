@@ -48,6 +48,26 @@ include_directories(${CMAKE_SOURCE_DIR}/parserlib/source)
 
 add_library(rete SHARED ${SRC_FILES})
 
+# install files
+install(
+    # trailing slash after "DIRECTORY include" renames
+    # include to include/rete, instead of creating
+    # include/rete/include
+    DIRECTORY include/
+    DESTINATION include/rete
+)
+
+install(
+    TARGETS rete
+    LIBRARY DESTINATION lib
+)
+
+install(
+    FILES "rete.pc"
+    DESTINATION lib/pkgconfig
+)
+
+
 # add tests
 add_executable(AvoidDuplicate_241 test/AvoidDuplicate_241.cpp)
 target_link_libraries(AvoidDuplicate_241 rete)

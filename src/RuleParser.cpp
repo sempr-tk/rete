@@ -8,7 +8,7 @@
 #include <tuple>
 #include <utility>
 #include <algorithm>
-
+#include <sstream>
 #include <iostream>
 
 namespace rete {
@@ -17,8 +17,22 @@ namespace pl = parserlib;
 // fwd decl helper method
 void construct(ast::Rule&, Network&);
 
-bool RuleParser::parseRules(const std::string& rulestring, Network& network)
+bool RuleParser::parseRules(const std::string& rulestring_pre, Network& network)
 {
+    // preprocessing: remove comment-lines.
+    std::stringstream ss(rulestring_pre);
+    std::string line;
+    std::string rulestring;
+    while (std::getline(ss, line))
+    {
+        if (line.empty() || line.at(0) == '#')
+        {
+            continue;
+        }
+        rulestring += line;
+    }
+    std::cout << "parsing rules:" << std::endl;
+    std::cout << rulestring << std::endl;
 
     /**
         The pl::rules defined in this section implement the EBNF structure which the rules must

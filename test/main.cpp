@@ -37,8 +37,8 @@ int main()
         joint node will be created, the sub-network duplicated.
     */
     p.parseRules(
-        "[(?a <foo> ?b), (?b <bar> ?c), (?c <baz> ?d) -> (?a <foobaz> ?d)]"
-        "[somerandomname42: (?b <bar> ?c), (?a <foo> ?b), (?c <zab> ?d) -> (?a <foozab> ?d)]",
+        "[(?a <foo> ?b), (?b <bar> ?c), (?c <baz> ?d) -> (?a <foobaz> ?d)]\n"
+        "[somerandomname42: (?b <bar> ?c), (?a <foo> ?b), (?c <zab> ?d) -> (?a <foozab> ?d)]\n",
         reasoner.net()
     );
 
@@ -54,7 +54,7 @@ int main()
         reused.
     */
     p2.parseRules(
-        "[name1:(?a <foo> ?b), (?b <bar> ?c), (?c <baz> ?d) -> (?a <foobaz> ?d)]"
+        "[name1:(?a <foo> ?b), (?b <bar> ?c), (?c <baz> ?d) -> (?a <foobaz> ?d)]\n"
         "[name2:(?a <foo> ?b), (?b <bar> ?c), (?c <zab> ?d) -> (?a <foozab> ?d)]",
         reasoner2.net()
     );

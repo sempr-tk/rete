@@ -19,9 +19,18 @@ class ProductionNode : public Node {
 protected:
     Production::Ptr production_;
     std::string getDOTAttr() const override;
+    std::string name_;
 public:
     using Ptr = std::shared_ptr<ProductionNode>;
     ProductionNode(Production::Ptr);
+
+    /**
+        Set the name of the production node. Used in conjunction with the productions name to form
+        the label in the dot-graph.
+    */
+    void setName(const std::string&);
+    std::string getName() const;
+
 
     /**
         Called when a Token is asserted/retracted.

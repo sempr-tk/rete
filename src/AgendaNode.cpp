@@ -10,7 +10,7 @@ AgendaNode::AgendaNode(Production::Ptr p, Agenda::Ptr a)
 
 std::string AgendaNode::getDOTAttr() const
 {
-    return "[label=\"AgendaNode\\n" + production_->getName() + "\"]";
+    return "[label=\"AgendaNode \'" + getName() + "\'\\n" + production_->getName() + "\"]";
 }
 
 

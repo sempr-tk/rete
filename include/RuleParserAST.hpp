@@ -16,7 +16,7 @@ namespace ast {
 
 namespace pl = parserlib;
 
-class String : public pl::ast_container {
+class String : public pl::ast_node {
 public:
     std::string value_;
 
@@ -53,6 +53,7 @@ public:
 
 class Rule : public pl::ast_container {
 public:
+    pl::ast_ptr<String, true> name_;
     pl::ast_ptr<Triples> conditions_, effects_;
 };
 

@@ -302,7 +302,8 @@ object    ::= variable | iriref | blank_node_label | literal
 
 triple    ::= '(' subject predicate object ')'
 triples   ::= triple (',' triple)*
-rule      ::= '[' triples '->' triples ']'
+rulename  ::= alphanum+ ':'
+rule      ::= '[' rulename? triples '->' triples ']'
 rules     ::= rule+
 ```
 

@@ -7,9 +7,19 @@ rete::ProductionNode::ProductionNode(Production::Ptr p)
 }
 
 
+void rete::ProductionNode::setName(const std::string& name)
+{
+    name_ = name;
+}
+
+std::string rete::ProductionNode::getName() const
+{
+    return name_;
+}
+
 std::string rete::ProductionNode::getDOTAttr() const
 {
-    return "[label=\"ProductionNode\\n" + production_->getName() + "\"]";
+    return "[label=\"ProductionNode \'" + getName() + "\'\\n" + production_->getName() + "\"]";
 }
 
 void rete::ProductionNode::tearDown()

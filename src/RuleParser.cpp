@@ -75,7 +75,12 @@ bool RuleParser::parseRules(const std::string& rulestring, Network& network)
                         >> pl::expr(')');
 
     pl::rule triples = triple >> *(pl::expr(',') >> triple);
+
+    // TODO: Normally, the alphanum should not be optional, but the occurence of the name in the rule. But I cant get it to work, the parser aborts due to an invalid (empty) stack. So I just added the colon to the name and allow the name to be empty. I noticed that there is a more elaborate solution based on the parserlib, which I should take a look at: https://github.com/CompilerTeaching/Pegmatite
+
+    pl::rule rulename = -(+alphanum >> pl::expr(':'));
     pl::rule rule = pl::expr('[') >>
+                        rulename >>  // optional name
                         triples >> pl::expr('-') >> pl::expr('>') >> triples >>
                     pl::expr(']');
 
@@ -90,6 +95,7 @@ bool RuleParser::parseRules(const std::string& rulestring, Network& network)
         ast::Triples class only defines a member variable of type pl::ast_list<ast::Triple>, which
         gets filles automatically by the parser. How? ~~magic~~
     */
+    pl::ast<ast::String>        ast_string(rulename);
     pl::ast<ast::TripleElement> ast_subject(subject);
     pl::ast<ast::TripleElement> ast_predicate(predicate);
     pl::ast<ast::TripleElement> ast_object(object);
@@ -113,6 +119,7 @@ bool RuleParser::parseRules(const std::string& rulestring, Network& network)
         for (auto rule : r->rules_.objects())
         {
             std::cout << "rule:" << std::endl;
+            std::cout << rule->name_->value_ << " ";
             for (auto c : rule->conditions_->triples_.objects())
             {
                 std::cout << *c << " ";
@@ -272,11 +279,11 @@ void construct(ast::Rule& rule, Network& net)
     if ((**conditionIterator).predicate_->isVariable()) variableLocation[(**conditionIterator).predicate_->value_] = {0, Triple::PREDICATE};
     if ((**conditionIterator).object_->isVariable()) variableLocation[(**conditionIterator).object_->value_] = {0, Triple::OBJECT};
 
-    std::cout << "variables:" << std::endl;
-    for (auto v : variableLocation)
-    {
-        std::cout << v.first << " -- " << v.second.first << "," << v.second.second << std::endl;
-    }
+    // std::cout << "variables:" << std::endl;
+    // for (auto v : variableLocation)
+    // {
+    //     std::cout << v.first << " -- " << v.second.first << "," << v.second.second << std::endl;
+    // }
 
     ++conditionIterator;
 
@@ -298,7 +305,7 @@ void construct(ast::Rule& rule, Network& net)
     size_t conditionCount = 1;
     for (; conditionIterator != conditionTriples.end(); ++conditionIterator)
     {
-        std::cout << "construction from " << **conditionIterator << std::endl;
+        // std::cout << "construction from " << **conditionIterator << std::endl;
         // 3.1 create condtion
         condition = constructAlphaMemory(**conditionIterator, net);
         // 3.2 create join
@@ -433,6 +440,7 @@ void construct(ast::Rule& rule, Network& net)
         // create the InferTriple production
         InferTriple::Ptr infer(new InferTriple(s, p, o));
         AgendaNode::Ptr inferNode(new AgendaNode(infer, net.getAgenda()));
+        inferNode->setName(rule.name_->value_);
         betaMemory->addProduction(inferNode);
     }
 }

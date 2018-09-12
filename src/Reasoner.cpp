@@ -13,6 +13,11 @@ Network& Reasoner::net()
     return rete_;
 }
 
+const Network& Reasoner::net() const
+{
+    return rete_;
+}
+
 void Reasoner::setCallback(std::function<void(WME::Ptr, rete::PropagationFlag)> fn)
 {
     callback_ = fn;

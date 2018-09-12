@@ -34,6 +34,7 @@ public:
         returns a reference to the internal rete network
     */
     Network& net();
+    const Network& net() const;
 
 
     /**

@@ -29,7 +29,7 @@ bool RuleParser::parseRules(const std::string& rulestring_pre, Network& network)
         {
             continue;
         }
-        rulestring += line;
+        rulestring += line + "\n";
     }
     std::cout << "parsing rules:" << std::endl;
     std::cout << rulestring << std::endl;
@@ -63,6 +63,12 @@ bool RuleParser::parseRules(const std::string& rulestring_pre, Network& network)
                         pl::expr('>')
                       ;
 
+    // @PREFIX rdf: <....>
+    pl::rule prefixname = +alphanum;
+    pl::rule prefixuri = iriref;
+    pl::rule prefixdef = pl::expr("@PREFIX") >> prefixname >> pl::expr(':') >> prefixuri;
+
+    pl::rule prefixedURI = pl::term(+alphanum >> pl::expr(':') >> +alphanum);
 
     // string literal in quotes: some unallowed things, but escaped-chars are okay
     // NOTE: I have no clue what \x22, \x5C etc are, I partly followed this description: https://www.w3.org/TR/n-triples/#n-triples-grammar
@@ -78,9 +84,9 @@ bool RuleParser::parseRules(const std::string& rulestring_pre, Network& network)
     pl::rule blank_node_label = pl::expr("_:") >> *alphanum;
     pl::rule variable = pl::expr('?') >> +alphanum;
 
-    pl::rule subject =      pl::term(variable | iriref | blank_node_label);
-    pl::rule predicate =    pl::term(variable | iriref);
-    pl::rule object =       pl::term(variable | iriref | blank_node_label | literal);
+    pl::rule subject =      pl::term(variable | iriref | prefixedURI | blank_node_label);
+    pl::rule predicate =    pl::term(variable | iriref | prefixedURI);
+    pl::rule object =       pl::term(variable | iriref | prefixedURI | blank_node_label | literal);
 
     pl::rule triple = pl::expr('(')
                         >> subject
@@ -98,8 +104,8 @@ bool RuleParser::parseRules(const std::string& rulestring_pre, Network& network)
                         triples >> pl::expr('-') >> pl::expr('>') >> triples >>
                     pl::expr(']');
 
-    // the main thing to parse: rules. Many of them.
-    pl::rule rules = +rule;
+    // the main thing to parse: rules. Many of them. And optionally some prefix definitions before that
+    pl::rule rules = *prefixdef >> +rule;
 
     /**
         The pl::ast<...> objects create the connection between the user defined ast-classes (i.e.,
@@ -109,6 +115,10 @@ bool RuleParser::parseRules(const std::string& rulestring_pre, Network& network)
         ast::Triples class only defines a member variable of type pl::ast_list<ast::Triple>, which
         gets filles automatically by the parser. How? ~~magic~~
     */
+    pl::ast<ast::String>        ast_prefixname(prefixname);
+    pl::ast<ast::String>        ast_iriref(prefixuri);
+    pl::ast<ast::PrefixDefinition> ast_prefix(prefixdef);
+
     pl::ast<ast::String>        ast_string(rulename);
     pl::ast<ast::TripleElement> ast_subject(subject);
     pl::ast<ast::TripleElement> ast_predicate(predicate);
@@ -130,20 +140,36 @@ bool RuleParser::parseRules(const std::string& rulestring_pre, Network& network)
     if (r)
     {
         std::cout << "success!" << std::endl;
+        std::cout << "Prefixes:" << std::endl;
+        std::map<std::string, std::string> prefixes;
+
+        for(auto pre : r->prefixes_.objects())
+        {
+            std::cout << pre->name_->value_ << " --> " << pre->uri_->value_ << std::endl;
+
+            std::string& uri = pre->uri_->value_;
+            prefixes[pre->name_->value_ + ":"] = uri.substr(1, uri.size() - 2); // trim <>
+        }
+
+
+        // important: preprocess the rules by substituting the prefixes
         for (auto rule : r->rules_.objects())
         {
             std::cout << "rule:" << std::endl;
             std::cout << rule->name_->value_ << " ";
             for (auto c : rule->conditions_->triples_.objects())
             {
+                c->substitutePrefixes(prefixes);
                 std::cout << *c << " ";
             }
             std::cout << "-> ";
             for (auto e : rule->effects_->triples_.objects())
             {
+                e->substitutePrefixes(prefixes);
                 std::cout << *e << " ";
             }
             std::cout << std::endl;
+
         }
     }
     else

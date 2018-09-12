@@ -296,6 +296,10 @@ Of course, constructing the network manually in the is cumbersome. It would be w
 The grammar is defined in EBNF, for the complete definition see `RuleParser.cpp`. The main parts of it are as follows:
 
 ```
+prefixname  ::= alphanum+
+prefixdef   ::= '@PREFIX' prefixname ':' iriref
+prefixeduri ::= prefixname ':' alphanum+
+
 subject   ::= variable | iriref | blank_node_label
 predicate ::= variable | iriref
 object    ::= variable | iriref | blank_node_label | literal
@@ -306,6 +310,25 @@ rulename  ::= alphanum+ ':'
 rule      ::= '[' rulename? triples '->' triples ']'
 rules     ::= rule+
 ```
+
+To shorten the URIs in your rules for RDF based reasoning you may specify prefixes, e.g.:
+
+```
+@PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+[rule1: (?a rdfs:subClassOf ?b), (?b rdfs:subClassOf ?c) -> (?a rdfs:subClassOf ?c)]
+```
+
+is equivalent to:
+
+```
+[rule1: (?a <http://www.w3.org/2000/01/rdf-schema#subClassOf> ?b),
+		(?b <http://www.w3.org/2000/01/rdf-schema#subClassOf> ?c)
+		->
+		(?a <http://www.w3.org/2000/01/rdf-schema#subClassOf> ?c)]
+```
+
+(Prefixes are not used in the following examples, instead URIs are shortened to the smallest patterns our parser currently allows. Be aware that they are not valid URIs, but this is not relevant for the created networks and the reasoning in general.)
 
 
 

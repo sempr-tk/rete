@@ -94,6 +94,10 @@ add_executable(RemoveCycle3 test/RemoveCycle3.cpp)
 target_link_libraries(RemoveCycle3 rete)
 add_test(NAME RemoveCycle3 COMMAND RemoveCycle3)
 
+add_executable(ParsePrefixes test/ParsePrefixes.cpp)
+target_link_libraries(ParsePrefixes rete)
+add_test(NAME ParsePrefixes COMMAND ParsePrefixes)
+
 add_executable(test_rete test/main.cpp)
 target_link_libraries(test_rete rete)
 add_test(NAME main COMMAND test_rete)

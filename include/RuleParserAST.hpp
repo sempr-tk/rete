@@ -5,6 +5,7 @@
 #include "../parserlib/source/parserlib.hpp"
 
 #include <string>
+#include <map>
 
 /**
     This file contains the class declarations from which an AST can be constructed. The actual
@@ -30,6 +31,11 @@ public:
     }
 };
 
+class PrefixDefinition : public pl::ast_container {
+public:
+    pl::ast_ptr<String> name_, uri_;
+};
+
 class TripleElement : public String {
 public:
     bool isVariable() const
@@ -44,6 +50,17 @@ public:
     pl::ast_ptr<TripleElement> subject_, predicate_, object_;
 
     friend std::ostream& operator << (std::ostream&, Triple&);
+
+    /**
+        Given a map[?key] = ?value,
+        for every ?string that starts with ?key, replaces the ?key with ?value and adds '<' '>'
+        around it, e.g.:
+            map["rdf:"] = "http://www.w3.org/...#"
+            rdf:type
+            -->
+            <http:://www.w3.org/...#type>
+    */
+    void substitutePrefixes(std::map<std::string, std::string>& prefixes);
 };
 
 class Triples : public pl::ast_container {
@@ -59,6 +76,7 @@ public:
 
 class Rules : public pl::ast_container {
 public:
+    pl::ast_list<PrefixDefinition> prefixes_;
     pl::ast_list<Rule> rules_;
 };
 

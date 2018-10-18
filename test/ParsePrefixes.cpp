@@ -1,21 +1,8 @@
 #include <iostream>
 #include <fstream>
 
-#include "../include/Network.hpp"
-#include "../include/Triple.hpp"
-#include "../include/TripleAlpha.hpp"
-#include "../include/AlphaMemory.hpp"
-#include "../include/JoinNode.hpp"
-#include "../include/AlphaBetaAdapter.hpp"
-#include "../include/TripleConsistency.hpp"
-#include "../include/TripleJoin.hpp"
-#include "../include/AgendaNode.hpp"
-#include "../include/InferTriple.hpp"
-
-#include "../include/Reasoner.hpp"
-#include "../include/AssertedEvidence.hpp"
-
-#include "../include/RuleParser.hpp"
+#include <rete-reasoner/Reasoner.hpp>
+#include <rete-reasoner/RuleParser.hpp>
 
 using namespace rete;
 

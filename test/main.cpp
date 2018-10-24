@@ -21,43 +21,48 @@ void save(Network& net, const std::string& filename)
 
 int main()
 {
-    RuleParser p;
-    Reasoner reasoner;
+    Network net;
+    // setup network
+    // (?x foo ?y) (?y foo ?z)
 
-    p.parseRules(
-        R"foo(
-            [(?a <foo> <bar>), (?b <foo> <baz>), (?a ?b ?c) -> (<foo> <bar> <baz>)]
-        )foo",
-        reasoner.net());
+    auto foo = std::make_shared<TripleAlpha>(Triple::PREDICATE, "foo");
+    net.getRoot()->addChild(foo);
+    foo->initAlphaMemory();
 
-//    /**
-//        Bad rule design! The first two conditions in the second rule are swapped, so a different
-//        joint node will be created, the sub-network duplicated.
-//    */
-//    p.parseRules(
-//        "[(?a <foo> ?b), (?b <bar> ?c), (?c <baz> ?d) -> (?a <foobaz> ?d)]\n"
-//        "[somerandomname42: (?b <bar> ?c), (?a <foo> ?b), (?c <zab> ?d) -> (?a <foozab> ?d)]\n",
-//        reasoner.net()
-//    );
-//
-    save(reasoner.net(), "badRules.dot");
-//
-//    // -----
-//
-//    RuleParser p2;
-//    Reasoner reasoner2;
-//
-//    /**
-//        Good rule design: The first two conditions match in the two rules, so this subnetwork is
-//        reused.
-//    */
-//    p2.parseRules(
-//        "[name1:(?a <foo> ?b), (?b <bar> ?c), (?c <baz> ?d) -> (?a <foobaz> ?d)]\n"
-//        "[name2:(?a <foo> ?b), (?b <bar> ?c), (?c <zab> ?d) -> (?a <foozab> ?d)]",
-//        reasoner2.net()
-//    );
-//
-//    save(reasoner2.net(), "goodRules.dot");
+    auto adapter = std::make_shared<AlphaBetaAdapter>();
+    BetaNode::connect(adapter, nullptr, foo->getAlphaMemory());
+
+    // auto join = std::make_shared<TripleJoin>(0, Triple::OBJECT, Triple::SUBJECT);
+    GenericJoin<std::string>::Ptr join(new GenericJoin<std::string>());
+    // setup generic join criteria:
+    auto accessor1 = std::make_shared<TripleAccessor>(Triple::OBJECT);
+    accessor1->index() = 0;
+    auto accessor2 = std::make_shared<TripleAccessor>(Triple::SUBJECT);
+
+    join->addCheck(accessor1, accessor2);
+
+
+    BetaNode::connect(join, adapter->getBetaMemory(), foo->getAlphaMemory());
+
+    // put in some data
+    auto t1 = std::make_shared<Triple>("A", "foo", "B");
+    auto t2 = std::make_shared<Triple>("B", "foo", "C");
+    auto t3 = std::make_shared<Triple>("C", "foo", "D");
+
+    net.getRoot()->activate(t1, rete::ASSERT);
+    net.getRoot()->activate(t3, rete::ASSERT);
+    net.getRoot()->activate(t2, rete::ASSERT);
+
+
+    // output
+    save(net, "genericjoin.dot");
+
+    // there shall be only two matches:
+    // [(A foo B) (B foo C)]
+    // and
+    // [(B foo C) (C foo D)]
+    if (join->getBetaMemory()->size() == 2) return 0;
+    return 1;
 
     return 0;
 }

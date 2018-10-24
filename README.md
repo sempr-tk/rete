@@ -8,6 +8,12 @@ If you are interested in how it works, please note the detailed description in [
 
 My first use case will be symbolic reasoning on rdf data, so while the algorithm in principle is of very general nature, I include some code in here for that use case. Hopefully it will still be extensible for other use cases.
 
+The project is split into three parts:
+
+- **rete-core:** Contains the classes needed for every rete network: Alpha- and Beta-Nodes and -Memories, ProductionNodes, the Agenda, Tokens and an abstract working memory element (WME).
+- **rete-rdf:** Implements a few specific classes to work with rdf triples: The Triple-class itself (a WME), and checks for specific entries in the triples, as well as consistency checks (e.g. if subject == object).
+- **rete-reasoner:** Builds a rule-based reasoner that works with rdf triples around the previous parts. It Adds the notion of "Evidences" for a fact/WME, which can be just asserted or inferred through a token-production-combination. It keeps track of all evidences for facts/WMEs, thus allowing a single fact to be inferred through different rule activations, while still ensuring that everything is firmly grounded in asserted facts and no self-inferring loops persist. Also, this part includes the first version of a parser to create the rete-network for the reasoner from a textual description of rules.
+
 
 
 ## Network
@@ -21,6 +27,20 @@ While the rete network is constructed implicitly by connecting nodes, the Networ
 ### rete::WME
 
 The working memory element (WME) class is the base for all types of knowledge that is to be processed in the rete network. An example for a concrete type is the rete::Triple class which represents simple string triples, but you may implement whatever you need here. Just make sure that a WME must be constant within the network, and every change must be stated explicitly by retracting and asserting WMEs.
+
+### rete::TupleWME
+
+The TupleWME-class is a template class which can be used to easily implement simple WMEs that hold multiple values. It was developed after the first tests with triples, thus although one could express rdf-triples as a `TupleWME<std::string, std::string, std::string>`, this is not the case, and IMHO should not be done in such a way. The entries in an RDF-Triple are more than just strings, even though they are implemented as such. The TupleWME is rather considered to be a utility class for custom builtins or other nodes that might want to compute values (int, double, string, ...) from the given token, and store their result in the token by adding a TupleWME.
+
+### rete::Accessor / rete::ValueAccessor / rete::TupleWMEAccessor
+
+The nodes in a network implement checks on the WMEs that are processed through it. Since the basic rete network should be applicable in different domains, with different implementations for WMEs etc., a more or less WME-independent way of accessing values inside the WME is needed. But at the same time the nodes will need to know the datatype they get. The following structure is an approach to solving this problem: The `rete::Accessor` is the base class for objects that can be used to extract values from WMEs, and from WMEs in tokens. The idea is that when constructing the network you know the structure of the tokens at each node, and you also know which value you want to extract from which WME in the token to process it in a node in the network. Hence you can create a `rete::Accessor` instance and hand it to the node, which no longer needs to know the type of the WME it gets to extract the value itself. Think of it as some kind of variable bindings. The next problem is that you cannot specify an interface to _arbitrary_ data. So the `rete::Accessor` has no methods to access the data directly, it can only be asked which instantiations of  `template <typename T> rete::ValueAccessor` it implements -- if you want to process a string, you can check `if (accessor->canAs<std::string>())`, which internally checks if the accessor can be cast to a `rete::ValueAccessor<std::string>`, which in turn has the method to extract a string from a WME: `std::string value(WME::Ptr) const;`.
+
+One implementation of this interface is the `rete::TupleWMEAccessor`, which simply returns n-th value from a `rete::TupleWME`. Please be aware that the accessor itself **does not check** if the given WME is of corect type, but assumes that it is the correct type of TupleWME, since you should know this when constructing the network.
+
+> ***NOTE:*** _This is work in progress. Accessors for Triples might not exist yet, and neither do the nodes accept accessors by now. Also, the following examples do not take these changes into account, though at the state of this writing, they are all functional (only include paths need to be adjusted)._
+
+
 
 ### rete::AlphaNode
 

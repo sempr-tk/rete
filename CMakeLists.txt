@@ -16,6 +16,7 @@ set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
 add_subdirectory(rete-core)
 add_subdirectory(rete-rdf)
 add_subdirectory(rete-reasoner)
+add_subdirectory(examples)
 
 enable_testing()
 add_subdirectory(test)

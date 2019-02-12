@@ -16,6 +16,11 @@ void save(Network& net, const std::string& filename)
 
 int main()
 {
+
+    #ifdef DEBUG_PARSING
+    std::cout << "DEBUG PARSING" << std::endl;
+    #endif
+
     RuleParser p;
     Reasoner reasoner;
 

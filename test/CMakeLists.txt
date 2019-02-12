@@ -1,5 +1,9 @@
 include_directories(${PROJECT_SOURCE_DIR})
 
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(Pegmatite REQUIRED pegmatite)
+include_directories(${Pegmatite_INCLUDE_DIRS})
+link_directories(${Pegmatite_LIBRARY_DIRS})
 
 add_executable(AvoidDuplicate_241 AvoidDuplicate_241.cpp)
 target_link_libraries(AvoidDuplicate_241 rete-core rete-rdf rete-reasoner)

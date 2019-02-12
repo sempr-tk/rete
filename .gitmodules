@@ -1,3 +1,0 @@
-[submodule "rete-reasoner/parserlib"]
-	path = rete-reasoner/parserlib
-	url = https://github.com/axilmar/parserlib.git

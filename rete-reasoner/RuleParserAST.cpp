@@ -3,6 +3,9 @@
 #include <string>
 #include <algorithm>
 
+#include <iostream>
+
+
 namespace rete {
 
 namespace ast {
@@ -10,9 +13,9 @@ namespace ast {
 std::ostream& operator << (std::ostream& str, Triple& t)
 {
     str << "("
-        << t.subject_->value_ << " "
-        << t.predicate_->value_ << " "
-        << t.object_->value_ << ")";
+        << *t.subject_->value_ << " "
+        << *t.predicate_->value_ << " "
+        << *t.object_->value_ << ")";
     return str;
 }
 
@@ -42,9 +45,9 @@ void Triple::substitutePrefixes(std::map<std::string, std::string>& prefixes)
 
     for (auto entry : prefixes)
     {
-        if (!s) s = subst(subject_->value_, entry.first, entry.second);
-        if (!p) p = subst(predicate_->value_, entry.first, entry.second);
-        if (!o) o = subst(object_->value_, entry.first, entry.second);
+        if (!s) s = subst(*subject_->value_, entry.first, entry.second);
+        if (!p) p = subst(*predicate_->value_, entry.first, entry.second);
+        if (!o) o = subst(*object_->value_, entry.first, entry.second);
         if (s && p && o) break;
     }
 }

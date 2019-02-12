@@ -15,6 +15,8 @@
     <license>New BSD</license>
     <url>https://git.hb.dfki.de/nniemann/rete</url>
 
+    <depend package="external/pegmatite" />
+
     <keywords>
         <keyword>reasoning</keyword>
         <keyword>rete</keyword>

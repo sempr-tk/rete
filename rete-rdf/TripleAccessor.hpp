@@ -16,6 +16,8 @@ public:
     TripleAccessor(Triple::Field field);
     std::string value(WME::Ptr) const override;
     std::string toString() const override;
+
+    TripleAccessor* clone() const override;
 };
 
 

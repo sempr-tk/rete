@@ -80,6 +80,13 @@ public:
     }
 
     /**
+        Accessors must be clonable! In a list of variable bindings we will need to increment the
+        index, but the nodes need access to the index they were given. (stupid reverse counting
+        index, where 0 is the last element...)
+    */
+    virtual Accessor* clone() const = 0;
+
+    /**
         For visualization purposes, every Accessor may implement a toString-method. This is used
         in nodes to show what variables they access. The base-implementation simply returns
         "Accessor(index)".

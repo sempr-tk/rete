@@ -28,3 +28,8 @@ std::string rete::TripleAccessor::toString() const
                               "[" + std::to_string(index_) + "]") +
                 "." + rete::Triple::fieldName(field_);
 }
+
+rete::TripleAccessor* rete::TripleAccessor::clone() const
+{
+    return new rete::TripleAccessor(*this);
+}

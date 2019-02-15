@@ -10,13 +10,16 @@ namespace rete {
 
 namespace ast {
 
-std::ostream& operator << (std::ostream& str, Triple& t)
+std::ostream& operator << (std::ostream& s, Precondition& p)
 {
-    str << "("
-        << *t.subject_->value_ << " "
-        << *t.predicate_->value_ << " "
-        << *t.object_->value_ << ")";
-    return str;
+    if (p.name_) s << *p.name_;
+    s << "( ";
+    for (auto& arg : p.args_)
+    {
+        s << *arg << " ";
+    }
+    s << ")";
+    return s;
 }
 
 
@@ -38,19 +41,19 @@ bool subst(std::string& str, const std::string& pre, const std::string& subst)
 }
 
 
-void Triple::substitutePrefixes(std::map<std::string, std::string>& prefixes)
-{
-    bool s, p, o;
-    s = p = o = false;
-
-    for (auto entry : prefixes)
-    {
-        if (!s) s = subst(*subject_->value_, entry.first, entry.second);
-        if (!p) p = subst(*predicate_->value_, entry.first, entry.second);
-        if (!o) o = subst(*object_->value_, entry.first, entry.second);
-        if (s && p && o) break;
-    }
-}
+// void Triple::substitutePrefixes(std::map<std::string, std::string>& prefixes)
+// {
+//     bool s, p, o;
+//     s = p = o = false;
+//
+//     for (auto entry : prefixes)
+//     {
+//         if (!s) s = subst(*subject_->value_, entry.first, entry.second);
+//         if (!p) p = subst(*predicate_->value_, entry.first, entry.second);
+//         if (!o) o = subst(*object_->value_, entry.first, entry.second);
+//         if (s && p && o) break;
+//     }
+// }
 
 
 

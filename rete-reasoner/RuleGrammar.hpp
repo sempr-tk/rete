@@ -36,7 +36,17 @@ public:
     Rule num    = "[0-9]"_R;
     Rule alphanum = alpha | num;
     Rule echar  = '\\' >> "tbnrf\"\'\\"_S;
-    // Rule iriref = rtrace("iriref", ('<'_E >> *(!("<>\"{}|^`\\"_S | ('\x00'_E -'\x20'))) >> '>'));
+
+    // while num is just a single digit,
+    // number is a complete, terminal value.
+    Rule number = term(+num >> // some digits, plus optionally...
+                  -('.'_E >> +number >>  // dot and numbers, plus optionally...
+                    -("eE"_S >> -("+-"_S) >> +number) // an optionally signed exponent
+                    ));
+    // to allow whitespaces etc as a single argument, define a quoted string.
+    // starts with a ", ends with a ", and everything inbetween is either \" or just not "
+    Rule quotedString = "\"" >> *("\\\""_E | (!"\""_E >> any())) >> "\"";
+
     Rule iriref = rtrace("iriref",
         (
             r1trace("open-bracket", '<'_E) >>
@@ -62,17 +72,26 @@ public:
     Rule literal =          (stringliteralquote >> -("^^" >> iriref | langtag));
     Rule blank_node_label = ("_:"_E >> +alphanum);
     Rule variable =         ("?"_E >> +alphanum);
+    Rule uri =              prefixedURI | iriref;
 
     Rule subject    = rtrace("subject",   term(variable | iriref | prefixedURI | blank_node_label));
     Rule predicate  = rtrace("predicate", term(variable | iriref | prefixedURI));
     Rule object     = rtrace("object",    term(variable | iriref | prefixedURI | blank_node_label | literal));
 
     Rule triple = rtrace("triple",   ('('_E >> subject >> predicate >> object >> ')'));
-    Rule triples = rtrace("triples", triple >> *(',' >> triple));
+    // cannot reuse triple for infertriple, would lead to triple being constructed before infertriple, and the infertriple being empty...
+    Rule inferTriple = rtrace("inferTriple", '('_E >> subject >> predicate >> object >> ')');
 
     // [name: (precondition1), (precondition2) --> (effect1), (effect2)]
+
+    Rule argument = rtrace("argument", term(quotedString | number | variable));
+    Rule builtinName = rtrace("builtinName", +alphanum >> -(":"_E >> +alphanum));
+    Rule builtin = rtrace("builtin", builtinName >> "(" >> *argument >> ")");
+    Rule precondition = rtrace("precondition", triple | builtin);
+    Rule effect = rtrace("effect", inferTriple);
+
     Rule rulename = rtrace("rulename", (+alphanum >> ':'));
-    Rule rule = rtrace("rule", ('['_E >> -rulename >> triples >> "->"_E >> triples >> ']'));
+    Rule rule = rtrace("rule", ('['_E >> -rulename >> precondition >> *(',' >> precondition) >> "->" >> +effect >> ']'));
     Rule rules = rtrace("rules", *prefixdef >> +rule);
 
     // TODO: Overhaul for builtins, other WMEs than triples, ...

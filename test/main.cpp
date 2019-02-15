@@ -33,7 +33,7 @@ int main()
     BetaNode::connect(adapter, nullptr, foo->getAlphaMemory());
 
     // auto join = std::make_shared<TripleJoin>(0, Triple::OBJECT, Triple::SUBJECT);
-    GenericJoin<std::string>::Ptr join(new GenericJoin<std::string>());
+    GenericJoin::Ptr join(new GenericJoin());
     // setup generic join criteria:
     auto accessor1 = std::make_shared<TripleAccessor>(Triple::OBJECT);
     accessor1->index() = 0;

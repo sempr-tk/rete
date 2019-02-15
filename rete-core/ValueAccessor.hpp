@@ -80,6 +80,16 @@ public:
     }
 
     /**
+        In order to do generic joins with any two Accessors, we need a way to compare them, or
+        rather, the values that they point to given a token and a wme. This is difficult through a
+        pointer to base, so instead we provide a virtual method that allows any Accessor to check
+        if some other one implements the same ValueAccessor-interface as itself, cast it and do
+        the check.
+    */
+    virtual bool canCompareValues(const Accessor& other) const = 0;
+    virtual bool valuesEqual(Accessor& other, Token::Ptr token, WME::Ptr wme) = 0;
+
+    /**
         Accessors must be clonable! In a list of variable bindings we will need to increment the
         index, but the nodes need access to the index they were given. (stupid reverse counting
         index, where 0 is the last element...)
@@ -152,11 +162,36 @@ public:
 
         return value(token->wme);
     }
+
+    /**
+        Check if the other Accessor implements this type, too.
+    */
+    bool canCompareValues(const Accessor& other) const override
+    {
+        return other.canAs<Type>();
+    }
+
+    /**
+        Compare the values accessed by this and the other accessor. Performs a static cast, so use
+        "canCompareValues" before calling this method!
+    */
+    bool valuesEqual(Accessor& other, Token::Ptr token, WME::Ptr wme) override
+    {
+        ValueAccessor& o = static_cast<ValueAccessor&>(other);
+        // handle the different cases, where both accessors can either be created to access a WME
+        // or a token. Normally, this method should only be called by joins, where one is applied
+        // to a token and the other to a wme.
+        if      (index() == -1 && o.index() == -1)    return value(wme)   == o.value(wme);
+        else if (index() != -1 && o.index() == -1)    return value(token) == o.value(wme);
+        else if (index() == -1 && o.index() != -1)    return value(wme)   == o.value(token);
+        else /* (index() != -1 && o.index() != -1) */ return value(token) == o.value(token);
+    }
 };
 
 
 /**
     Helper do define multiple supported types at once
+    TODO: I guess this is broken due to ambiguous method declariations (some signature with different return types)? And the canCompareValues and valuesEqual methods must be a bit more sophisticated in this case...
 */
 template <class... Types>
 class ValueAccessors : public ValueAccessor<Types>... {};

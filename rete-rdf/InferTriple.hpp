@@ -2,6 +2,8 @@
 #define RETE_INFERTRIPLE_HPP_
 
 #include <rete-core/Production.hpp>
+#include <rete-core/ValueAccessor.hpp>
+
 #include "Triple.hpp"
 
 namespace rete {
@@ -15,23 +17,27 @@ public:
 
     /**
         Implements the construction of a single part of the triple -- subject, predicate or object.
-        Can be instantiated to return a predefined, constant string, or with an int and a triple
-        field to access part of the matching token.
+        Can be instantiated to return a predefined, constant string, or with an Accessor to get
+        an arbitrary value from the matcheed pattern.
     */
     class ConstructHelper {
         bool isPredefined_;
         std::string string_;
-        int tokenOffset_;
-        Triple::Field field_;
+
+        // unique pointer: Prevents modification of the index etc. from the outside.
+        std::unique_ptr<Accessor> accessor_;
+
     public:
         ConstructHelper(const std::string& predefined);
         ConstructHelper(const char* predefined);
-        ConstructHelper(int offset, Triple::Field field);
+        ConstructHelper(std::unique_ptr<Accessor> accessor);
 
         ConstructHelper();
+        ConstructHelper(ConstructHelper&& other);
+        
         void init(const std::string& predefined);
         void init(const char* predefined);
-        void init(int offset, Triple::Field field);
+        void init(std::unique_ptr<Accessor> accessor);
 
         std::string constructFrom(Token::Ptr token) const;
 
@@ -45,9 +51,9 @@ public:
         Triple::Field}, with the latter defining where to get the value from: Take the N'th WME in
         the Token, assume it is a Triple and use its specified Triple::Field.
     */
-    InferTriple(const ConstructHelper& subject,
-                const ConstructHelper& predicate,
-                const ConstructHelper& object);
+    InferTriple(ConstructHelper&& subject,
+                ConstructHelper&& predicate,
+                ConstructHelper&& object);
 
     /**
         For visualization purposes.

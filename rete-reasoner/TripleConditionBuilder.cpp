@@ -1,14 +1,14 @@
-#include "TripleNodeBuilder.hpp"
+#include "TripleConditionBuilder.hpp"
 #include <iostream>
 
 namespace rete {
 
-TripleNodeBuilder::TripleNodeBuilder()
+TripleConditionBuilder::TripleConditionBuilder()
     : NodeBuilder("Triple", BuilderType::ALPHA)
 {
 }
 
-void TripleNodeBuilder::buildAlpha(ArgumentList& args, std::vector<AlphaNode::Ptr>& nodes) const
+void TripleConditionBuilder::buildAlpha(ArgumentList& args, std::vector<AlphaNode::Ptr>& nodes) const
 {
     std::cout << "TripleBuilder with args:" << std::endl;
     for (auto& arg : args)

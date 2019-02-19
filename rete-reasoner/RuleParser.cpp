@@ -3,7 +3,7 @@
 
 #include "RuleParser.hpp"
 #include "RuleParserAST.hpp"
-#include "TripleNodeBuilder.hpp"
+#include "TripleConditionBuilder.hpp"
 
 #include <map>
 #include <tuple>
@@ -17,8 +17,8 @@ namespace peg = pegmatite;
 
 RuleParser::RuleParser()
 {
-    // registerNodeBuilder(std::unique_ptr<TripleNodeBuilder>(new TripleNodeBuilder()));
-    registerNodeBuilder<TripleNodeBuilder>();
+    // registerNodeBuilder(std::unique_ptr<TripleConditionBuilder>(new TripleConditionBuilder()));
+    registerNodeBuilder<TripleConditionBuilder>();
 }
 
 void RuleParser::registerNodeBuilder(std::unique_ptr<NodeBuilder> builder)

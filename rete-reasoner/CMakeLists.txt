@@ -15,7 +15,7 @@ set(REASONER_SRC
     RuleParser.cpp
     RuleParserAST.cpp
     NodeBuilder.cpp
-    TripleNodeBuilder.cpp
+    TripleConditionBuilder.cpp
 
     # ebnf parsing
     # parserlib/source/ast.cpp

@@ -9,6 +9,8 @@
 #include "Util.hpp"
 #include "ValueAccessor.hpp"
 
+
+#include <iostream>
 namespace rete {
 
 /**
@@ -80,7 +82,13 @@ public:
             if (o->checks_.size() != this->checks_.size()) return false;
             for (auto check : this->checks_)
             {
-                if (std::find(o->checks_.begin(), o->checks_.end(), check) == o->checks_.end())
+                if (std::find_if(o->checks_.begin(), o->checks_.end(),
+                        [check](const AccessorPair& other) -> bool
+                        {
+                            return (*other.first == *check.first) &&
+                                   (*other.second == *check.second);
+                        })
+                    == o->checks_.end())
                 {
                     return false;
                 }

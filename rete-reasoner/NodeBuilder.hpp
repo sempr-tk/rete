@@ -4,6 +4,7 @@
 #include "Argument.hpp"
 #include <rete-core/AlphaNode.hpp>
 #include <rete-core/Builtin.hpp>
+#include <rete-core/Production.hpp>
 
 namespace rete {
 
@@ -28,13 +29,15 @@ namespace rete {
 
 class NodeBuilder {
 public:
-    enum BuilderType { ALPHA, BUILTIN };
+    enum BuilderType { ALPHA, BUILTIN, EFFECT };
 protected:
     NodeBuilder(const std::string& conditionType, BuilderType builderType);
     std::string conditionType_;
     BuilderType builderType_;
 
 public:
+    virtual ~NodeBuilder();
+
     /**
         Returns the identifier for the conditions it handles.
     */
@@ -56,6 +59,14 @@ public:
         through the specific implementation of the NodeBuilder.
     */
     virtual Builtin::Ptr buildBuiltin(ArgumentList& args) const;
+
+    /**
+    Construct an effect: Productions can be used in AgendaNodes and implement the effects a match.
+    Since the AgendaNode implements some management routines and is connected to an actutal agenda
+    in a rete network, all this is done by the parser -- and the NodeBuilder in this case does not
+    build a Node. Just a Production, which will become part of an AgendaNode. Sorry for that.
+    */
+    virtual Production::Ptr buildEffect(ArgumentList& args) const;
 };
 
 } /* rete */

@@ -7,6 +7,10 @@ NodeBuilder::NodeBuilder(const std::string& ctype, BuilderType btype)
 {
 }
 
+NodeBuilder::~NodeBuilder()
+{
+}
+
 std::string NodeBuilder::type() const
 {
     return conditionType_;
@@ -27,4 +31,8 @@ Builtin::Ptr NodeBuilder::buildBuiltin(ArgumentList&) const
     throw std::exception(); // not implemented
 }
 
+Production::Ptr NodeBuilder::buildEffect(ArgumentList&) const
+{
+    throw std::exception(); // not implemented
+}
 } /* rete */

@@ -4,6 +4,7 @@
 #include "RuleParser.hpp"
 #include "RuleParserAST.hpp"
 #include "TripleConditionBuilder.hpp"
+#include "TripleEffectBuilder.hpp"
 
 #include <map>
 #include <tuple>
@@ -19,17 +20,25 @@ RuleParser::RuleParser()
 {
     // registerNodeBuilder(std::unique_ptr<TripleConditionBuilder>(new TripleConditionBuilder()));
     registerNodeBuilder<TripleConditionBuilder>();
+    registerNodeBuilder<TripleEffectBuilder>();
 }
 
 void RuleParser::registerNodeBuilder(std::unique_ptr<NodeBuilder> builder)
 {
+    std::map<std::string, std::unique_ptr<NodeBuilder>>* map = &conditionBuilders_;
+    if (builder->builderType() == NodeBuilder::EFFECT) map = &effectBuilders_;
+
     std::string t = builder->type();
-    if (builders_.find(t) != builders_.end())
+    if (map->find(t) != map->end())
     {
+        std::cout << "Already registered a NodeBuilder for the same effect/condition!" << std::endl;
+        std::cout << builder->type() << ", "
+                  << (builder->builderType() == NodeBuilder::EFFECT ? "effect" : "condition")
+                  << std::endl;
         throw std::exception(); // already registerd a builder for this type
     }
 
-    builders_[t] = std::move(builder);
+    (*map)[t] = std::move(builder);
 }
 
 
@@ -215,8 +224,8 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
     for (auto& condition : rule.conditions_)
     {
         // find the correct builder
-        auto bIt = builders_.find(condition->type());
-        if (bIt == builders_.end())
+        auto bIt = conditionBuilders_.find(condition->type());
+        if (bIt == conditionBuilders_.end())
         {
             std::cout << "no builder for type " << condition->type() << std::endl;
             throw std::exception(); // no builder for this type
@@ -229,11 +238,11 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
         for (auto& astArg : condition->args_)
         {
             std::map<std::string, Accessor::Ptr> emptyBindings;
-            std::map<std::string, Accessor::Ptr>& usedBindings = emptyBindings;
+            std::map<std::string, Accessor::Ptr>* usedBindings = &emptyBindings;
             if (builder.builderType() != NodeBuilder::ALPHA)
-                usedBindings = bindings;
+                usedBindings = &bindings;
 
-            Argument arg = Argument::createFromAST(std::move(astArg), usedBindings);
+            Argument arg = Argument::createFromAST(std::move(astArg), *usedBindings);
             args.push_back(std::move(arg));
         }
 
@@ -337,6 +346,34 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
 
     // TODO: create productions / effects. Maybe use extent the NodeBuilders for that?
 
+    for (auto& effect : rule.effects_)
+    {
+        // find the correct builder
+        auto it = effectBuilders_.find(effect->type());
+        if (it == effectBuilders_.end())
+        {
+            std::cout << "no effect-builder for type " << effect->type() << std::endl;
+            throw std::exception();
+        }
+
+        // create an argument list. The ast::Arguments are consumed.
+        ArgumentList args;
+        for (auto& astArg : effect->args_)
+        {
+            Argument arg = Argument::createFromAST(std::move(astArg), bindings);
+            args.push_back(std::move(arg));
+        }
+
+        // create the production, encapsulate it in an AgendaNode, and add it to the current pattern results (beta memory)
+        auto production = it->second->buildEffect(args);
+        AgendaNode::Ptr agendaNode(new AgendaNode(production, net.getAgenda()));
+
+        if (rule.name_) agendaNode->setName(*rule.name_);
+        else            agendaNode->setName("");
+
+        currentBeta->getBetaMemory()->addProduction(agendaNode);
+    }
+
     // /**
     //     To construct the rule in the network, we do the following:
     //         1. Create the first condition in the alpha network
@@ -356,51 +393,7 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
 
     //
     // // 4. add the consequences to the end of the condition-chain (the betaMemory we kept track of)
-    // auto& consequences = rule.effects_->triples_;
-    // for (auto& consequence : consequences)
-    // {
-    //     auto& sub = consequence->subject_;
-    //     auto& pred = consequence->predicate_;
-    //     auto& obj = consequence->object_;
-    //
-    //     InferTriple::ConstructHelper s, p, o;
-    //
-    //     if (sub->isVariable())
-    //     {
-    //         auto it = variableLocation.find(*sub->value_);
-    //         if (it == variableLocation.end()) throw std::exception(); // unbound var in effect
-    //         size_t tokenIndex = conditionCount - (it->second.first + 1);
-    //         s.init(tokenIndex, it->second.second);
-    //     }
-    //     else
-    //     {
-    //         s.init(*sub->value_);
-    //     }
-    //
-    //     if (pred->isVariable())
-    //     {
-    //         auto it = variableLocation.find(*pred->value_);
-    //         if (it == variableLocation.end()) throw std::exception(); // unbound var in effect
-    //         size_t tokenIndex = conditionCount - (it->second.first + 1);
-    //         p.init(tokenIndex, it->second.second);
-    //     }
-    //     else
-    //     {
-    //         p.init(*pred->value_);
-    //     }
-    //
-    //     if (obj->isVariable())
-    //     {
-    //         auto it = variableLocation.find(*obj->value_);
-    //         if (it == variableLocation.end()) throw std::exception(); // unbound var in effect
-    //         size_t tokenIndex = conditionCount - (it->second.first + 1);
-    //         o.init(tokenIndex, it->second.second);
-    //     }
-    //     else
-    //     {
-    //         o.init(*obj->value_);
-    //     }
-    //
+
     //     // create the InferTriple production
     //     InferTriple::Ptr infer(new InferTriple(s, p, o));
     //     AgendaNode::Ptr inferNode(new AgendaNode(infer, net.getAgenda()));

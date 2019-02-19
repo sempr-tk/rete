@@ -153,7 +153,7 @@ namespace rete {
             */
             virtual std::string type() const{
                 if (name_) return *name_;
-                return "InferTriple";
+                return "Triple";
             }
         };
 

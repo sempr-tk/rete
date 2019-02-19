@@ -62,7 +62,8 @@ class RuleParser : peg::ASTParserDelegate {
         NodeBuilder objects that are called to constuct the nodes we need. The connection is then
         again done by the parser, which also searches for identical nodes that might be reused.
     */
-    std::map<std::string, std::unique_ptr<NodeBuilder>> builders_;
+    std::map<std::string, std::unique_ptr<NodeBuilder>> conditionBuilders_;
+    std::map<std::string, std::unique_ptr<NodeBuilder>> effectBuilders_;
 
     void construct(ast::Rule&, Network&) const;
 

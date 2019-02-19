@@ -91,7 +91,7 @@ public:
     Rule effect = rtrace("effect", inferTriple);
 
     Rule rulename = rtrace("rulename", (+alphanum >> ':'));
-    Rule rule = rtrace("rule", ('['_E >> -rulename >> precondition >> *(',' >> precondition) >> "->" >> +effect >> ']'));
+    Rule rule = rtrace("rule", ('['_E >> -rulename >> precondition >> *(',' >> precondition) >> "->" >> effect >> *(',' >> effect) >> ']'));
     Rule rules = rtrace("rules", *prefixdef >> +rule);
 
     // TODO: Overhaul for builtins, other WMEs than triples, ...

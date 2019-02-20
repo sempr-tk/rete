@@ -14,9 +14,9 @@ namespace rete {
 */
 template <size_t I, typename TWME, typename T = typename util::extract_type<TWME, I>::type>
 class TupleWMEAccessor : public ValueAccessor<T> {
-    bool equals(const Accessor& other) const
+    bool equals(const Accessor& other) const override
     {
-        auto o = dynamic_cast<TupleWMEAccessor*>(&other);
+        auto o = dynamic_cast<const TupleWMEAccessor*>(&other);
         if (o) return true; // everything encoded in the type -- WME-type,
         return false;
     }

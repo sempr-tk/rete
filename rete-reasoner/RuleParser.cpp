@@ -178,8 +178,9 @@ BetaNode::Ptr implementBetaNode(BetaNode::Ptr node, BetaNode::Ptr parentBeta, Al
     }
     else
     {
-        std::cout << "Adding BetaNode " << beta->getDOTId() << " beneath " << parentBeta->getDOTId() << " and " << parentAlpha->getDOTId() << std::endl;
-        BetaNode::connect(beta, parentBeta->getBetaMemory(), parentAlpha->getAlphaMemory());
+        std::cout << "Adding BetaNode " << beta->getDOTId() << " beneath " << parentBeta->getDOTId() << " and " << (parentAlpha ? parentAlpha->getDOTId() : " 0x0") << std::endl;
+        BetaNode::connect(beta, parentBeta->getBetaMemory(),
+                 (parentAlpha ? parentAlpha->getAlphaMemory() : nullptr));
     }
     return beta;
 }
@@ -313,7 +314,7 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
         {
             // create and implement the builtin node
             Builtin::Ptr builtin = builder.buildBuiltin(args);
-            implementBetaNode(builtin, currentBeta, nullptr);
+            currentBeta = implementBetaNode(builtin, currentBeta, nullptr);
         }
 
 

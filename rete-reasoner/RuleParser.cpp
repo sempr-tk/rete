@@ -115,9 +115,10 @@ bool RuleParser::parseRules(const std::string& rulestring_pre, Network& network)
             construct(*rule, network);
         }
 
+        return true;
     }
 
-    return true;
+    return false;
 }
 
 

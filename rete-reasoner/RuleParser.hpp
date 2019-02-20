@@ -35,7 +35,7 @@ class RuleParser : peg::ASTParserDelegate {
     // peg::BindAST<ast::Argument> predicate = RuleGrammar::get().predicate;
     // peg::BindAST<ast::Argument> object = RuleGrammar::get().object;
 
-    peg::BindAST<ast::Argument> argument = RuleGrammar::get().argument;
+    // peg::BindAST<ast::Argument> argument = RuleGrammar::get().argument;
     peg::BindAST<ast::Variable> variable = RuleGrammar::get().variable;
     peg::BindAST<ast::Number> number = RuleGrammar::get().number;
     peg::BindAST<ast::QuotedString> quotedstring = RuleGrammar::get().quotedString;

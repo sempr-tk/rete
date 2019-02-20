@@ -33,6 +33,11 @@ add_executable(ParsePrefixes ParsePrefixes.cpp)
 target_link_libraries(ParsePrefixes rete-core rete-rdf rete-reasoner)
 add_test(NAME ParsePrefixes COMMAND ParsePrefixes)
 
+add_executable(MathBuiltins MathBuiltins.cpp)
+target_link_libraries(MathBuiltins rete-core rete-rdf rete-reasoner)
+add_test(NAME MathBuiltins COMMAND MathBuiltins)
+
+
 add_executable(test_rete main.cpp)
 target_link_libraries(test_rete rete-core rete-rdf rete-reasoner)
 add_test(NAME main COMMAND test_rete)

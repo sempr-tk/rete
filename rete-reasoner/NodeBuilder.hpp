@@ -41,7 +41,7 @@ public:
     /**
         Returns the identifier for the conditions it handles.
     */
-    std::string type() const;
+    virtual std::string type() const;
 
     /**
         Returns the type of this builder, ALPHA or BUILTIN.

@@ -1,3 +1,5 @@
+#include "builtins/Math.hpp"
+
 #include "AgendaNode.hpp"
 #include "AlphaBetaAdapter.hpp"
 #include "AlphaMemory.hpp"

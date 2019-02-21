@@ -2,7 +2,7 @@
 #define TRIPLE_CONDITION_BUILDER_HPP_
 
 #include "NodeBuilder.hpp"
-#include <rete-rdf/ReteRDF.hpp>
+#include "../rete-rdf/ReteRDF.hpp"
 
 namespace rete {
 

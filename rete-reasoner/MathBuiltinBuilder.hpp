@@ -2,7 +2,7 @@
 #define RETE_MATH_BUILTIN_BUILDER_HPP_
 
 #include "NodeBuilder.hpp"
-#include <rete-core/TupleWME.hpp>
+#include "../rete-core/TupleWME.hpp"
 
 namespace rete {
 namespace builtin {

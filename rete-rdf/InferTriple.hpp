@@ -1,8 +1,8 @@
 #ifndef RETE_INFERTRIPLE_HPP_
 #define RETE_INFERTRIPLE_HPP_
 
-#include <rete-core/Production.hpp>
-#include <rete-core/ValueAccessor.hpp>
+#include "../rete-core/Production.hpp"
+#include "../rete-core/ValueAccessor.hpp"
 
 #include "Triple.hpp"
 
@@ -34,7 +34,7 @@ public:
 
         ConstructHelper();
         ConstructHelper(ConstructHelper&& other);
-        
+
         void init(const std::string& predefined);
         void init(const char* predefined);
         void init(std::unique_ptr<Accessor> accessor);

@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include <rete-core/WME.hpp>
+#include "../rete-core/WME.hpp"
 
 namespace rete {
 

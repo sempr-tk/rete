@@ -1,7 +1,7 @@
 #ifndef RETE_TRIPLECONSISTENCY_HPP_
 #define RETE_TRIPLECONSISTENCY_HPP_
 
-#include <rete-core/AlphaNode.hpp>
+#include "../rete-core/AlphaNode.hpp"
 #include "Triple.hpp"
 
 namespace rete {

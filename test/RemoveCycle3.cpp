@@ -1,10 +1,10 @@
 #include <iostream>
 #include <fstream>
 
-#include <rete-rdf/ReteRDF.hpp>
-#include <rete-reasoner/Reasoner.hpp>
-#include <rete-reasoner/RuleParser.hpp>
-#include <rete-reasoner/AssertedEvidence.hpp>
+#include "../rete-rdf/ReteRDF.hpp"
+#include "../rete-reasoner/Reasoner.hpp"
+#include "../rete-reasoner/RuleParser.hpp"
+#include "../rete-reasoner/AssertedEvidence.hpp"
 
 using namespace rete;
 

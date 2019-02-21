@@ -2,9 +2,9 @@
 #define RETE_PARSER_NODE_BUILDER_HPP_
 
 #include "Argument.hpp"
-#include <rete-core/AlphaNode.hpp>
-#include <rete-core/Builtin.hpp>
-#include <rete-core/Production.hpp>
+#include "../rete-core/AlphaNode.hpp"
+#include "../rete-core/Builtin.hpp"
+#include "../rete-core/Production.hpp"
 
 namespace rete {
 

@@ -1,5 +1,5 @@
 #include "InferTriple.hpp"
-#include <rete-core/Util.hpp>
+#include "../rete-core/Util.hpp"
 
 
 namespace rete {

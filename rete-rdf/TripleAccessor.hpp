@@ -2,7 +2,7 @@
 #define RETE_TRIPLEACCESSOR_HPP_
 
 #include "Triple.hpp"
-#include <rete-core/ValueAccessor.hpp>
+#include "../rete-core/ValueAccessor.hpp"
 
 namespace rete {
 

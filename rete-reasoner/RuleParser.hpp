@@ -2,7 +2,7 @@
 #define RETE_RULE_PARSER_HPP_
 
 #include <string>
-#include <rete-core/Network.hpp>
+#include "../rete-core/Network.hpp"
 
 #include "RuleGrammar.hpp"
 #include "RuleParserAST.hpp"

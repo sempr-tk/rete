@@ -1,7 +1,7 @@
 #ifndef RETE_TRIPLEJOIN_HPP_
 #define RETE_TRIPLEJOIN_HPP_
 
-#include <rete-core/JoinNode.hpp>
+#include "../rete-core/JoinNode.hpp"
 #include "Triple.hpp"
 
 #include <tuple>

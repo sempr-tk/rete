@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include <rete-core/WME.hpp>
+#include "../rete-core/WME.hpp"
 #include "Evidence.hpp"
 
 namespace rete {

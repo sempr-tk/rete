@@ -2,8 +2,8 @@
 #define RETE_INFERREDEVIDENCE_HPP_
 
 #include "Evidence.hpp"
-#include <rete-core/Token.hpp>
-#include <rete-core/Production.hpp>
+#include "../rete-core/Token.hpp"
+#include "../rete-core/Production.hpp"
 
 namespace rete {
 

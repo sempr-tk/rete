@@ -2,7 +2,7 @@
 
 #include <iostream>
 rete::ProductionNode::ProductionNode(Production::Ptr p)
-    : production_(p)
+    : production_(p), name_("")
 {
 }
 

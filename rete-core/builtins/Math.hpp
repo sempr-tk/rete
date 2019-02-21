@@ -80,7 +80,7 @@ public:
     /**
         Equality operator: checks if the names of the operators and all the operands match.
     */
-    bool operator == (const BetaNode& other) const;
+    bool operator == (const BetaNode& other) const override;
 };
 
 /**

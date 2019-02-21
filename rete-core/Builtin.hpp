@@ -23,7 +23,7 @@ public:
     /**
         Returns the name of the builtin.
     */
-    virtual std::string name() const;;
+    virtual std::string name() const;
 
     /**
         To be implemented: Process a Token. Returns a WME::Ptr containing the newly created data or a nullpointer if the token should not be forwarded to the next stage.

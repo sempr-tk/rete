@@ -44,7 +44,7 @@ public:
             {
                 auto& ast = arg.getAST();
                 if (!ast.isNumber()) throw std::exception(); // not a number constant given to math builtin
-                builtin->addOperand({ast.toFloat()});
+                builtin->addOperand(ast.toFloat());
             }
         }
 

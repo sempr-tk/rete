@@ -36,7 +36,7 @@ namespace rete {
             virtual bool isString() const { return false; }
             virtual bool isURI() const { return false; }
 
-            virtual void substitutePrefixes(const std::map<std::string, std::string>& prefixes)
+            virtual void substitutePrefixes(const std::map<std::string, std::string>&)
             {
                 // nothing to do. only implemented by URIs.
             }

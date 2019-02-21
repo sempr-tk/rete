@@ -21,7 +21,7 @@ void MathBuiltin::addOperand(float val)
 
 void MathBuiltin::addOperand(std::unique_ptr<Accessor> var)
 {
-    if (maxOperands_ >= 0 && maxOperands_ == operands_.size())
+    if (maxOperands_ == operands_.size())
                                 throw std::exception(); // to many operands given
     if (!var)                   throw std::exception(); // nullptr?!
     if (!var->canAs<float>())   throw std::exception(); // no conversion to float possible
@@ -72,7 +72,7 @@ WME::Ptr Sum::process(Token::Ptr token)
     for (auto& o : operands_)
     {
         if (o.variable_)
-            result += o.variable_->as<float>()->value(token);
+            result += o.variable_->value<float>(token);
         else
             result += o.constant_;
     }
@@ -93,7 +93,7 @@ WME::Ptr Mul::process(Token::Ptr token)
     for (auto& o : operands_)
     {
         if (o.variable_)
-            result *= o.variable_->as<float>()->value(token);
+            result *= o.variable_->value<float>(token);
         else
             result *= o.constant_;
     }
@@ -111,10 +111,10 @@ Div::Div()
 WME::Ptr Div::process(Token::Ptr token)
 {
     float numerator, denominator;
-    if (operands_[0].variable_) numerator = operands_[0].variable_->as<float>()->value(token);
+    if (operands_[0].variable_) numerator = operands_[0].variable_->value<float>(token);
     else                        numerator = operands_[0].constant_;
 
-    if (operands_[1].variable_) denominator = operands_[1].variable_->as<float>()->value(token);
+    if (operands_[1].variable_) denominator = operands_[1].variable_->value<float>(token);
     else                        denominator = operands_[1].constant_;
 
     if (denominator == 0.f) throw std::invalid_argument("division by zero!");

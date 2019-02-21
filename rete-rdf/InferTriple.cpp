@@ -64,7 +64,7 @@ std::string InferTriple::ConstructHelper::constructFrom(Token::Ptr token) const
 {
     if (isPredefined_) return string_;
     // NOTE: Assumption is that accessor_->canAs<std::string>()! This is checked in the ctor and init() method.
-    return accessor_->as<std::string>()->value(token);
+    return accessor_->value<std::string>(token);
 }
 
 std::string InferTriple::ConstructHelper::getName() const

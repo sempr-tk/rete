@@ -5,10 +5,10 @@ rete::TripleAccessor::TripleAccessor(rete::Triple::Field field)
 {
 }
 
-std::string rete::TripleAccessor::value(rete::WME::Ptr wme) const
+void rete::TripleAccessor::getValue(rete::WME::Ptr wme, std::string& value) const
 {
     auto triple = std::static_pointer_cast<rete::Triple>(wme);
-    return triple->getField(field_);
+    value = triple->getField(field_);
 }
 
 

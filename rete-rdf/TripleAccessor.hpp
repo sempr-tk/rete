@@ -14,7 +14,7 @@ class TripleAccessor : public ValueAccessor<std::string> {
     bool equals(const Accessor& other) const override;
 public:
     TripleAccessor(Triple::Field field);
-    std::string value(WME::Ptr) const override;
+    void getValue(WME::Ptr, std::string& value) const override;
     std::string toString() const override;
 
     TripleAccessor* clone() const override;

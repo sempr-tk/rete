@@ -67,6 +67,25 @@ public:
     }
 
     /**
+        Shortcut to get the value. Use canAs<T> before trying this!
+    */
+    template <class Type>
+    Type value(WME::Ptr wme)
+    {
+        Type tmp;
+        this->as<Type>()->getValue(wme, tmp);
+        return tmp;
+    }
+
+    template <class Type>
+    Type value(Token::Ptr token)
+    {
+        Type tmp;
+        this->as<Type>()->getValue(token, tmp);
+        return tmp;
+    }
+
+    /**
         Equality between accessors is given when they use the same token-index, are of the same type
         and access the same part of a WME.
         This operator only implements the token-index-check and calls the pure virtual equals-method
@@ -137,13 +156,15 @@ public:
 
     /**
         Returns the value extracted from the WME as <Type>.
+        Sadly this can't use the return type, or else you won't be able to implement multiple
+        ValueAccessor<T>s in one accessor (return type is not part of the function signature).
     */
-    virtual Type value(WME::Ptr) const = 0;
+    virtual void getValue(WME::Ptr, Type& value) const = 0;
 
     /**
         Returns the value extracted from the WME in the token.
     */
-    Type value(Token::Ptr token) const
+    void getValue(Token::Ptr token, Type& value) const
     {
         if (index_ < 0)
             throw std::invalid_argument("ValueAccessor constructed for WMEs only applied to Token");
@@ -160,7 +181,7 @@ public:
                 "ValueAccessor indexes entry no. " + std::to_string(index_) +
                 " but the Token has " + std::to_string(count) + " entries too few.");
 
-        return value(token->wme);
+        this->getValue(token->wme, value);
     }
 
     /**
@@ -181,10 +202,11 @@ public:
         // handle the different cases, where both accessors can either be created to access a WME
         // or a token. Normally, this method should only be called by joins, where one is applied
         // to a token and the other to a wme.
-        if      (index() == -1 && o.index() == -1)    return value(wme)   == o.value(wme);
-        else if (index() != -1 && o.index() == -1)    return value(token) == o.value(wme);
-        else if (index() == -1 && o.index() != -1)    return value(wme)   == o.value(token);
-        else /* (index() != -1 && o.index() != -1) */ return value(token) == o.value(token);
+        if      (index() == -1 && o.index() == -1)return value<Type>(wme)   == o.value<Type>(wme);
+        else if (index() != -1 && o.index() == -1)return value<Type>(token) == o.value<Type>(wme);
+        else if (index() == -1 && o.index() != -1)return value<Type>(wme)   == o.value<Type>(token);
+             /* (index() != -1 && o.index() != -1) */
+        else                                      return value<Type>(token) == o.value<Type>(token);
     }
 };
 

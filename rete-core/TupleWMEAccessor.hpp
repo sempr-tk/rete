@@ -21,10 +21,10 @@ class TupleWMEAccessor : public ValueAccessor<T> {
         return false;
     }
 public:
-    T value(WME::Ptr wme) const override
+    void getValue(WME::Ptr wme, T& value) const override
     {
         auto twme = std::static_pointer_cast<TWME>(wme);
-        return std::get<I>(twme->value_);
+        value = std::get<I>(twme->value_);
     }
 
     TupleWMEAccessor* clone() const override { return new TupleWMEAccessor(*this); }

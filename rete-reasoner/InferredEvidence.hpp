@@ -18,6 +18,8 @@ public:
     std::string toString() const override;
 
     Token::Ptr token() const;
+
+    static const int TypeId = 1; // init allowed because it's const!
 };
 
 } /* rete */

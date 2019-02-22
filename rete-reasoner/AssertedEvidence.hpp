@@ -15,6 +15,8 @@ public:
     bool operator < (const Evidence& other) const override;
 
     std::string toString() const override;
+
+    static const int TypeId = 0;
 };
 
 } /* rete */

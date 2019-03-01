@@ -216,13 +216,13 @@ public:
 
     // convenience
     int getInt(WME::Ptr wme) const { int tmp; getValue(wme, tmp); return tmp; }
-    int getLong(WME::Ptr wme) const { long tmp; getValue(wme, tmp); return tmp; }
-    int getFloat(WME::Ptr wme) const { float tmp; getValue(wme, tmp); return tmp; }
-    int getDouble(WME::Ptr wme) const { double tmp; getValue(wme, tmp); return tmp; }
+    long getLong(WME::Ptr wme) const { long tmp; getValue(wme, tmp); return tmp; }
+    float getFloat(WME::Ptr wme) const { float tmp; getValue(wme, tmp); return tmp; }
+    double getDouble(WME::Ptr wme) const { double tmp; getValue(wme, tmp); return tmp; }
     int getInt(Token::Ptr token) const { int tmp; getValue(token, tmp); return tmp; }
-    int getLong(Token::Ptr token) const { long tmp; getValue(token, tmp); return tmp; }
-    int getFloat(Token::Ptr token) const { float tmp; getValue(token, tmp); return tmp; }
-    int getDouble(Token::Ptr token) const { double tmp; getValue(token, tmp); return tmp; }
+    long getLong(Token::Ptr token) const { long tmp; getValue(token, tmp); return tmp; }
+    float getFloat(Token::Ptr token) const { float tmp; getValue(token, tmp); return tmp; }
+    double getDouble(Token::Ptr token) const { double tmp; getValue(token, tmp); return tmp; }
 
     bool canCompareValues(const Accessor& other) const override;
     bool valuesEqual(Accessor& other, Token::Ptr token, WME::Ptr wme) override;

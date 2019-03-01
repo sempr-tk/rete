@@ -28,17 +28,31 @@ While the rete network is constructed implicitly by connecting nodes, the Networ
 
 The working memory element (WME) class is the base for all types of knowledge that is to be processed in the rete network. An example for a concrete type is the rete::Triple class which represents simple string triples, but you may implement whatever you need here. Just make sure that a WME must be constant within the network, and every change must be stated explicitly by retracting and asserting WMEs.
 
+WMEs are also used to store the values of (custom) builtin nodes. The semantics differ towards "normal" WMEs: Those computed in a builtin simply hold in the context of a (partly-) matched rule (see Token below). This is relevant for the reasoning process explained later on.
+
 ### rete::TupleWME
 
 The TupleWME-class is a template class which can be used to easily implement simple WMEs that hold multiple values. It was developed after the first tests with triples, thus although one could express rdf-triples as a `TupleWME<std::string, std::string, std::string>`, this is not the case, and IMHO should not be done in such a way. The entries in an RDF-Triple are more than just strings, even though they are implemented as such. The TupleWME is rather considered to be a utility class for custom builtins or other nodes that might want to compute values (int, double, string, ...) from the given token, and store their result in the token by adding a TupleWME.
 
-### rete::Accessor / rete::ValueAccessor / rete::TupleWMEAccessor
+### rete::Accessor / rete::StringAccessor / rete::NumberAccessor / ...
 
-The nodes in a network implement checks on the WMEs that are processed through it. Since the basic rete network should be applicable in different domains, with different implementations for WMEs etc., a more or less WME-independent way of accessing values inside the WME is needed. But at the same time the nodes will need to know the datatype they get. The following structure is an approach to solving this problem: The `rete::Accessor` is the base class for objects that can be used to extract values from WMEs, and from WMEs in tokens. The idea is that when constructing the network you know the structure of the tokens at each node, and you also know which value you want to extract from which WME in the token to process it in a node in the network. Hence you can create a `rete::Accessor` instance and hand it to the node, which no longer needs to know the type of the WME it gets to extract the value itself. Think of it as some kind of variable bindings. The next problem is that you cannot specify an interface to _arbitrary_ data. So the `rete::Accessor` has no methods to access the data directly, it can only be asked which instantiations of  `template <typename T> rete::ValueAccessor` it implements -- if you want to process a string, you can check `if (accessor->canAs<std::string>())`, which internally checks if the accessor can be cast to a `rete::ValueAccessor<std::string>`, which in turn has the method to extract a string from a WME: `std::string value(WME::Ptr) const;`.
+The nodes in a network implement checks on the WMEs that are processed through it. Since the basic rete network should be applicable in different domains, with different implementations for WMEs etc., a more or less WME-independent way of accessing values inside the WME is needed. But at the same time the nodes will need to know the datatype they get. The following structure is an approach to solving this problem: The `rete::Accessor` is the base class for objects that can be used to extract values from WMEs, and from WMEs in tokens. The idea is that when constructing the network you know the structure of the tokens at each node, and you also know which value you want to extract from which WME in the token to process it in a node in the network. Hence you can create a `rete::Accessor` instance and hand it to the node, which no longer needs to know the type of the WME it gets to extract the value from itself. Think of it as some kind of variable bindings. The next problem is that you cannot specify an interface to _arbitrary_ data. So the `rete::Accessor` has no methods to access the data directly, it can only be asked which more concrete interfaces it implements: `rete::StringAccessor` and `rete::NumberAccessor`. Be aware that the latter also implements the `rete::StringAccessor` interface, so that numbers can also be interpreted as strings. You can use `accessor->canAs<rete::NumberAccessor>()` to check for the type, and
 
-One implementation of this interface is the `rete::TupleWMEAccessor`, which simply returns n-th value from a `rete::TupleWME`. Please be aware that the accessor itself **does not check** if the given WME is of corect type, but assumes that it is the correct type of TupleWME, since you should know this when constructing the network.
+```c++
+auto numAcc = accessor->as<rete::NumberAccessor>();
+if (numAcc->canGetFloat())
+{
+    float value = numAcc->getFloat();
+}
+```
 
-> ***NOTE:*** _This is work in progress. Accessors for Triples might not exist yet, and neither do the nodes accept accessors by now. Also, the following examples do not take these changes into account, though at the state of this writing, they are all functional (only include paths need to be adjusted)._
+To extract a value. The `canGetFloat()` check is optional: It determines if the underlying datatype can be (more or less) safely cast to a float. `canGetFloat()` returns `false` if the underlying datatype is a `double`, as well as `canGetInt()` does if it would try to convert from `long`, `float` or `double`, etc., you get the point. But you can still just cast it.
+
+One implementation of this interface is the `rete::TupleWMEAccessor`, which simply returns n-th value from a `rete::TupleWME`. Please be aware that the accessor itself **does not check** if the given WME is of correct type, but assumes that it is the correct type of TupleWME, since you should know this when constructing the network.
+
+The accessors are especially useful for the rule parser and the reasoner, who need to construct and use a network which is defined in a string given by the user.
+
+> ***NOTE:*** _This is work in progress. Not all the nodes accept accessors by now. Also, the following examples do not take these changes into account, though at the state of this writing, they are all functional (only include paths need to be adjusted)._
 
 
 
@@ -53,6 +67,21 @@ A storage for WMEs that match a the conditions checked by the chain of alpha nod
 ### rete::BetaNode
 
 Beta nodes generally (with maybe some exceptions) perform checks on multiple WMEs. They can be connected to a BetaMemory and an AlphaMemory and are used to create joins between partial matches (BetaMemory) and the WMEs satisfying the next condition in the clause (AlphaMemory). The results are (extended) Tokens which are stored in the next BetaMemory. See e.g. the TripleJoin class. Think of inter-WME-conditions, while AlphaNodes implement intra-WME-conditions: AlphaNodes are used to find triples of the form "(?a foo bar)" and "(something else ?a)", and a BetaNode makes sure that the subject of the first triple in the results matches the object of the second triple (?a == ?a).
+
+#### Different kinds of join nodes & rete::GenericJoin
+
+The BetaNodes described above are basically join nodes, and there are several implemented by now, **though you should only use the `GenericJoin`:**
+
+- `JoinNode`, an abstract interface for joins
+- `JoinUnconditional`, which simply produces all combinations between the entries in the alpha and beta memory
+- `TripleJoin`, an implementation of a `JoinNode` which solely works on triples. 
+- **`GenericJoin`** is the recommended way to go.  It accepts pairs of `Accessor` objects, which are then applied on the respective token and WME to extract and compare the values. (This is also the reason why the accessors need to implement a `bool canCompareValues(const Accessor& other)` and `bool valuesEqual(Accessor& other, Token::Ptr token, WME::Ptr wme)`).
+
+### rete::Builtin
+
+In order to extend the functionalities of the rete network it is possible to define custom beta nodes that compute values from token, called `rete::Builtin`s. A simple use case would e.g. be to do some simple mathematical computations or comparisons.
+
+>  _**NOTE:** Though the code base for builtins is already implemented, only few builtins exist yet -- namely: Sum, Mul and Div. More will be added later, including string operations etc._
 
 ### rete::BetaMemory
 
@@ -78,9 +107,11 @@ The agenda is a list of triples consisting of a token, a production and a propag
 
 ## Example Network
 
+> _**NOTE:** This example is a result from a very early stage of development. It is still valid, but you probably want to use the reasoner and rule parser instead of constructing the patterns yourself. Also, the graphical visualization of your network will differ a bit._
+
 The following network represents the pattern `(?a self ?b) (?x color red) (?y color red)`. For more complex patterns like `(?a self ?a) (?a color red)` where you need to intra-consistency checks and conditional joins, see the test files.
 
-You can convert the dot-file to a png using
+You can convert a dot-file to a png using
 ```
 dot -Tpng network.dot > network.png
 ```
@@ -91,7 +122,7 @@ which will give you something like this (old picture, see sections RuleParser/Re
 
 ## Reasoning
 
-Our main use case for the rete network is not only pattern matching, but _reasoning_. The rete algorithm is used to find matches for the preconditions of the rules, which are then executed to infer new WMEs that are added to the network, etc.
+Our main use case for the rete network is not only pattern matching, but _reasoning_. The rete algorithm is used to find matches for the preconditions of the rules, which are then executed to infer new WMEs that are added to the network, and trigger new matches themselves.
 
 To manage the known facts and multiple sources (assertions or inference chains) for them, a few more classes are implemented in a more or less generic way:
 
@@ -110,7 +141,7 @@ A wrapper for WMEs that adds a list of evidences to it.
 
 ### rete::Reasoner
 
-The reasoner contains two things: A rete network and a set of BackedWMEs. It allows us to add and remove evidences, and adds/retracts WMEs to/from the network when necessary. It also provides methods to perform the inference. To do so, it simply takes the first item on the networks agenda, executes it and, if a token was asserted, takes inferred WMEs from the production and adds them to the knowledge base, with the token and the production as evidence.
+The reasoner contains two things: A rete network and a set of BackedWMEs. It allows us to add and remove evidences, and adds/retracts WMEs to/from the network when necessary. It also provides methods to perform the inference. To do so, it simply takes the first item from the networks agenda, executes it and, if a token was asserted, takes inferred WMEs from the production and adds them to the knowledge base, with the token and the production as evidence.
 
 "Executing an AgendaItem" means to call the `execute` method of its production with the provided token and the propagation flag. In case the flag is "ASSERTED" we are performing normal forward inference, and the production is allowed to infer new WMEs. When the flag is "RETRACTED" this is not possible, as the only token we have as a "reason" is currently being removed from the knowledge base. If you want to infer knowledge from the absence of WMEs / tokens, consider implementing negative nodes in the rete network.
 
@@ -184,7 +215,9 @@ It then adds the facts: `(A rdfs:subClassOf B)` , `(B rdfs:subClassOf C)` and `(
 
 And when the triple `(B rdfs:subClassOf C)` is removed, all three inferred triples get removed, too.
 
-Code (see [SubClassExample.cpp](test/SubClassExample.cpp)):
+Code (see [SubClassExample.cpp](examples/SubClassOfExample.cpp)):
+
+> _**NOTE:** This example shows what is needed to construct a network for the given task. But by now we have the RuleParser, which you can feed with the above string representation of the rule to construct the whole network. Make sure to check out the description of the RuleParser in later sections of this README._
 
 ```c++
 #include <iostream>
@@ -305,30 +338,49 @@ If we now remove our asserted triple `(B rdfs:subClassOf C)` the whole construct
 
 
 
-> **TODO**: The reasoner does not provide an interface to access the inferred triples yet, an does not have a way to export changes (added and retracted inferences)
+To make use of the inferred statements you will need to catch them when they are created. For this purpose, the reasoner allows registering a callback function `void(WME::Ptr, rete::PropagationFlag)`, e.g.:
+
+```c++
+rete::Reasoner r;
+auto callback = [](WME::Ptr wme, rete::PropagationFlag flag)
+{
+    std::cout << (flag == rete::PropagationFlag::ASSERT ? "asserted: " : "retracted: ")
+        	  << wme->toString()
+        	  << std::endl;
+}
+r.setCallback(callback);
+```
 
 
 
 ### RuleParser
 
-Of course, constructing the network manually in the is cumbersome. It would be way more convenient to write rules in a simple, text based structure, and let the network be constructed automatically from those rules. This is where the  `rete::RuleParser` comes in: It takes a string as an input, parses is according to the grammar described below, and constructs a rete network from the input, reusing nodes when possible (with limitations).
+Of course, constructing the network manually in code is cumbersome. It would be way more convenient to write rules in a simple, text based structure, and let the network be constructed automatically from those rules. This is where the  `rete::RuleParser` comes in: It takes a string as an input, parses it according to the grammar described below, and constructs a rete network from the input, reusing nodes when possible (with limitations).
 
-The grammar is defined in EBNF, for the complete definition see `RuleParser.cpp`. The main parts of it are as follows:
+The grammar is defined in EBNF, for the complete definition see `RuleGrammar.hpp`. The main parts of it are as follows (_simplified, shortened version_):
 
 ```
 prefixname  ::= alphanum+
 prefixdef   ::= '@PREFIX' prefixname ':' iriref
 prefixeduri ::= prefixname ':' alphanum+
+variable 	::= '?' alphanum+
 
 subject   ::= variable | iriref | blank_node_label
 predicate ::= variable | iriref
 object    ::= variable | iriref | blank_node_label | literal
 
+argument  	::= quotedString | number | variable;
+builtinName ::= alphanum+ (':' alphanum+)?
+builtin 	::= builtinName '(' argument* ')'
+
 triple    ::= '(' subject predicate object ')'
-triples   ::= triple (',' triple)*
-rulename  ::= alphanum+ ':'
-rule      ::= '[' rulename? triples '->' triples ']'
-rules     ::= rule+
+
+precondition ::= triple | builtin
+effect 		 ::= triple
+
+rulename ::= alphanum+ ':'
+rule   ::= '[' rulename? precondition (',' precondition)* '->' effect (',' effect)* ']'
+rules  ::= prefixdef* rule+
 ```
 
 To shorten the URIs in your rules for RDF based reasoning you may specify prefixes, e.g.:
@@ -348,9 +400,7 @@ is equivalent to:
 		(?a <http://www.w3.org/2000/01/rdf-schema#subClassOf> ?c)]
 ```
 
-(Prefixes are not used in the following examples, instead URIs are shortened to the smallest patterns our parser currently allows. Be aware that they are not valid URIs, but this is not relevant for the created networks and the reasoning in general.)
-
-
+> _**NOTE:** (Prefixes are not used in the following examples, instead URIs are shortened to the smallest patterns our parser currently allows. Be aware that they are not valid URIs, but this is not relevant for the created networks and the reasoning in general.)_
 
 As an example, some non-sense rules and the created network are shown below:
 
@@ -447,3 +497,9 @@ This code creates two networks with two rules, where only the third condition is
 
 
 I think you can recognize which network is more efficient. :slightly_smiling_face:
+
+#### Extending the RuleParser
+
+The RuleParser makes excessive use of the accessor objects introduced previously. While constructing the nodes for a single rule, the parser keeps track of the current variable bindings: A binding is a mapping from a variable name to an accessor, which describes how to get the value from a token at this point in the rule. When creating a single precondition (let it be the check for a (single!) triple pattern or a builtin) or an effect, the parser uses `NodeBuilder` object to do so. Currently implemented and registered by default are the `TripleConditionBuilder`, `TripleEffectBuilder` and `MathBuiltinBuilder`. They are selected by the name of the condition/builtin/effect in the rule, and are given an argument list containing constants, bound and unbound variables. The node builders know how to construct the necessary nodes to fulfill their task in the network, need to check the given arguments for their correct types, and must bind all unbound variables to a new accessor that matches the result WME of the created node. E.g., the math builtins always add a  `TupleWME<float>`, and their node builder thus binds a `TupleWME<float>::Accessor<0>` to the first argument, so that it points to the result of the computation.
+
+If you want to use your own builtins, create node builders for them and register those at the rule parser using `parser.registerNodeBuilder<MySuperNodeBuilder>()`. Have a look at the existing builders to see how to implement your own, the code should be well documented.

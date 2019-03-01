@@ -2,7 +2,7 @@
 #define RETE_BUILTIN_MATH_HPP
 
 #include "../Builtin.hpp"
-#include "../ValueAccessor.hpp"
+#include "../Accessors.hpp"
 
 
 #include <vector>

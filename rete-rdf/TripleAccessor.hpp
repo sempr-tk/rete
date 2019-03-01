@@ -2,14 +2,15 @@
 #define RETE_TRIPLEACCESSOR_HPP_
 
 #include "Triple.hpp"
-#include "../rete-core/ValueAccessor.hpp"
+#include "../rete-core/Accessors.hpp"
 
 namespace rete {
 
 /**
     Accessors for rdf triples
+    TODO: Allow interpretation of values as numbers? --> Derive from NumberAccessor
 */
-class TripleAccessor : public ValueAccessor<std::string> {
+class TripleAccessor : public StringAccessor {
     Triple::Field field_;
     bool equals(const Accessor& other) const override;
 public:

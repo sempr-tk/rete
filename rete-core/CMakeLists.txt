@@ -1,4 +1,5 @@
 set(CORE_SRC
+    Accessors.cpp
     Agenda.cpp
     AgendaNode.cpp
     AlphaBetaAdapter.cpp
@@ -16,7 +17,6 @@ set(CORE_SRC
     ProductionNode.cpp
     Token.cpp
     Util.cpp
-    ValueAccessor.cpp
     WME.cpp
     WMEComparator.cpp
 )

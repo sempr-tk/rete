@@ -2,7 +2,7 @@
 #define RETE_PARSER_ARGUMENT_HPP_
 
 #include "RuleParserAST.hpp"
-#include "../rete-core/ValueAccessor.hpp"
+#include "../rete-core/Accessors.hpp"
 #include <vector>
 
 namespace rete {

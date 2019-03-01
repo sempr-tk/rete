@@ -2,7 +2,7 @@
 #define RETE_INFERTRIPLE_HPP_
 
 #include "../rete-core/Production.hpp"
-#include "../rete-core/ValueAccessor.hpp"
+#include "../rete-core/Accessors.hpp"
 
 #include "Triple.hpp"
 

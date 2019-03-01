@@ -7,7 +7,7 @@
 
 #include "JoinNode.hpp"
 #include "Util.hpp"
-#include "ValueAccessor.hpp"
+#include "Accessors.hpp"
 
 
 #include <iostream>

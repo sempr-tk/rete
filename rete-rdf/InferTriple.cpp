@@ -17,7 +17,7 @@ InferTriple::ConstructHelper::ConstructHelper(const char* predefined)
 InferTriple::ConstructHelper::ConstructHelper(std::unique_ptr<Accessor> accessor)
     : isPredefined_(false), string_("")
 {
-    if (!accessor->canAs<std::string>())
+    if (!accessor->canAs<StringAccessor>())
     {
         throw std::exception(); // see init(...) method
     }
@@ -50,7 +50,7 @@ void InferTriple::ConstructHelper::init(const char* predefined)
 
 void InferTriple::ConstructHelper::init(std::unique_ptr<Accessor> accessor)
 {
-    if (!accessor->canAs<std::string>())
+    if (!accessor->canAs<StringAccessor>())
     {
         throw std::exception(); // InferTriple only works with strings
         // TODO: Implement some kind of "NumberAccessor" that works with float, int, ... but also allows conversion to string.
@@ -63,8 +63,8 @@ void InferTriple::ConstructHelper::init(std::unique_ptr<Accessor> accessor)
 std::string InferTriple::ConstructHelper::constructFrom(Token::Ptr token) const
 {
     if (isPredefined_) return string_;
-    // NOTE: Assumption is that accessor_->canAs<std::string>()! This is checked in the ctor and init() method.
-    return accessor_->value<std::string>(token);
+    // NOTE: Assumption is that accessor_->canAs<StringAccessor>()! This is checked in the ctor and init() method.
+    return accessor_->as<StringAccessor>()->getString(token);
 }
 
 std::string InferTriple::ConstructHelper::getName() const

@@ -110,6 +110,51 @@ struct tuple_printer<std::tuple<Args...>>
 {
 };
 
+
+
+/**
+    Check if the conversion is (more or less) safe. It checks if the common_type of From and To is
+    To. I guess this is enough. In the cppreference there is an example for mixed-mode arithmetics
+    using std::common_type in a similar way.
+*/
+template <typename From, typename To,
+          typename Base = typename std::conditional<
+                                std::is_same< To,
+                                              typename std::common_type<From, To>::type
+                                            >::value,
+                                std::true_type,
+                                std::false_type
+                          >::type
+        >
+struct safe_conversion : Base {};
+
+/**
+    Check if the first type is contained somewhere in the type list
+*/
+template <class T, class Head, class... Tail> struct one_of : one_of<T, Tail...> {};
+
+// first element matched?
+template <class T, class... Tail>
+struct one_of<T, T, Tail...> {
+    static constexpr bool value = true;
+    typedef T type;
+};
+
+// last element matched?
+template <class T>
+struct one_of<T, T> {
+    static constexpr bool value = true;
+    typedef T type;
+};
+
+// last one doesn't match?
+template <class T, class H>
+struct one_of<T, H> {
+    static constexpr bool value = false;
+};
+
+
+
 } /* util */
 } /* rete */
 

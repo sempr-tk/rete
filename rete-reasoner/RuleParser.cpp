@@ -89,7 +89,9 @@ bool RuleParser::parseRules(const std::string& rulestring_pre, Network& network)
         */
         for (auto& rule : root->rules_)
         {
-            std::cout << "Rule: " << std::endl;
+            std::cout << "Rule: ";
+            if (rule->name_) std::cout << *rule->name_;
+            std::cout << std::endl;
             for (auto& condition : rule->conditions_)
             {
                 std::cout << "  Condition:" << std::endl;
@@ -350,8 +352,7 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
     } // end loop over conditions
 
 
-    // TODO: create productions / effects. Maybe use extent the NodeBuilders for that?
-
+    //  create productions / effects
     for (auto& effect : rule.effects_)
     {
         // find the correct builder

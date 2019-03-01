@@ -52,6 +52,7 @@ class RuleParser : peg::ASTParserDelegate {
     peg::BindAST<ast::InferTriple> inferTriple = RuleGrammar::get().inferTriple;
 
     // rules
+    peg::BindAST<peg::ASTString> rulename = RuleGrammar::get().rulename;
     peg::BindAST<ast::Rule> rule = RuleGrammar::get().rule;
     peg::BindAST<ast::Rules> rules = RuleGrammar::get().rules;
 

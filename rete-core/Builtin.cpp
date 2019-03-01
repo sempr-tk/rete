@@ -32,6 +32,10 @@ void Builtin::leftActivate(Token::Ptr token, PropagationFlag flag)
     {
         // process the submatch
         auto computed = process(token);
+
+        // mark the WME as a computed one --> does not need evidence to hold inside a token.
+        computed->isComputed_ = true;
+
         if (computed)
         {
             bmem_->leftActivate(token, computed, flag);

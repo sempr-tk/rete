@@ -62,7 +62,5 @@ int main()
     // and
     // [(B foo C) (C foo D)]
     if (join->getBetaMemory()->size() == 2) return 0;
-    return 1;
-
-    return 0;
+    return join->getBetaMemory()->size() - 2;
 }

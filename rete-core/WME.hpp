@@ -4,14 +4,25 @@
 #include <memory>
 
 namespace rete {
+
+    class Builtin; // forward declaration of builtin base class.
+
 /**
     The base class for all working memory elements in the rete network.
     These are the facts to be added.
+
+    Also, Builtins can compute values and add them as WMEs to a token.
+    TODO: This return value of a Builtin should probably become a class of its own, but for now it should suffice to use WMEs for that. There's one catch: Computed values are reasoner-internal. They are not added to the fact base as asserted/inferred values, but are computations that are only valid inside the execution context of a rule. So we need to mark them as such computations, that they don't need to be checked for evidence in the fact-base when checking which facts still hold. --> isComputed_ flag.
 */
 class WME {
+    bool isComputed_;
+    friend class Builtin; // the Builtin base class sets the isComputed_ value
 public:
     using Ptr = std::shared_ptr<WME>;
+    WME();
     virtual ~WME() {};
+
+    bool isComputed() const;
 
     /**
         For visualization only

@@ -3,7 +3,10 @@
 
 #include "WME.hpp"
 #include "TupleWMEAccessor.hpp"
+#include "Util.hpp"
 #include <tuple>
+
+#include <sstream>
 
 namespace rete {
 
@@ -13,11 +16,11 @@ namespace rete {
 template <class... Types>
 class TupleWME : public WME {
 public:
+    std::tuple<Types...> value_;
+
     template <size_t I> using Accessor = TupleWMEAccessor<I, TupleWME>;
     template <size_t, typename, typename> friend class TupleWMEAccessor;
-private:
-    std::tuple<Types...> value_;
-public:
+
     using Ptr = std::shared_ptr<TupleWME>;
 
     TupleWME(Types... args)
@@ -27,7 +30,12 @@ public:
 
     std::string toString() const override
     {
-        return "TupleWME[" + std::to_string(sizeof...(Types)) + "]";
+        std::stringstream ss;
+        ss << "TupleWME(";
+        util::tuple_printer<decltype(value_)>::print(value_, ss);
+        ss << ")";
+        return ss.str();
+        // return "TupleWME[" + std::to_string(sizeof...(Types)) + "]";
     }
 
     bool operator < (const WME& other) const override

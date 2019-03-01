@@ -23,7 +23,8 @@ int main()
 
     // TODO: InferTriple only accepts string so for. Need to implement a more versatile ValueAccessor.
     bool ok = p.parseRules(
-"[(?a <foo> ?b), sum(?sum 1 1.0 100.0e-2), mul(?neg ?sum -1), div(?quot ?neg -3.0) -> (<a> <b> <c>)]\n",
+"[computation: (?a <foo> ?b), sum(?sum 1 1.0 100.0e-2), mul(?neg ?sum -1), div(?quot ?neg -3.0) -> (<a> <sum> ?sum), (<a> <neg> ?neg), (<a> <quot> ?quot)]\n"
+"[debug: (<a> ?b ?c) -> (<just> <lookat> <alphamemory>)]",
         reasoner.net()
     );
 

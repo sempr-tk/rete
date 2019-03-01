@@ -27,6 +27,9 @@ public:
     std::string toString() const override;
 
     TripleAccessor* clone() const override;
+
+    bool canCompareValues(const Accessor& other) const override;
+    bool valuesEqual(Accessor& other, Token::Ptr token, WME::Ptr wme) override;
 };
 
 

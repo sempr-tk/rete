@@ -8,11 +8,19 @@ namespace rete {
 
 /**
     Accessors for rdf triples
-    TODO: Allow interpretation of values as numbers? --> Derive from NumberAccessor
+
+    TODO: This is rather quickly hacked together. It should not inherit SpecificNumAccessor<float>,
+        but rather NumberAccessor, and implement all the checks and conversions itself, and base
+        them on the actual string inside the triple. It needs to take typed literals into account,
+        so e.g. "3.14"^^<xsd:float> is correctly parsed as a float.
+
+    For now, it just assumes plain numbers without any extra annotations, quotations etc., and
+    parses them with a stringstream.
 */
-class TripleAccessor : public StringAccessor {
+class TripleAccessor : public SpecificNumAccessor<float> {
     Triple::Field field_;
     bool equals(const Accessor& other) const override;
+    float internalValue(WME::Ptr) const override;
 public:
     TripleAccessor(Triple::Field field);
     void getValue(WME::Ptr, std::string& value) const override;

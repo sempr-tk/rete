@@ -1,4 +1,5 @@
 #include "TripleAccessor.hpp"
+#include <sstream>
 
 rete::TripleAccessor::TripleAccessor(rete::Triple::Field field)
     : field_(field)
@@ -18,6 +19,17 @@ bool rete::TripleAccessor::equals(const rete::Accessor& other) const
     if (!o) return false;;
     if (this->field_ == o->field_) return true;
     return false;
+}
+
+float rete::TripleAccessor::internalValue(WME::Ptr wme) const
+{
+    std::string str;
+    getValue(wme, str);
+
+    float value;
+    std::istringstream(str) >> value;
+    
+    return value;
 }
 
 

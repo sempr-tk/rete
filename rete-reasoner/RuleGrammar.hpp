@@ -78,7 +78,7 @@ public:
     Rule predicate  = rtrace("predicate", term(variable | iriref | prefixedURI));
     Rule object     = rtrace("object",    term(variable | iriref | prefixedURI | blank_node_label | literal));
 
-    Rule triple = rtrace("triple",   ('('_E >> subject >> predicate >> object >> ')'));
+    Rule triple = rtrace("triple", -"noValue"_E >> '('_E >> subject >> predicate >> object >> ')');
     // cannot reuse triple for infertriple, would lead to triple being constructed before infertriple, and the infertriple being empty...
     Rule inferTriple = rtrace("inferTriple", '('_E >> subject >> predicate >> object >> ')');
 
@@ -86,7 +86,7 @@ public:
 
     Rule argument = rtrace("argument", term(quotedString | number | variable));
     Rule builtinName = rtrace("builtinName", +alphanum >> -(":"_E >> +alphanum));
-    Rule builtin = rtrace("builtin", builtinName >> "(" >> *argument >> ")");
+    Rule builtin = rtrace("builtin", -"noValue"_E >> builtinName >> "(" >> *argument >> ")");
     Rule precondition = rtrace("precondition", triple | builtin);
     Rule effect = rtrace("effect", inferTriple);
 

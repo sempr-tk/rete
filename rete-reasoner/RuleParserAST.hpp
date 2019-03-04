@@ -99,6 +99,7 @@ namespace rete {
 
 
         class Precondition : public peg::ASTContainer {
+            bool noValue_;
         public:
             friend std::ostream& operator << (std::ostream&, Precondition&);
 
@@ -121,6 +122,30 @@ namespace rete {
             {
                 if (name_) return *name_;
                 return "Triple";
+            }
+
+            bool isNoValue() { return noValue_; }
+
+            bool construct(const peg::InputRange& r, peg::ASTStack& st, const peg::ErrorReporter& err)
+            {
+                noValue_ = false;
+
+                auto str = r.str();
+                // std::cout << "constructing precondition from string: " << str << std::endl;
+
+                // check for optional prefix
+                const std::string negation = "noValue";
+                if (str.size() > negation.size())
+                {
+                    auto it = std::mismatch(std::begin(negation), std::end(negation), std::begin(str));
+                    if (it.first == std::end(negation))
+                    {
+                        // std::cout << "precondition is negated!" << std::endl;
+                        noValue_ = true;
+                    }
+                }
+
+                return peg::ASTContainer::construct(r, st, err);
             }
         };
 

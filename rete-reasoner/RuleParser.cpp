@@ -94,7 +94,11 @@ bool RuleParser::parseRules(const std::string& rulestring_pre, Network& network)
             std::cout << std::endl;
             for (auto& condition : rule->conditions_)
             {
-                std::cout << "  Condition:" << std::endl;
+                std::cout << "  Condition: "
+                          << (condition->isNoValue() ? "-" : "+")
+                          << " "
+                          << condition->type()
+                          << std::endl;
                 for (auto& arg : condition->args_)
                 {
                     arg->substitutePrefixes(prefixes);
@@ -319,6 +323,9 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
         }
         else if (builder.builderType() == NodeBuilder::BUILTIN)
         {
+            // rules *must* start with an alpha check
+            if (!currentBeta) throw std::exception();
+
             // create and implement the builtin node
             Builtin::Ptr builtin = builder.buildBuiltin(args);
             currentBeta = implementBetaNode(builtin, currentBeta, nullptr);

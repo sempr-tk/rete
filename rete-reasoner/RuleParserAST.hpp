@@ -8,6 +8,8 @@
 #include <sstream>
 #include <map>
 
+#include <iostream>
+
 /**
 This file contains the class declarations from which an AST can be constructed. The actual
 construction is done by the parserlib library and according to the rule grammar.
@@ -131,17 +133,22 @@ namespace rete {
                 noValue_ = false;
 
                 auto str = r.str();
-                // std::cout << "constructing precondition from string: " << str << std::endl;
+                std::cout << "constructing precondition from string: " << str << std::endl;
 
                 // check for optional prefix
-                const std::string negation = "noValue";
-                if (str.size() > negation.size())
+                const std::string negations[] = {"noValue ", "no ", "novalue " };
+
+                for (auto& negation : negations)
                 {
-                    auto it = std::mismatch(std::begin(negation), std::end(negation), std::begin(str));
-                    if (it.first == std::end(negation))
+                    if (str.size() > negation.size())
                     {
-                        // std::cout << "precondition is negated!" << std::endl;
-                        noValue_ = true;
+                        auto it = std::mismatch(std::begin(negation), std::end(negation), std::begin(str));
+                        if (it.first == std::end(negation))
+                        {
+                            std::cout << "precondition is negated!" << std::endl;
+                            noValue_ = true;
+                            break;
+                        }
                     }
                 }
 
@@ -158,6 +165,9 @@ namespace rete {
         };
 
         class Builtin : public Precondition {
+        };
+
+        class GenericAlphaCondition : public Precondition {
         };
 
 
@@ -187,6 +197,9 @@ namespace rete {
             const Argument& subject() const { return **args_.begin(); }
             const Argument& predicate() const { return **(++args_.begin()); }
             const Argument& object() const { return **(++(++args_.begin())); }
+        };
+
+        class GenericEffect : public Effect {
         };
 
 

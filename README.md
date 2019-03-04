@@ -1,3 +1,5 @@
+[![pipeline status](https://git.hb.dfki.de/nniemann/rete/badges/master/pipeline.svg)](https://git.hb.dfki.de/nniemann/rete/commits/master)
+
 # Rete Algorithm in C++
 
 Rete is an algorithm for efficient pattern matching which is often used in business production rule systems to perform forward inference: The rules are translated into a graph structure, the rete (network), where every node implements some part of the condition-checks. By storing intermediate results in memory nodes, and reusing these nodes whenever possible, for multiple rules, the Rete algorithm gains improved evaluation speed (incremental updates are possible) on the cost of increased memory usage.

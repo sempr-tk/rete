@@ -3,10 +3,12 @@ cmake_minimum_required(VERSION 2.8)
 project(rete)
 add_definitions(-std=c++11 -Wall -Wextra -pedantic -Wnon-virtual-dtor)
 
+option(DEBUG_PARSING "enable debug output while parsing rules" false)
 if(${DEBUG_PARSING})
     add_definitions(-DDEBUG_PARSING)
 endif()
 
+option(DEBUG_AST "enable debug output while constructing AST" false)
 if (${DEBUG_AST})
     add_definitions(-DDEBUG_AST_CONSTRUCTION)
 endif()

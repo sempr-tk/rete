@@ -292,6 +292,13 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
             if (currentBeta)
             {
                 GenericJoin::Ptr join(new GenericJoin());
+                if (condition->isNoValue())
+                {
+                    // condition is negated with "noValue" modifier.
+                    // --> negate the join!
+                    join->setNegative(true);
+                }
+
                 // create one check for every variable that was previously unbound
                 for (auto jv : joinVars)
                 {
@@ -332,15 +339,25 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
         }
 
 
-        // after constructing one condition, update the known variable bindings!
-        for (auto& arg : args)
+        // After constructing one condition, update the known variable bindings!
+        // NOTE: In general, we want to override all bindings we can, so that we always have
+        //       the latest accessor for every variable (if one occurs in multiple conditions).
+        //       But be aware: If the condition is negated with "noValue", new variables are
+        //       actually placeholders and cannot be bound -- there is "noValue" to bind them to.
+        //       The NodeBuilder will create accessors nevertheless, which would lead to segfaults
+        //       and undefined behavious, as we would e.g. try to cast an EmptyWME to a Triple.
+        if (!condition->isNoValue())
         {
-            if (arg.isVariable())
+            for (auto& arg : args)
             {
-                auto accessor = arg.getAccessor();
-                if (!accessor) throw std::exception(); // a NodeBuilder left a variable unbound!
+                if (arg.isVariable())
+                {
+                    auto accessor = arg.getAccessor();
+                    if (!accessor) throw std::exception(); // a NodeBuilder left a variable unbound!
 
-                bindings[arg.getVariableName()] = accessor;
+
+                    bindings[arg.getVariableName()] = accessor;
+                }
             }
         }
 

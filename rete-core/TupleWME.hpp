@@ -50,6 +50,8 @@ public:
 };
 
 
+typedef TupleWME<> EmptyWME;
+
 } /* rete */
 
 

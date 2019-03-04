@@ -155,7 +155,7 @@ public:
         if (!token)
             throw std::out_of_range(
                 "ValueAccessor indexes entry no. " + std::to_string(static_cast<const Self*>(this)->index()) +
-                " but the Token has " + std::to_string(count) + " entries too few.");
+                " but the Token has " + std::to_string(count+1) + " entries too few.");
 
         this->getValue(token->wme, value);
     }

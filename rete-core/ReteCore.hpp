@@ -1,3 +1,6 @@
+#include "builtins/Math.hpp"
+
+#include "Accessors.hpp"
 #include "AgendaNode.hpp"
 #include "AlphaBetaAdapter.hpp"
 #include "AlphaMemory.hpp"
@@ -17,5 +20,4 @@
 #include "TupleWME.hpp"
 #include "TupleWMEAccessor.hpp"
 #include "Util.hpp"
-#include "ValueAccessor.hpp"
 #include "WME.hpp"

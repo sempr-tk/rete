@@ -1,4 +1,5 @@
 set(CORE_SRC
+    Accessors.cpp
     Agenda.cpp
     AgendaNode.cpp
     AlphaBetaAdapter.cpp
@@ -7,6 +8,7 @@ set(CORE_SRC
     BetaComparator.cpp
     BetaMemory.cpp
     BetaNode.cpp
+    Builtin.cpp
     JoinNode.cpp
     JoinUnconditional.cpp
     Network.cpp
@@ -15,12 +17,15 @@ set(CORE_SRC
     ProductionNode.cpp
     Token.cpp
     Util.cpp
-    ValueAccessor.cpp
     WME.cpp
     WMEComparator.cpp
 )
 
-add_library(rete-core SHARED ${CORE_SRC})
+set(BUILTIN_SRC
+    builtins/Math.cpp
+)
+
+add_library(rete-core SHARED ${CORE_SRC} ${BUILTIN_SRC})
 install(
     DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DESTINATION include

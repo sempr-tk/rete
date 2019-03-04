@@ -1,18 +1,36 @@
+image: buildpack-deps:xenial
+
 before_script:
     - apt-get update -qq
     - apt-get install -y -qq git g++ cmake
 
 stages:
+    - deps
     - build
     - test
     - deploy
+
+deps:
+    stage: deps
+    script:
+    - mkdir deps_install
+    - git clone https://github.com/niniemann/Pegmatite.git
+    - cd Pegmatite
+    - mkdir build && cd build
+    - cmake .. -DCMAKE_INSTALL_PREFIX=../../deps_install
+    - make -j8 install
+    artifacts:
+        paths:
+        - deps_install
+        expire_in: 1 hour
+
 
 
 build:
     stage: build
     script:
-    - git submodule init
-    - git submodule update
+    - export PATH=${PATH}:$(pwd)/deps_install
+    - export PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:$(pwd)/deps_install/lib/pkgconfig
     - mkdir build && cd build
     - cmake ..
     - make -j8
@@ -24,6 +42,7 @@ build:
 test:
     stage: test
     script:
+    - export PATH=${PATH}:$(pwd)/deps_install
     - cd build
     - make test
 

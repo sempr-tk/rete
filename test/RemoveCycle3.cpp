@@ -1,10 +1,10 @@
 #include <iostream>
 #include <fstream>
 
-#include <rete-rdf/ReteRDF.hpp>
-#include <rete-reasoner/Reasoner.hpp>
-#include <rete-reasoner/RuleParser.hpp>
-#include <rete-reasoner/AssertedEvidence.hpp>
+#include "../rete-rdf/ReteRDF.hpp"
+#include "../rete-reasoner/Reasoner.hpp"
+#include "../rete-reasoner/RuleParser.hpp"
+#include "../rete-reasoner/AssertedEvidence.hpp"
 
 using namespace rete;
 
@@ -38,10 +38,10 @@ int main()
     Reasoner reasoner;
 
     p.parseRules(
-        "[(<A> <B> <C>) -> (<A> <equivalent> <B>)]"
-        "[(?a <equivalent> ?b) -> (?b <equivalent> ?a)]"
-        "[(<B> <equivalent> <A>) -> (<X> <Y> <Z>)]"
-        "[(<X> <Y> <Z>) -> (<B> <equivalent> <A>)]",
+        "[rule1: (<A> <B> <C>) -> (<A> <equivalent> <B>)]"
+        "[rule2: (?a <equivalent> ?b) -> (?b <equivalent> ?a)]"
+        "[rule3: (<B> <equivalent> <A>) -> (<X> <Y> <Z>)]"
+        "[rule4: (<X> <Y> <Z>) -> (<B> <equivalent> <A>)]",
         reasoner.net()
     );
 

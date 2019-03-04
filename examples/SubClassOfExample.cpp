@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <memory>
 
 #include "../rete-core/ReteCore.hpp"
 #include "../rete-rdf/ReteRDF.hpp"
@@ -40,11 +41,16 @@ int main()
     BetaNode::connect(join, adapter->getBetaMemory(), foo->getAlphaMemory());
 
 
+    std::unique_ptr<Accessor> accA(new TripleAccessor(Triple::SUBJECT));
+    accA->index() = 1;
+    std::unique_ptr<Accessor> accC(new TripleAccessor(Triple::OBJECT));
+    accC->index() = 0;
+
     // the consequence: construct (C1.?a  rdfs:subClassOf  C2.?c)
     InferTriple::Ptr infer(new InferTriple(
-        {1, Triple::SUBJECT},
+        std::move(accA),
         "rdfs:subClassOf",
-        {0, Triple::OBJECT}
+        std::move(accC)
     ));
 
     // alternative construction

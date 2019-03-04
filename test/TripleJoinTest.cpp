@@ -1,8 +1,8 @@
 #include <iostream>
 #include <fstream>
 
-#include <rete-core/ReteCore.hpp>
-#include <rete-rdf/ReteRDF.hpp>
+#include "../rete-core/ReteCore.hpp"
+#include "../rete-rdf/ReteRDF.hpp"
 
 using namespace rete;
 

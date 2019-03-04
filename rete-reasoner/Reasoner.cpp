@@ -202,6 +202,9 @@ bool Reasoner::checkIfEvidenceHolds(Evidence::Ptr evidence, std::set<WME::Ptr>& 
 
 bool Reasoner::checkIfFactHolds(WME::Ptr fact, std::set<WME::Ptr>& notHolding)
 {
+    // no need to check computations of builtins
+    if (fact->isComputed()) return true;
+
     // no need to check if we already know it does not hold
     if (notHolding.find(fact) != notHolding.end()) return false;
 

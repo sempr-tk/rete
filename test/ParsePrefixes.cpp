@@ -1,8 +1,8 @@
 #include <iostream>
 #include <fstream>
 
-#include <rete-reasoner/Reasoner.hpp>
-#include <rete-reasoner/RuleParser.hpp>
+#include "../rete-reasoner/Reasoner.hpp"
+#include "../rete-reasoner/RuleParser.hpp"
 
 using namespace rete;
 

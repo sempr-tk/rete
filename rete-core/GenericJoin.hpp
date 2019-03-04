@@ -7,8 +7,10 @@
 
 #include "JoinNode.hpp"
 #include "Util.hpp"
-#include "ValueAccessor.hpp"
+#include "Accessors.hpp"
 
+
+#include <iostream>
 namespace rete {
 
 /**
@@ -16,10 +18,10 @@ namespace rete {
     It accepts pairs of accessors, where the first is used to access a WME in a token and the second
     to access the WME from an AlphaMemory.
 
-    Of course the GenericJoin-Node needs to know the datatype to work with. The default is
-    std::string, but other types may be used.
+    The actual comparison is done in the ValueAccessors, which is why the GenericJoin does not need
+    to know the actual datatypes compared. But make sure that the Accessors can compare their
+    accessed values.
 */
-template <typename T = std::string>
 class GenericJoin : public JoinNode {
     std::string getDOTAttr() const override
     {
@@ -33,7 +35,7 @@ class GenericJoin : public JoinNode {
         return s +"\"]\n";
     }
 
-    typedef std::pair<typename ValueAccessor<T>::Ptr, typename ValueAccessor<T>::Ptr> AccessorPair;
+    typedef std::pair<Accessor::Ptr, Accessor::Ptr> AccessorPair;
     std::vector<AccessorPair> checks_;
 public:
     using Ptr = std::shared_ptr<GenericJoin>;
@@ -41,17 +43,31 @@ public:
         Adds an additional check to the join node.
         The left accessor will be applied to a token, while the right accessor is directly used
         with a WME from an alpha memory.
+
+        Make sure that the accessors are configured accordingly, else this will throw.
+        Also throws if the two accessors are unable to compare their pointed-at values, i.e.,
+        implement different ValueAccessor<T>s.
     */
-    void addCheck(typename ValueAccessor<T>::Ptr left, typename ValueAccessor<T>::Ptr right)
+    void addCheck(Accessor::Ptr left, Accessor::Ptr right)
     {
-        checks_.push_back({left, right});
+        if (left->index() == -1 || right->index() != -1) throw std::exception();
+
+        if (left->canCompareValues(*right))
+        {
+            checks_.push_back({left, right});
+        }
+        else if (right->canCompareValues(*left))
+        {
+            checks_.push_back({right, left});
+        }
+        else throw std::exception();
     }
 
     bool isValidCombination(Token::Ptr token, WME::Ptr wme) override
     {
         for (auto check : checks_)
         {
-            if (check.first->value(token) != check.second->value(wme))
+            if (!check.first->valuesEqual(*check.second, token, wme))
             {
                 return false;
             }
@@ -66,7 +82,13 @@ public:
             if (o->checks_.size() != this->checks_.size()) return false;
             for (auto check : this->checks_)
             {
-                if (std::find(o->checks_.begin(), o->checks_.end(), check) == o->checks_.end())
+                if (std::find_if(o->checks_.begin(), o->checks_.end(),
+                        [check](const AccessorPair& other) -> bool
+                        {
+                            return (*other.first == *check.first) &&
+                                   (*other.second == *check.second);
+                        })
+                    == o->checks_.end())
                 {
                     return false;
                 }

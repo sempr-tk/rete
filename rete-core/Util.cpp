@@ -38,5 +38,12 @@ std::string dotEscape(const std::string& str)
     return cpy;
 }
 
+
+template <>
+std::string to_string(const std::string& v)
+{
+    return v;
+}
+
 } /* util */
 } /* rete */

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 project(rete)
-add_definitions(-std=c++11 -Wall)
+add_definitions(-std=c++11 -Wall -Wextra -pedantic -Wnon-virtual-dtor)
 
 if(${DEBUG_PARSING})
     add_definitions(-DDEBUG_PARSING)
@@ -12,6 +12,7 @@ if (${DEBUG_AST})
 endif()
 
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-undefined")
 
 add_subdirectory(rete-core)
 add_subdirectory(rete-rdf)

@@ -1,13 +1,13 @@
 #include <iostream>
 #include <fstream>
 
-#include <rete-core/ReteCore.hpp>
-#include <rete-rdf/ReteRDF.hpp>
+#include "../rete-core/ReteCore.hpp"
+#include "../rete-rdf/ReteRDF.hpp"
 
-#include <rete-reasoner/Reasoner.hpp>
-#include <rete-reasoner/AssertedEvidence.hpp>
+#include "../rete-reasoner/Reasoner.hpp"
+#include "../rete-reasoner/AssertedEvidence.hpp"
 
-#include <rete-reasoner/RuleParser.hpp>
+#include "../rete-reasoner/RuleParser.hpp"
 
 using namespace rete;
 
@@ -33,7 +33,7 @@ int main()
     BetaNode::connect(adapter, nullptr, foo->getAlphaMemory());
 
     // auto join = std::make_shared<TripleJoin>(0, Triple::OBJECT, Triple::SUBJECT);
-    GenericJoin<std::string>::Ptr join(new GenericJoin<std::string>());
+    GenericJoin::Ptr join(new GenericJoin());
     // setup generic join criteria:
     auto accessor1 = std::make_shared<TripleAccessor>(Triple::OBJECT);
     accessor1->index() = 0;
@@ -62,7 +62,5 @@ int main()
     // and
     // [(B foo C) (C foo D)]
     if (join->getBetaMemory()->size() == 2) return 0;
-    return 1;
-
-    return 0;
+    return join->getBetaMemory()->size() - 2;
 }

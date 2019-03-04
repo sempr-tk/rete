@@ -5,7 +5,7 @@
 #include <set>
 #include <functional>
 
-#include <rete-core/Network.hpp>
+#include "../rete-core/Network.hpp"
 #include "BackedWME.hpp"
 #include "EvidenceComparator.hpp"
 

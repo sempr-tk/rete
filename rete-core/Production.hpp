@@ -20,6 +20,7 @@ public:
         The priority of the ProductionNode influences their order on the agenda.
     */
     Production(int priority = 0);
+    virtual ~Production() {};
 
     /**
         Realize the consequences. This method is called when a match for this production hits the

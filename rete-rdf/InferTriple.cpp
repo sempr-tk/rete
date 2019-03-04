@@ -1,26 +1,38 @@
 #include "InferTriple.hpp"
-#include <rete-core/Util.hpp>
+#include "../rete-core/Util.hpp"
 
 
 namespace rete {
 
 InferTriple::ConstructHelper::ConstructHelper(const std::string& predefined)
-    : isPredefined_(true), string_(predefined), tokenOffset_(0), field_(Triple::SUBJECT)
+    : isPredefined_(true), string_(predefined), accessor_(nullptr)
 {
 }
 
 InferTriple::ConstructHelper::ConstructHelper(const char* predefined)
-    : isPredefined_(true), string_(predefined), tokenOffset_(0), field_(Triple::SUBJECT)
+    : isPredefined_(true), string_(predefined), accessor_(nullptr)
 {
 }
 
-InferTriple::ConstructHelper::ConstructHelper(int offset, Triple::Field field)
-    : isPredefined_(false), string_(""), tokenOffset_(offset), field_(field)
+InferTriple::ConstructHelper::ConstructHelper(std::unique_ptr<Accessor> accessor)
+    : isPredefined_(false), string_("")
 {
+    if (!accessor->canAs<StringAccessor>())
+    {
+        throw std::exception(); // see init(...) method
+    }
+    accessor_ = std::move(accessor);
 }
 
 InferTriple::ConstructHelper::ConstructHelper()
-    : isPredefined_(true), string_(""), tokenOffset_(0), field_(Triple::SUBJECT)
+    : isPredefined_(true), string_(""), accessor_(nullptr)
+{
+}
+
+InferTriple::ConstructHelper::ConstructHelper(InferTriple::ConstructHelper&& other)
+    : isPredefined_(other.isPredefined_),
+      string_(std::move(other.string_)),
+      accessor_(std::move(other.accessor_))
 {
 }
 
@@ -36,41 +48,34 @@ void InferTriple::ConstructHelper::init(const char* predefined)
     string_ = std::string(predefined);
 }
 
-void InferTriple::ConstructHelper::init(int offset, Triple::Field field)
+void InferTriple::ConstructHelper::init(std::unique_ptr<Accessor> accessor)
 {
+    if (!accessor->canAs<StringAccessor>())
+    {
+        throw std::exception(); // InferTriple only works with strings
+        // TODO: Implement some kind of "NumberAccessor" that works with float, int, ... but also allows conversion to string.
+    }
+
     isPredefined_ = false;
-    tokenOffset_ = offset;
-    field_ = field;
+    accessor_ = std::move(accessor);
 }
 
 std::string InferTriple::ConstructHelper::constructFrom(Token::Ptr token) const
 {
     if (isPredefined_) return string_;
-
-    int cnt = 0;
-    Token::Ptr sel = token;
-    while (cnt < tokenOffset_ && sel)
-    {
-        sel = sel->parent;
-        ++cnt;
-    }
-
-    if (!sel || !sel->wme) throw std::exception(); // ill formed network! no wme
-    auto triple = std::dynamic_pointer_cast<Triple>(sel->wme);
-    if (!triple) throw std::exception(); // ill formed network! wme not a triple
-
-    return triple->getField(field_);
+    // NOTE: Assumption is that accessor_->canAs<StringAccessor>()! This is checked in the ctor and init() method.
+    return accessor_->as<StringAccessor>()->getString(token);
 }
 
 std::string InferTriple::ConstructHelper::getName() const
 {
     if (isPredefined_) return string_;
-    return std::to_string(tokenOffset_) + "." + Triple::fieldName(field_);
+    return accessor_->toString();
 }
 
 
-InferTriple::InferTriple(const ConstructHelper& sub, const ConstructHelper& pred, const ConstructHelper& obj)
-    : subject_(sub), predicate_(pred), object_(obj)
+InferTriple::InferTriple(ConstructHelper&& sub, ConstructHelper&& pred, ConstructHelper&& obj)
+    : subject_(std::move(sub)), predicate_(std::move(pred)), object_(std::move(obj))
 {
 }
 

@@ -2,8 +2,8 @@
 #define RETE_INFERREDEVIDENCE_HPP_
 
 #include "Evidence.hpp"
-#include <rete-core/Token.hpp>
-#include <rete-core/Production.hpp>
+#include "../rete-core/Token.hpp"
+#include "../rete-core/Production.hpp"
 
 namespace rete {
 
@@ -18,6 +18,8 @@ public:
     std::string toString() const override;
 
     Token::Ptr token() const;
+
+    static const int TypeId = 1; // init allowed because it's const!
 };
 
 } /* rete */

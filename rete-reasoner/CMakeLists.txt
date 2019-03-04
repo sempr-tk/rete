@@ -3,9 +3,9 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(Pegmatite REQUIRED pegmatite)
 include_directories(${Pegmatite_INCLUDE_DIRS})
 link_directories(${Pegmatite_LIBRARY_DIRS})
-message("Link dirs: ${Pegmatite_LIBRARY_DIRS}")
 
 set(REASONER_SRC
+    Argument.cpp
     AssertedEvidence.cpp
     BackedWME.cpp
     EvidenceComparator.cpp
@@ -14,6 +14,9 @@ set(REASONER_SRC
     RuleGrammar.cpp
     RuleParser.cpp
     RuleParserAST.cpp
+    NodeBuilder.cpp
+    TripleConditionBuilder.cpp
+    TripleEffectBuilder.cpp
 
     # ebnf parsing
     # parserlib/source/ast.cpp

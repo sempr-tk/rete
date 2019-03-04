@@ -1,8 +1,11 @@
-#include <rete-core/ReteCore.hpp>
-#include <rete-rdf/ReteRDF.hpp>
+#include "../rete-core/ReteCore.hpp"
+#include "../rete-rdf/ReteRDF.hpp"
 
 #include "RuleParser.hpp"
 #include "RuleParserAST.hpp"
+#include "TripleConditionBuilder.hpp"
+#include "TripleEffectBuilder.hpp"
+#include "MathBuiltinBuilder.hpp"
 
 #include <map>
 #include <tuple>
@@ -14,8 +17,34 @@
 namespace rete {
 namespace peg = pegmatite;
 
-// fwd decl helper method
-void construct(ast::Rule&, Network&);
+RuleParser::RuleParser()
+{
+    // registerNodeBuilder(std::unique_ptr<TripleConditionBuilder>(new TripleConditionBuilder()));
+    registerNodeBuilder<TripleConditionBuilder>();
+    registerNodeBuilder<TripleEffectBuilder>();
+    registerNodeBuilder<builtin::MathBuiltinBuilder<builtin::Sum>>();
+    registerNodeBuilder<builtin::MathBuiltinBuilder<builtin::Mul>>();
+    registerNodeBuilder<builtin::MathBuiltinBuilder<builtin::Div>>();
+}
+
+void RuleParser::registerNodeBuilder(std::unique_ptr<NodeBuilder> builder)
+{
+    std::map<std::string, std::unique_ptr<NodeBuilder>>* map = &conditionBuilders_;
+    if (builder->builderType() == NodeBuilder::EFFECT) map = &effectBuilders_;
+
+    std::string t = builder->type();
+    if (map->find(t) != map->end())
+    {
+        std::cout << "Already registered a NodeBuilder for the same effect/condition!" << std::endl;
+        std::cout << builder->type() << ", "
+                  << (builder->builderType() == NodeBuilder::EFFECT ? "effect" : "condition")
+                  << std::endl;
+        throw std::exception(); // already registerd a builder for this type
+    }
+
+    (*map)[t] = std::move(builder);
+}
+
 
 bool RuleParser::parseRules(const std::string& rulestring_pre, Network& network)
 {
@@ -38,58 +67,64 @@ bool RuleParser::parseRules(const std::string& rulestring_pre, Network& network)
     peg::StringInput input(std::move(rulestring));
     this->parse(input, g.rules, g.ws, peg::defaultErrorReporter, root);
 
+
     if (root)
     {
-        std::cout << "success!" << std::endl;
-        std::cout << "Prefixes:" << std::endl;
+        /*
+            Build a map of used URI-prefixes.
+        */
+        std::cout << "successfully parsed the rules." << std::endl;
+        // std::cout << input.getString() << std::endl;
+        std::cout << "Prefixes: " << root->prefixes_.size() << std::endl;
         std::map<std::string, std::string> prefixes;
-
-        for(auto& pre : root->prefixes_)
+        for (auto& pre : root->prefixes_)
         {
-            std::cout << *pre->name_ << " --> " << *pre->uri_ << std::endl;
-
-            std::string& uri = *pre->uri_;
-            prefixes[*pre->name_ + ":"] = uri.substr(1, uri.size() - 2); // trim <>
+            std::cout << pre->name_ << " --> " << pre->uri_ << std::endl;
+            const std::string& uri = pre->uri_;
+            prefixes[pre->name_ + ":"] = uri.substr(1, uri.size() - 2); // trim <>
         }
 
-
-        // important: preprocess the rules by substituting the prefixes
+        /*
+            Preprocess: Substitute prefixes in the arguments of conditions and effects
+        */
         for (auto& rule : root->rules_)
         {
-            std::cout << "rule:" << std::endl;
-            if (rule->name_) std::cout << *rule->name_ << " ";
-            for (auto& c : rule->conditions_->triples_)
-            {
-                c->substitutePrefixes(prefixes);
-                std::cout << *c << " ";
-            }
-            std::cout << "-> ";
-            for (auto& e : rule->effects_->triples_)
-            {
-                e->substitutePrefixes(prefixes);
-                std::cout << *e << " ";
-            }
+            std::cout << "Rule: ";
+            if (rule->name_) std::cout << *rule->name_;
             std::cout << std::endl;
+            for (auto& condition : rule->conditions_)
+            {
+                std::cout << "  Condition:" << std::endl;
+                for (auto& arg : condition->args_)
+                {
+                    arg->substitutePrefixes(prefixes);
+                    std::cout << "    " << *arg << std::endl;
+                }
+            }
 
+            for (auto& effect : rule->effects_)
+            {
+                std::cout << "  Effect:" << std::endl;
+                for (auto& arg : effect->args_)
+                {
+                    arg->substitutePrefixes(prefixes);
+                    std::cout << "    " << *arg << std::endl;
+                }
+            }
         }
-    }
-    else
-    {
-        std::cout << "failed" << std::endl;
-        return false;
-    }
 
+        /**
+            Construct the network
+        */
+        for (auto& rule : root->rules_)
+        {
+            construct(*rule, network);
+        }
 
-
-    /**
-        The parsing is done, now we need to construct nodes in the network.
-    */
-    for (auto& rule : root->rules_)
-    {
-        construct(*rule, network);
+        return true;
     }
 
-    return true;
+    return false;
 }
 
 
@@ -108,282 +143,274 @@ AlphaNode::Ptr implementAlphaNode(AlphaNode::Ptr alpha, AlphaNode::Ptr parent)
         }
     );
 
-    if (it != candidates.end()) alpha = *it;
-    else parent->addChild(alpha);
+    if (it != candidates.end())
+    {
+        std::cout << "Reusing AlphaNode " << (*it)->getDOTId() << std::endl;
+        alpha = *it;
+    }
+    else
+    {
+        std::cout << "Adding AlphaNode " << alpha->getDOTId() << " beneath " << parent->getDOTId()  << std::endl;
+        parent->addChild(alpha);
+    }
 
     return alpha;
 }
 
 
-
-AlphaMemory::Ptr constructAlphaMemory(ast::Triple& triple, Network& net)
+/**
+    Try to find an equivalent node at the parent. If not found add the given node. Returns the node
+    which is connected to the parent after this operation.
+*/
+BetaNode::Ptr implementBetaNode(BetaNode::Ptr node, BetaNode::Ptr parentBeta, AlphaNode::Ptr parentAlpha)
 {
-    AlphaNode::Ptr current = net.getRoot();
-    // ---------------------------------------------
-    // 1. static checks for the non-variable parts.
-    // ---------------------------------------------
-    if (!triple.subject_->isVariable())
-    {
-        TripleAlpha::Ptr check(new TripleAlpha(Triple::SUBJECT, *triple.subject_->value_));
-        current = implementAlphaNode(check, current);
-    }
-    if (!triple.predicate_->isVariable())
-    {
-        TripleAlpha::Ptr check(new TripleAlpha(Triple::PREDICATE, *triple.predicate_->value_));
-        current = implementAlphaNode(check, current);
-    }
-    if (!triple.object_->isVariable())
-    {
-        TripleAlpha::Ptr check(new TripleAlpha(Triple::OBJECT, *triple.object_->value_));
-        current = implementAlphaNode(check, current);
-    }
-    // ------------------------------------------------
-    // 2. consistency checks for variable with equal name
-    // ------------------------------------------------
-    if (triple.subject_->isVariable())
-    {
-        // sub & pred
-        if (triple.predicate_->isVariable())
-        {
-            if (*triple.subject_->value_ == *triple.predicate_->value_)
-            {
-                TripleConsistency::Ptr check(new TripleConsistency(Triple::SUBJECT, Triple::PREDICATE));
-                current = implementAlphaNode(check, current);
-            }
-        }
-        // sub & obj
-        if (triple.object_->isVariable())
-        {
-            if (*triple.subject_->value_ == *triple.object_->value_)
-            {
-                TripleConsistency::Ptr check(new TripleConsistency(Triple::SUBJECT, Triple::OBJECT));
-                current = implementAlphaNode(check, current);
-            }
-        }
-    }
-    if (triple.predicate_->isVariable())
-    {
-        // pred & obj
-        if (triple.object_->isVariable())
-        {
-            if (*triple.predicate_->value_ == *triple.object_->value_)
-            {
-                TripleConsistency::Ptr check(new TripleConsistency(Triple::PREDICATE, Triple::OBJECT));
-                current = implementAlphaNode(check, current);
-            }
-        }
-    }
+    BetaNode::Ptr beta = node;
 
-    // ---------------------------------------------
-    // 3. init alpha memory
-    // ---------------------------------------------
-    current->initAlphaMemory();
-    return current->getAlphaMemory();
+    std::vector<BetaNode::Ptr> candidates;
+    parentBeta->getBetaMemory()->getChildren(candidates);
+    auto it = std::find_if(candidates.begin(), candidates.end(),
+        [beta] (BetaNode::Ptr other) -> bool
+        {
+            return *beta == *other;
+        }
+    );
+
+    // reuse or connect new, if the same join was found in the beta parent that connects to the wanted alpha
+    AlphaMemory::Ptr pamem = (parentAlpha ? parentAlpha->getAlphaMemory() : nullptr);
+
+    if (it != candidates.end() && (*it)->getParentAlpha() == pamem)
+    {
+        std::cout << "Reusing BetaNode " << (*it)->getDOTId() << std::endl;
+        beta = *it;
+    }
+    else
+    {
+        std::cout << "Adding BetaNode " << beta->getDOTId() << " beneath " << parentBeta->getDOTId() << " and " << (parentAlpha ? parentAlpha->getDOTId() : " 0x0") << std::endl;
+        BetaNode::connect(beta, parentBeta->getBetaMemory(),
+                 (parentAlpha ? parentAlpha->getAlphaMemory() : nullptr));
+    }
+    return beta;
 }
 
 
 /**
-    Implement the rule in the given network.
+    Find or create an AlphaBetaAdapter under the given node
 */
-void construct(ast::Rule& rule, Network& net)
+AlphaBetaAdapter::Ptr getAlphaBeta(AlphaMemory::Ptr amem)
 {
-    /**
-        To construct the rule in the network, we do the following:
-            1. Create the first condition in the alpha network
-            2. Create an AlphaBetaAdapter, track the latest beta-memory
-            3. While there are still conditions left:
-                3.1 Create the next condition
-                3.2 Create a join node between the latest beta memory and the new condition
-                3.3 Update latest beta memory to be the one of the join node
-                3.4 Update the set of known variables (with additions from 3.1)
-            4. Add the consequences through ProductionNodes to the latest beta memory
-
-        In order to correctly create join nodes we need to keep track of the occurences of variable
-        names. Therefore we keep a set with variable names, the condition index (to be used in the
-        tokens in the partial matches in the rete) and the field (since the WMEs addressed by the
-        condition index are triples with subject, predicate, object).
-    */
-    typedef std::pair<int, Triple::Field> index_t;
-    std::map<std::string, index_t> variableLocation;
-
-    auto& conditionTriples = rule.conditions_->triples_;
-    auto conditionIterator = conditionTriples.begin();
-
-    // 1. first condition
-    AlphaMemory::Ptr condition = constructAlphaMemory(**conditionIterator, net);
-    // remember variables
-    if ((**conditionIterator).subject_->isVariable()) variableLocation[*(**conditionIterator).subject_->value_] = {0, Triple::SUBJECT};
-    if ((**conditionIterator).predicate_->isVariable()) variableLocation[*(**conditionIterator).predicate_->value_] = {0, Triple::PREDICATE};
-    if ((**conditionIterator).object_->isVariable()) variableLocation[*(**conditionIterator).object_->value_] = {0, Triple::OBJECT};
-
-    // std::cout << "variables:" << std::endl;
-    // for (auto v : variableLocation)
-    // {
-    //     std::cout << v.first << " -- " << v.second.first << "," << v.second.second << std::endl;
-    // }
-
-    ++conditionIterator;
-
-    // 2. Adapter
     AlphaBetaAdapter::Ptr adapter(new AlphaBetaAdapter());
+
     std::vector<BetaNode::Ptr> amemChildren;
-    condition->getChildren(amemChildren);
+    amem->getChildren(amemChildren);
+
     auto it = std::find_if(amemChildren.begin(), amemChildren.end(),
         [adapter](BetaNode::Ptr other) -> bool
         {
             return *adapter == *other;
         }
     );
+
     if (it != amemChildren.end()) adapter = std::dynamic_pointer_cast<AlphaBetaAdapter>(*it);
-    else BetaNode::connect(adapter, nullptr, condition);
+    else BetaNode::connect(adapter, nullptr, amem);
 
-    // 3. beta network
-    BetaMemory::Ptr betaMemory = adapter->getBetaMemory();
-    size_t conditionCount = 1;
-    for (; conditionIterator != conditionTriples.end(); ++conditionIterator)
+    return adapter;
+}
+
+
+/**
+    Implement the rule in the given network.
+*/
+void RuleParser::construct(ast::Rule& rule, Network& net) const
+{
+    // keep track of the last implemented beta node
+    BetaNode::Ptr currentBeta = nullptr;
+
+    // remember already bound variables
+    std::map<std::string, Accessor::Ptr> bindings;
+
+    // construct all the conditions
+    for (auto& condition : rule.conditions_)
     {
-        // std::cout << "construction from " << **conditionIterator << std::endl;
-        // 3.1 create condtion
-        condition = constructAlphaMemory(**conditionIterator, net);
-        // 3.2 create join
-        TripleJoin::Ptr join(new TripleJoin());
-        // check for join-conditions.
-        ast::Triple& conditionTriple = **conditionIterator;
-        // -- subject?
-        if (conditionTriple.subject_->isVariable())
+        // find the correct builder
+        auto bIt = conditionBuilders_.find(condition->type());
+        if (bIt == conditionBuilders_.end())
         {
-            // check if the variable is already known (--> bound.)
-            auto var = variableLocation.find(*conditionTriple.subject_->value_);
-            if (var != variableLocation.end())
-            {
-                // found it! --> add a check.
-                size_t tokenIndex = conditionCount - (var->second.first + 1);
-                TripleJoin::check_t check(tokenIndex, var->second.second, Triple::SUBJECT);
-                join->addCheck(check);
-            }
+            std::cout << "no builder for type " << condition->type() << std::endl;
+            throw std::exception(); // no builder for this type
         }
-        // -- predicate?
-        if (conditionTriple.predicate_->isVariable())
+        auto& builder = *bIt->second;
+
+        // create an argument list. The ast::Arguments are consumed.
+        // NOTE: When constructing an alpha node, variables are always unbound, though they might have been used before in other alpha nodes of the same rule! Bindings only happen in the beta network, when they are given through the context of the sub-match. So, if we are constructing an AlphaNode, create the arguments with an empty bindings-map.
+        ArgumentList args;
+        for (auto& astArg : condition->args_)
         {
-            // check if the variable is already known (--> bound.)
-            auto var = variableLocation.find(*conditionTriple.predicate_->value_);
-            if (var != variableLocation.end())
-            {
-                // found it! --> add a check.
-                size_t tokenIndex = conditionCount - (var->second.first + 1);
-                TripleJoin::check_t check(tokenIndex, var->second.second, Triple::PREDICATE);
-                join->addCheck(check);
-            }
+            std::map<std::string, Accessor::Ptr> emptyBindings;
+            std::map<std::string, Accessor::Ptr>* usedBindings = &emptyBindings;
+            if (builder.builderType() != NodeBuilder::ALPHA)
+                usedBindings = &bindings;
+
+            Argument arg = Argument::createFromAST(std::move(astArg), *usedBindings);
+            args.push_back(std::move(arg));
         }
-        // -- object?
-        if (conditionTriple.object_->isVariable())
+
+        // Only relevant in case of an alpha node: Remember all the variables given to the builder that were previously bound by another node. These are the ones we need to create a join for in the beta network.
+        std::vector<size_t> joinVars;
+        for (size_t argIndex = 0; argIndex < args.size(); argIndex++)
         {
-            // check if the variable is already known (--> bound.)
-            auto var = variableLocation.find(*conditionTriple.object_->value_);
-            if (var != variableLocation.end())
+            // for the nodebuilder it will be seen as an unbound variable
+            if (args[argIndex].isVariable() && !args[argIndex].getAccessor())
             {
-                // found it! --> add a check.
-                /**
-                    NOTE: The token index must be inverted: The TripleJoin-Node follows the token n-steps from the end backwards. So when we want to address the last condition in the token we need tokenIndex 0, and if we want the first we need the tokens length-1 (if length = 1 index is 0). In general: i'th WME in token has index (tokenlength - (i+1)), where tokenlength is the number of conditions we have already processed --> conditionCount;
-                */
-                size_t tokenIndex = conditionCount - (var->second.first + 1);
-                TripleJoin::check_t check(tokenIndex, var->second.second, Triple::OBJECT);
-                join->addCheck(check);
+                // but it was bound before
+                auto prevBound = bindings.find(args[argIndex].getVariableName());
+                if (prevBound != bindings.end() && prevBound->second != nullptr)
+                {
+                    joinVars.push_back(argIndex);
+                }
             }
         }
 
-        // check if an equivalent join already exists:
-        std::vector<BetaNode::Ptr> joinCandidates;
-        betaMemory->getChildren(joinCandidates);
-        auto it = std::find_if(joinCandidates.begin(), joinCandidates.end(),
-            [join] (BetaNode::Ptr other) -> bool
+        if (builder.builderType() == NodeBuilder::ALPHA)
+        {
+            // - create and implement the chain of alpha nodes
+            std::vector<AlphaNode::Ptr> anodes;
+            builder.buildAlpha(args, anodes);
+
+            AlphaNode::Ptr currentAlpha = net.getRoot();
+            for (auto alpha : anodes)
             {
-                return *join == *other;
+                currentAlpha = implementAlphaNode(alpha, currentAlpha);
             }
-        );
+            currentAlpha->initAlphaMemory(); // no-op if already initialized.
 
-        // reuse or connect new
-        if (it != joinCandidates.end() && (*it)->getParentAlpha() == condition)
-            join = std::static_pointer_cast<TripleJoin>(*it);
-        else BetaNode::connect(join, betaMemory, condition);
+            // - if there has been a beta node before, create a join
+            // - else create an AlphaBetaAdapter
+            if (currentBeta)
+            {
+                GenericJoin::Ptr join(new GenericJoin());
+                // create one check for every variable that was previously unbound
+                for (auto jv : joinVars)
+                {
+                    Argument& arg = args[jv];
+                    std::cout << "adding join check on variable " << arg.getVariableName() << std::endl;
+                    if (!arg.getAccessor())
+                    {
+                        // the node did not bind the variable it was given? this is an error!
+                        throw std::exception();
+                    }
 
-        // 3.3
-        betaMemory = join->getBetaMemory();
-        // 3.4
-        if (conditionTriple.subject_->isVariable())
-        {
-            variableLocation[*conditionTriple.subject_->value_] = {conditionCount, Triple::SUBJECT};
+                    Accessor::Ptr beta(bindings[arg.getVariableName()]->clone());
+                    Accessor::Ptr alpha(arg.getAccessor()->clone());
+
+                    // add the check to the join
+                    join->addCheck(beta, alpha);
+                }
+
+                // add the join.
+                currentBeta = implementBetaNode(join, currentBeta, currentAlpha);
+            }
+            else
+            {
+                BetaNode::Ptr alphabeta = getAlphaBeta(currentAlpha->getAlphaMemory());
+                std::cout << "Adding AlphaBetaNode " << alphabeta << " beneath <nullptr> and " << currentAlpha << std::endl;
+
+                currentBeta = alphabeta;
+            }
         }
-        if (conditionTriple.predicate_->isVariable())
+        else if (builder.builderType() == NodeBuilder::BUILTIN)
         {
-            variableLocation[*conditionTriple.predicate_->value_] = {conditionCount,
-                                                                    Triple::PREDICATE};
-        }
-        if (conditionTriple.object_->isVariable())
-        {
-            variableLocation[*conditionTriple.object_->value_] = {conditionCount, Triple::OBJECT};
+            // create and implement the builtin node
+            Builtin::Ptr builtin = builder.buildBuiltin(args);
+            currentBeta = implementBetaNode(builtin, currentBeta, nullptr);
         }
 
-        ++conditionCount;
-    } // end loop over condition triples
+
+        // after constructing one condition, update the known variable bindings!
+        for (auto& arg : args)
+        {
+            if (arg.isVariable())
+            {
+                auto accessor = arg.getAccessor();
+                if (!accessor) throw std::exception(); // a NodeBuilder left a variable unbound!
+
+                bindings[arg.getVariableName()] = accessor;
+            }
+        }
+
+        /*
+            Every time we created a beta node (join or builtin, or alphabeta), we need to increment
+            the accessors afterwards. ASSUMPTION: The accessors bound to variables by the node
+            builders are indexed at -1, so that we can just increment them all and get them to
+            index 0, the first wme in the token chain.
+        */
+        for (auto binding : bindings)
+        {
+            ++(binding.second->index());
+        }
 
 
-    // 4. add the consequences to the end of the condition-chain (the betaMemory we kept track of)
-    auto& consequences = rule.effects_->triples_;
-    for (auto& consequence : consequences)
+    } // end loop over conditions
+
+
+    //  create productions / effects
+    for (auto& effect : rule.effects_)
     {
-        auto& sub = consequence->subject_;
-        auto& pred = consequence->predicate_;
-        auto& obj = consequence->object_;
-
-        InferTriple::ConstructHelper s, p, o;
-
-        if (sub->isVariable())
+        // find the correct builder
+        auto it = effectBuilders_.find(effect->type());
+        if (it == effectBuilders_.end())
         {
-            auto it = variableLocation.find(*sub->value_);
-            if (it == variableLocation.end()) throw std::exception(); // unbound var in effect
-            size_t tokenIndex = conditionCount - (it->second.first + 1);
-            s.init(tokenIndex, it->second.second);
-        }
-        else
-        {
-            s.init(*sub->value_);
+            std::cout << "no effect-builder for type " << effect->type() << std::endl;
+            throw std::exception();
         }
 
-        if (pred->isVariable())
+        // create an argument list. The ast::Arguments are consumed.
+        ArgumentList args;
+        for (auto& astArg : effect->args_)
         {
-            auto it = variableLocation.find(*pred->value_);
-            if (it == variableLocation.end()) throw std::exception(); // unbound var in effect
-            size_t tokenIndex = conditionCount - (it->second.first + 1);
-            p.init(tokenIndex, it->second.second);
-        }
-        else
-        {
-            p.init(*pred->value_);
+            Argument arg = Argument::createFromAST(std::move(astArg), bindings);
+            args.push_back(std::move(arg));
         }
 
-        if (obj->isVariable())
-        {
-            auto it = variableLocation.find(*obj->value_);
-            if (it == variableLocation.end()) throw std::exception(); // unbound var in effect
-            size_t tokenIndex = conditionCount - (it->second.first + 1);
-            o.init(tokenIndex, it->second.second);
-        }
-        else
-        {
-            o.init(*obj->value_);
-        }
+        // create the production, encapsulate it in an AgendaNode, and add it to the current pattern results (beta memory)
+        auto production = it->second->buildEffect(args);
+        AgendaNode::Ptr agendaNode(new AgendaNode(production, net.getAgenda()));
 
-        // create the InferTriple production
-        InferTriple::Ptr infer(new InferTriple(s, p, o));
-        AgendaNode::Ptr inferNode(new AgendaNode(infer, net.getAgenda()));
-        if (rule.name_)
-            inferNode->setName(*rule.name_);
-        else
-            inferNode->setName("");
+        if (rule.name_) agendaNode->setName(*rule.name_);
+        else            agendaNode->setName("");
 
-        betaMemory->addProduction(inferNode);
+        currentBeta->getBetaMemory()->addProduction(agendaNode);
     }
+
+    // /**
+    //     To construct the rule in the network, we do the following:
+    //         1. Create the first condition in the alpha network
+    //         2. Create an AlphaBetaAdapter, track the latest beta-memory
+    //         3. While there are still conditions left:
+    //             3.1 Create the next condition
+    //             3.2 Create a join node between the latest beta memory and the new condition
+    //             3.3 Update latest beta memory to be the one of the join node
+    //             3.4 Update the set of known variables (with additions from 3.1)
+    //         4. Add the consequences through ProductionNodes to the latest beta memory
+    //
+    //     In order to correctly create join nodes we need to keep track of the occurences of variable
+    //     names. Therefore we keep a set with variable names, the condition index (to be used in the
+    //     tokens in the partial matches in the rete) and the field (since the WMEs addressed by the
+    //     condition index are triples with subject, predicate, object).
+    // */
+
+    //
+    // // 4. add the consequences to the end of the condition-chain (the betaMemory we kept track of)
+
+    //     // create the InferTriple production
+    //     InferTriple::Ptr infer(new InferTriple(s, p, o));
+    //     AgendaNode::Ptr inferNode(new AgendaNode(infer, net.getAgenda()));
+    //     if (rule.name_)
+    //         inferNode->setName(*rule.name_);
+    //     else
+    //         inferNode->setName("");
+    //
+    //     betaMemory->addProduction(inferNode);
+    // }
 }
 
 

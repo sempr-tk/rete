@@ -322,6 +322,11 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
             }
             else
             {
+                if (condition->isNoValue())
+                {
+                    throw std::exception(); // first alpha condition must not be negated!
+                }
+
                 BetaNode::Ptr alphabeta = getAlphaBeta(currentAlpha->getAlphaMemory());
                 std::cout << "Adding AlphaBetaNode " << alphabeta << " beneath <nullptr> and " << currentAlpha << std::endl;
 
@@ -392,6 +397,11 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
         for (auto& astArg : effect->args_)
         {
             Argument arg = Argument::createFromAST(std::move(astArg), bindings);
+            // all args in the effects MUST be bound variables or constants!
+            if (arg.isVariable() && !arg.getAccessor())
+            {
+                throw std::exception(); // unbound variable in rule effect
+            }
             args.push_back(std::move(arg));
         }
 

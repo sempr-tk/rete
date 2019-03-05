@@ -1,0 +1,69 @@
+digraph graphname { 
+graph [fontname = "Ubuntu Mono"]
+node  [fontname = "Ubuntu Mono"]
+"0xb013a0" [label=Root];
+"0xb08d00" [label="TripleCheck\n (?pred == \<on\>)"];
+"0xb013a0" -> "0xb08d00";
+"0xb08960" [label="TripleCheck\n (?pred == \<color\>)"];
+"0xb013a0" -> "0xb08960";
+"0xb006a0" [label="TripleCheck\n (?pred == \<left-of\>)"];
+"0xb013a0" -> "0xb006a0";
+"0xb08840" [label="TripleCheck\n (?pred == \<type\>)"];
+"0xb013a0" -> "0xb08840";
+"0xb083c0" [label="TripleCheck\n (?pred == \<edge-size\>)"];
+"0xb013a0" -> "0xb083c0";
+"0xb04a00" [shape=record, label="{AlphaMemory|(a0 \<edge-size\> 1.451000)|(b0 \<edge-size\> 2.000000)|(c \<edge-size\> 3.000000)|(d \<edge-size\> 4.000000)}"];
+"0xb083c0" -> "0xb04a00";
+"0xb05bc0" [label="TripleCheck\n (?obj == \<block\>)"];
+"0xb08840" -> "0xb05bc0";
+"0xb087e0" [shape=record, label="{AlphaMemory|(a0 \<type\> \<block\>)|(a1 \<type\> \<block\>)|(b0 \<type\> \<block\>)|(b1 \<type\> \<block\>)|(c \<type\> \<block\>)|(d \<type\> \<block\>)}"];
+"0xb05bc0" -> "0xb087e0";
+"0xb0a470" [shape=record, label="{AlphaMemory|(c \<left-of\> a0)|(d \<left-of\> b0)|(d \<left-of\> c)}"];
+"0xb006a0" -> "0xb0a470";
+"0xb00950" [label="TripleCheck\n (?obj == \<red\>)"];
+"0xb08960" -> "0xb00950";
+"0xb05a40" [shape=record, label="{AlphaMemory|(a0 \<color\> \<red\>)|(c \<color\> \<red\>)}"];
+"0xb00950" -> "0xb05a40";
+"0xb08ac0" [shape=record, label="{AlphaMemory|(a1 \<on\> a0)|(b0 \<on\> b1)}"];
+"0xb08d00" -> "0xb08ac0";
+"0xb04a00" -> "0xb09640";
+"0xb09640" [label="GenericJoin\nTriple[0].?sub == Triple.?sub"]
+;
+"0xb05a40" -> "0xb063c0";
+"0xb063c0" [label="GenericJoin\nTriple[0].?obj == Triple.?sub"]
+;
+"0xb05a40" -> "0xb08fb0";
+"0xb08fb0" [label="negative GenericJoin\nTriple[0].?obj == Triple.?sub"]
+;
+"0xb087e0" -> "0xb08b20";
+"0xb08b20" [label="AB-Adapter"];
+"0xb08ac0" -> "0xb08380";
+"0xb08380" [label="AB-Adapter"];
+"0xb0a470" -> "0xb05390";
+"0xb05390" [label="AB-Adapter"];
+"0xb088a0" [shape=record, label="{BetaMemory|(c \<left-of\> a0)|(d \<left-of\> c)|(d \<left-of\> b0)}"];
+"0xb05390" -> "0xb088a0";
+"0xb088a0" -> "0xb08fb0";
+"0xb08a20" [shape=record, label="{BetaMemory|(a1 \<on\> a0)|(b0 \<on\> b1)}"];
+"0xb08380" -> "0xb08a20";
+"0xb08a20" -> "0xb063c0";
+"0xb09db0" [shape=record, label="{BetaMemory|(a0 \<type\> \<block\>)|(a1 \<type\> \<block\>)|(b0 \<type\> \<block\>)|(b1 \<type\> \<block\>)|(c \<type\> \<block\>)|(d \<type\> \<block\>)}"];
+"0xb08b20" -> "0xb09db0";
+"0xb09db0" -> "0xb09640";
+"0xb08420" [shape=record, label="{BetaMemory|[TupleWME() (d \<left-of\> b0)]}"];
+"0xb08fb0" -> "0xb08420";
+"0xb093f0" [label="AgendaNode 'LeftOfANotRedBlock'\nInferTriple (Triple[1].?sub \<left-of-not-red-block\> Triple[1].?obj)"];
+"0xb08420" -> "0xb093f0";
+"0xb07ad0" [shape=record, label="{BetaMemory|[(a0 \<color\> \<red\>) (a1 \<on\> a0)]}"];
+"0xb063c0" -> "0xb07ad0";
+"0xb05d00" [label="AgendaNode 'OnARedBlock'\nInferTriple (Triple[1].?sub \<on-red-block\> Triple[0].?sub)"];
+"0xb07ad0" -> "0xb05d00";
+"0xb07a30" [shape=record, label="{BetaMemory|[(a0 \<edge-size\> 1.451000) (a0 \<type\> \<block\>)]|[(b0 \<edge-size\> 2.000000) (b0 \<type\> \<block\>)]|[(c \<edge-size\> 3.000000) (c \<type\> \<block\>)]|[(d \<edge-size\> 4.000000) (d \<type\> \<block\>)]}"];
+"0xb09640" -> "0xb07a30";
+"0xb09910" [label="mul(Triple[0].?obj, Triple[0].?obj, Triple[0].?obj)"];
+"0xb07a30" -> "0xb09910";
+"0xb079d0" [shape=record, label="{BetaMemory|[TupleWME(3.054937) [(a0 \<edge-size\> 1.451000) (a0 \<type\> \<block\>)]]|[TupleWME(8.000000) [(b0 \<edge-size\> 2.000000) (b0 \<type\> \<block\>)]]|[TupleWME(27.000000) [(c \<edge-size\> 3.000000) (c \<type\> \<block\>)]]|[TupleWME(64.000000) [(d \<edge-size\> 4.000000) (d \<type\> \<block\>)]]}"];
+"0xb09910" -> "0xb079d0";
+"0xb02c40" [label="AgendaNode 'BlockVolume'\nInferTriple (Triple[1].?sub \<volume\> Accessor(0))"];
+"0xb079d0" -> "0xb02c40";
+}

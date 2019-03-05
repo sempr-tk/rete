@@ -84,7 +84,7 @@ public:
 
     Rule subject    = rtrace("subject",   term(variable | iriref | prefixedURI | blank_node_label));
     Rule predicate  = rtrace("predicate", term(variable | iriref | prefixedURI));
-    Rule object     = rtrace("object",    term(variable | iriref | prefixedURI | blank_node_label | literal));
+    Rule object     = rtrace("object",    term(variable | iriref | prefixedURI | blank_node_label | literal | number));
 
     /**
     Modifier to negate joins (forward only when there is no match)

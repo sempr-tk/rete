@@ -37,6 +37,9 @@ add_executable(MathBuiltins MathBuiltins.cpp)
 target_link_libraries(MathBuiltins rete-core rete-rdf rete-reasoner)
 add_test(NAME MathBuiltins COMMAND MathBuiltins)
 
+add_executable(NoValue NoValue.cpp)
+target_link_libraries(NoValue rete-core rete-rdf rete-reasoner)
+add_test(NAME NoValue COMMAND NoValue)
 
 add_executable(test_rete main.cpp)
 target_link_libraries(test_rete rete-core rete-rdf rete-reasoner)

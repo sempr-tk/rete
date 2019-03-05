@@ -30,6 +30,10 @@ public:
         #define r1trace(name, expression)    (expression)
     #endif
 
+    /*
+        Some basic definitions of whitespace, alphanumeric and escaped characters, numbers and
+        quoted strings.
+    */
     Rule endl   = "\r\n"_E | "\n\r" | "\n" | "\r";
     Rule ws     = *(" \t"_S | endl);
     Rule alpha  = "[a-zA-Z]"_R;
@@ -47,6 +51,10 @@ public:
     // starts with a ", ends with a ", and everything inbetween is either \" or just not "
     Rule quotedString = "\"" >> *("\\\""_E | (!"\""_E >> any())) >> "\"";
 
+    /*
+        In the world of RDF there are some special things to consider: IRIs, typed string literals,
+        language tags and the structure of triples.
+    */
     Rule iriref = rtrace("iriref",
         (
             r1trace("open-bracket", '<'_E) >>
@@ -76,20 +84,52 @@ public:
 
     Rule subject    = rtrace("subject",   term(variable | iriref | prefixedURI | blank_node_label));
     Rule predicate  = rtrace("predicate", term(variable | iriref | prefixedURI));
-    Rule object     = rtrace("object",    term(variable | iriref | prefixedURI | blank_node_label | literal));
+    Rule object     = rtrace("object",    term(variable | iriref | prefixedURI | blank_node_label | literal | number));
 
-    Rule triple = rtrace("triple",   ('('_E >> subject >> predicate >> object >> ')'));
+    /**
+    Modifier to negate joins (forward only when there is no match)
+    */
+    Rule noValue = rtrace("noValue", "noValue "_E | "no " | "novalue ");
+    Rule triple = rtrace("triple", -noValue >> '('_E >> subject >> predicate >> object >> ')');
+
+    /*
+        Here comes the more general stuff: Basically, rules are created from preconditions and
+        effects. Preconditions are subdivided into alpha-conditions, which are criteria on a single
+        WME and are chained together using joins, and builtins, which are more or less simple
+        computations on the matched values (e.g., compute a sum of two values, concatenate a
+        string, etc...).
+        Special cases are triples, which do not need a name (as they are the default condition, and
+        also the default effect) and for which we specified a more sophisticated grammar above.
+        Further extensions to alpha conditions can be implemented without changing the grammar by
+        simply accepting arguments as defined below.
+    */
+    Rule argument = rtrace("argument", term(quotedString | number | variable | uri));
+
     // cannot reuse triple for infertriple, would lead to triple being constructed before infertriple, and the infertriple being empty...
     Rule inferTriple = rtrace("inferTriple", '('_E >> subject >> predicate >> object >> ')');
+    /*
+        Generic conditions and effects
+    */
+    // alpha conditions
+    Rule alphaConditionName = rtrace("alphaConditionName", term(+alphanum));
+    Rule genericAlphaCondition = rtrace("genericAlphaCondition",
+                                    -noValue >> alphaConditionName >> "(" >> *argument >> ")");
+
+    // builtins
+    // TODO: distinguish between alpha conditions and builtins?
+    //       Not important for the parser to work, only to fail fast during parsing instead of construction. alpha- and builtin-builders reside in the same pool of node builders.
+    Rule builtinName = rtrace("builtinName", term(+alphanum) >> -(":"_E >> term(+alphanum)));
+    Rule builtin = rtrace("builtin", builtinName >> "(" >> *argument >> ")");
+
+    // effects
+    Rule effectName = rtrace("effectName", term(+alphanum));
+    Rule genericEffect = rtrace("genericEffect", effectName >> "(" >> *argument >> ")");
+
+
+    Rule precondition = rtrace("precondition", triple | builtin | genericAlphaCondition);
+    Rule effect = rtrace("effect", inferTriple | genericEffect);
 
     // [name: (precondition1), (precondition2) --> (effect1), (effect2)]
-
-    Rule argument = rtrace("argument", term(quotedString | number | variable));
-    Rule builtinName = rtrace("builtinName", +alphanum >> -(":"_E >> +alphanum));
-    Rule builtin = rtrace("builtin", builtinName >> "(" >> *argument >> ")");
-    Rule precondition = rtrace("precondition", triple | builtin);
-    Rule effect = rtrace("effect", inferTriple);
-
     Rule rulename = rtrace("rulename", +alphanum);
     Rule rule = rtrace("rule", ('['_E >> -(rulename >> ':') >> precondition >> *(',' >> precondition) >> "->" >> effect >> *(',' >> effect) >> ']'));
     Rule rules = rtrace("rules", *prefixdef >> +rule);

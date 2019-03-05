@@ -18,6 +18,77 @@ The project is split into three parts:
 
 
 
+## Feature Example
+
+The following sections will explain the core of this rete implementation, the types of nodes, how they are connected, how a reasoner is constructed using the rete network, what else has to be taken into account for the reasoning to work correctly, and how a network can be parsed from a textual representation of rules. Many examples given will focus on a single aspect of the functionalities and are helpful to understand what's going on "under the hood", but might not be what you are searching for if you just want to use this library. So before going into the internals, lets look at an artificial example to show what can be done with this library, and how you set everything up.
+
+Let's consider a simple blocks world, where we add instances of blocks, knowledge on their color and their position relative to each other. We might want to infer things like _"which block is placed on a red block?"_, or _"which block is left of a block that is not known to be red?"_ (Note that we do not use an actual negation here. There is no actual negation implemented, but only a `noValue` condition working in an open world assumption). Or maybe the blocks have an edge width and you want to infer their volume? We can do this.
+
+The full example is found in the [Blocksworld.cpp](examples/Blocksworld.cpp), the assertion of the facts has been omitted here. (To add facts you need to simply call `reasoner.addEvidence(fact, evidence))`. And you never remove facts directly, but only evidences -- the facts vanish when there is no more evidence supporting them). This is what you need to setup the reasoner (and export the constructed network as a dot-file):
+
+```c++
+#include <iostream>
+#include <fstream>
+
+#include "../rete-rdf/ReteRDF.hpp" // for Triple-facts, omitted here
+#include "../rete-reasoner/AssertedEvidence.hpp" // to assert facts, omitted here
+
+#include "../rete-reasoner/Reasoner.hpp"
+#include "../rete-reasoner/RuleParser.hpp"
+
+using namespace rete;
+
+int main()
+{
+    RuleParser p;
+    Reasoner reasoner;
+
+    p.parseRules(
+"[OnARedBlock: (?b1 <on> ?b2), (?b2 <color> <red>) -> (?b1 <on-red-block> ?b2)]\n"
+"[LeftOfANotRedBlock:"
+	"(?b1 <left-of> ?b2), noValue (?b2 <color> <red>)"
+    "-> (?b1 <left-of-not-red-block> ?b2)]\n"
+"[BlockVolume:"
+    "(?b <type> <block>), (?b <edge-size> ?len), mul(?volume ?len ?len ?len)"
+    "-> (?b <volume> ?volume)]",
+        reasoner.net()
+    );
+    
+    // [...]
+    // Add your facts/evidences here
+    // [...]
+    
+    reasoner.performInference();
+    
+    save(reasoner.net(), "blocksworld.dot");
+
+    return 0;
+}
+    
+```
+
+> _**NOTE:** I've left out the checks on `(?b1 <type> <block>)` etc. in the first two rules, since the resulting network would be hard to visualize._
+
+This creates a `blocksworld.dot` file, and with `dot -Tpng -O blocksworld.dot && eog blocksworld.dot.png` you will get this nice visualization of your network, including the facts stored in the memory nodes. If you look at the memory nodes at the bottom, right before the AgendaNodes (which infer the new data, and thus implement the effects of the rules), you see the matches for the rules stated above.
+
+![Blocksworld network](img/blocksworld.dot.png)
+
+
+
+A smaller, but just as expressive example can be seen in [Blockstower.cpp](examples/Blockstower.cpp). The rules:
+
+```
+[AtTheBottom: (?b <type> <block>), noValue (?b <on> ?c) 	 -> (?b <level> 0)]
+[OnAnother:   (?a <on> ?b), (?b <level> ?lb), sum(?la ?lb 1) -> (?a <level> ?la)]
+```
+
+infer the height level that each block is located at. If a block is not located on something else, it is at level 0, else it is one level above the block it is standing on. The resulting network is seen below:
+![blockstower](img/blockstower.dot.png)
+
+That's it. You can also implement your own builtins (in the examples we have used `sum` and `mul`), alpha conditions, and effects. The rest of the readme should give you a good understanding on how to do this, and how everything works, starting from the basic network components, up to the reasoner and rule parser.
+
+
+
 ## Network
 
 The core of this library is the support structure for rete networks, consisting of the working memory elements (WME), the different node types and other things only exist for the core structure, without any concrete reasoning functionality, without being pre-defined to any type of knowledge etc. The main parts are the following:
@@ -78,6 +149,8 @@ The BetaNodes described above are basically join nodes, and there are several im
 - `JoinUnconditional`, which simply produces all combinations between the entries in the alpha and beta memory
 - `TripleJoin`, an implementation of a `JoinNode` which solely works on triples. 
 - **`GenericJoin`** is the recommended way to go.  It accepts pairs of `Accessor` objects, which are then applied on the respective token and WME to extract and compare the values. (This is also the reason why the accessors need to implement a `bool canCompareValues(const Accessor& other)` and `bool valuesEqual(Accessor& other, Token::Ptr token, WME::Ptr wme)`).
+
+Join nodes can be inverted/negated/... however you want to call it. The result is that the join lets a token pass iff there is **no** wme in the connected alpha memory that matches the token. 
 
 ### rete::Builtin
 
@@ -359,7 +432,7 @@ r.setCallback(callback);
 
 Of course, constructing the network manually in code is cumbersome. It would be way more convenient to write rules in a simple, text based structure, and let the network be constructed automatically from those rules. This is where the  `rete::RuleParser` comes in: It takes a string as an input, parses it according to the grammar described below, and constructs a rete network from the input, reusing nodes when possible (with limitations).
 
-The grammar is defined in EBNF, for the complete definition see `RuleGrammar.hpp`. The main parts of it are as follows (_simplified, shortened version_):
+The grammar is defined in a notation similar to EBNF, for the complete definition see `RuleGrammar.hpp`. The main parts of it are as follows (_simplified, shortened version_): Basically, rules are written in square brackets and contain a list of preconditions and effects, separated by `->`. There must be at least one precondition and one effect per rule, multiple conditions/effects are comma-separated. Rules start with an optional alphanumeric name and a colon. Preconditions that refer to a WME (and are not a builtin) can be negated with a `noValue` prefix, which inverts the join node and lets the previous sub-match pass iff there is no matching value as specified. Free variables in `noValue`-conditions are not bound (how could they be? When the conditions are fulfilled, there is _no value_ to bind them to), and are interpreted as wildcards.
 
 ```
 prefixname  ::= alphanum+
@@ -377,7 +450,8 @@ builtin 	::= builtinName '(' argument* ')'
 
 triple    ::= '(' subject predicate object ')'
 
-precondition ::= triple | builtin
+negation ::= 'noValue' | 'no' | 'novalue'
+precondition ::= (negation? triple) | builtin
 effect 		 ::= triple
 
 rulename ::= alphanum+ ':'

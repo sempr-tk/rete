@@ -1,0 +1,47 @@
+digraph graphname { 
+graph [fontname = "Ubuntu Mono"]
+node  [fontname = "Ubuntu Mono"]
+"0x11b2430" [label=Root];
+"0x11b19e0" [label="TripleCheck\n (?pred == \<type\>)"];
+"0x11b2430" -> "0x11b19e0";
+"0x11b49c0" [label="TripleCheck\n (?pred == \<on\>)"];
+"0x11b2430" -> "0x11b49c0";
+"0x11b8bf0" [label="TripleCheck\n (?pred == \<level\>)"];
+"0x11b2430" -> "0x11b8bf0";
+"0x11b8d40" [shape=record, label="{AlphaMemory|(a0 \<level\> 0)|(a1 \<level\> 1.000000)|(a2 \<level\> 2.000000)|(a3 \<level\> 3.000000)|(a4 \<level\> 4.000000)|(b0 \<level\> 0)|(b1 \<level\> 1.000000)|(b2 \<level\> 2.000000)}"];
+"0x11b8bf0" -> "0x11b8d40";
+"0x11b6b30" [shape=record, label="{AlphaMemory|(a1 \<on\> a0)|(a2 \<on\> a1)|(a3 \<on\> a2)|(a4 \<on\> a3)|(b1 \<on\> b0)|(b2 \<on\> b1)}"];
+"0x11b49c0" -> "0x11b6b30";
+"0x11ba3a0" [label="TripleCheck\n (?obj == \<block\>)"];
+"0x11b19e0" -> "0x11ba3a0";
+"0x11b67d0" [shape=record, label="{AlphaMemory|(a0 \<type\> \<block\>)|(a1 \<type\> \<block\>)|(a2 \<type\> \<block\>)|(a3 \<type\> \<block\>)|(a4 \<type\> \<block\>)|(b0 \<type\> \<block\>)|(b1 \<type\> \<block\>)|(b2 \<type\> \<block\>)}"];
+"0x11ba3a0" -> "0x11b67d0";
+"0x11b67d0" -> "0x11b1730";
+"0x11b1730" [label="AB-Adapter"];
+"0x11b6b30" -> "0x11b6b90";
+"0x11b6b90" [label="negative GenericJoin\nTriple[0].?sub == Triple.?sub"]
+;
+"0x11b6b30" -> "0x11bb5a0";
+"0x11bb5a0" [label="AB-Adapter"];
+"0x11b8d40" -> "0x11b8dc0";
+"0x11b8dc0" [label="GenericJoin\nTriple[0].?obj == Triple.?sub"]
+;
+"0x11b8e50" [shape=record, label="{BetaMemory|[(b0 \<level\> 0) (b1 \<on\> b0)]|[(b1 \<level\> 1.000000) (b2 \<on\> b1)]|[(a0 \<level\> 0) (a1 \<on\> a0)]|[(a1 \<level\> 1.000000) (a2 \<on\> a1)]|[(a2 \<level\> 2.000000) (a3 \<on\> a2)]|[(a3 \<level\> 3.000000) (a4 \<on\> a3)]}"];
+"0x11b8dc0" -> "0x11b8e50";
+"0x11b5b80" [label="sum(Triple[0].?obj, 1.000000)"];
+"0x11b8e50" -> "0x11b5b80";
+"0x11b5c00" [shape=record, label="{BetaMemory|[TupleWME(1.000000) [(b0 \<level\> 0) (b1 \<on\> b0)]]|[TupleWME(2.000000) [(b1 \<level\> 1.000000) (b2 \<on\> b1)]]|[TupleWME(1.000000) [(a0 \<level\> 0) (a1 \<on\> a0)]]|[TupleWME(2.000000) [(a1 \<level\> 1.000000) (a2 \<on\> a1)]]|[TupleWME(3.000000) [(a2 \<level\> 2.000000) (a3 \<on\> a2)]]|[TupleWME(4.000000) [(a3 \<level\> 3.000000) (a4 \<on\> a3)]]}"];
+"0x11b5b80" -> "0x11b5c00";
+"0x11b5df0" [label="AgendaNode 'OnAnother'\nInferTriple (Triple[2].?sub \<level\> Accessor(0))"];
+"0x11b5c00" -> "0x11b5df0";
+"0x11b8a50" [shape=record, label="{BetaMemory|(a1 \<on\> a0)|(a2 \<on\> a1)|(a3 \<on\> a2)|(a4 \<on\> a3)|(b1 \<on\> b0)|(b2 \<on\> b1)}"];
+"0x11bb5a0" -> "0x11b8a50";
+"0x11b8a50" -> "0x11b8dc0";
+"0x11b6c20" [shape=record, label="{BetaMemory|[TupleWME() (a0 \<type\> \<block\>)]|[TupleWME() (b0 \<type\> \<block\>)]}"];
+"0x11b6b90" -> "0x11b6c20";
+"0x11b89c0" [label="AgendaNode 'AtTheBottom'\nInferTriple (Triple[1].?sub \<level\> 0)"];
+"0x11b6c20" -> "0x11b89c0";
+"0x11b84f0" [shape=record, label="{BetaMemory|(a0 \<type\> \<block\>)|(a1 \<type\> \<block\>)|(a2 \<type\> \<block\>)|(a3 \<type\> \<block\>)|(a4 \<type\> \<block\>)|(b0 \<type\> \<block\>)|(b1 \<type\> \<block\>)|(b2 \<type\> \<block\>)}"];
+"0x11b1730" -> "0x11b84f0";
+"0x11b84f0" -> "0x11b6b90";
+}

@@ -25,7 +25,8 @@ namespace rete {
 class GenericJoin : public JoinNode {
     std::string getDOTAttr() const override
     {
-        std::string s = "[label=\"GenericJoin";
+        std::string s = std::string("[label=\"") +
+                                (isNegative() ? "negative " : "") + "GenericJoin";
         for (auto check : checks_)
         {
             s = s + "\\n" +
@@ -79,6 +80,7 @@ public:
     {
         if (auto o = dynamic_cast<const GenericJoin*>(&other))
         {
+            if (o->isNegative() != this->isNegative()) return false;
             if (o->checks_.size() != this->checks_.size()) return false;
             for (auto check : this->checks_)
             {

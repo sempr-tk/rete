@@ -94,7 +94,11 @@ bool RuleParser::parseRules(const std::string& rulestring_pre, Network& network)
             std::cout << std::endl;
             for (auto& condition : rule->conditions_)
             {
-                std::cout << "  Condition:" << std::endl;
+                std::cout << "  Condition: "
+                          << (condition->isNoValue() ? "-" : "+")
+                          << " "
+                          << condition->type()
+                          << std::endl;
                 for (auto& arg : condition->args_)
                 {
                     arg->substitutePrefixes(prefixes);
@@ -288,6 +292,13 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
             if (currentBeta)
             {
                 GenericJoin::Ptr join(new GenericJoin());
+                if (condition->isNoValue())
+                {
+                    // condition is negated with "noValue" modifier.
+                    // --> negate the join!
+                    join->setNegative(true);
+                }
+
                 // create one check for every variable that was previously unbound
                 for (auto jv : joinVars)
                 {
@@ -311,6 +322,11 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
             }
             else
             {
+                if (condition->isNoValue())
+                {
+                    throw std::exception(); // first alpha condition must not be negated!
+                }
+
                 BetaNode::Ptr alphabeta = getAlphaBeta(currentAlpha->getAlphaMemory());
                 std::cout << "Adding AlphaBetaNode " << alphabeta << " beneath <nullptr> and " << currentAlpha << std::endl;
 
@@ -319,21 +335,34 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
         }
         else if (builder.builderType() == NodeBuilder::BUILTIN)
         {
+            // rules *must* start with an alpha check
+            if (!currentBeta) throw std::exception();
+
             // create and implement the builtin node
             Builtin::Ptr builtin = builder.buildBuiltin(args);
             currentBeta = implementBetaNode(builtin, currentBeta, nullptr);
         }
 
 
-        // after constructing one condition, update the known variable bindings!
-        for (auto& arg : args)
+        // After constructing one condition, update the known variable bindings!
+        // NOTE: In general, we want to override all bindings we can, so that we always have
+        //       the latest accessor for every variable (if one occurs in multiple conditions).
+        //       But be aware: If the condition is negated with "noValue", new variables are
+        //       actually placeholders and cannot be bound -- there is "noValue" to bind them to.
+        //       The NodeBuilder will create accessors nevertheless, which would lead to segfaults
+        //       and undefined behavious, as we would e.g. try to cast an EmptyWME to a Triple.
+        if (!condition->isNoValue())
         {
-            if (arg.isVariable())
+            for (auto& arg : args)
             {
-                auto accessor = arg.getAccessor();
-                if (!accessor) throw std::exception(); // a NodeBuilder left a variable unbound!
+                if (arg.isVariable())
+                {
+                    auto accessor = arg.getAccessor();
+                    if (!accessor) throw std::exception(); // a NodeBuilder left a variable unbound!
 
-                bindings[arg.getVariableName()] = accessor;
+
+                    bindings[arg.getVariableName()] = accessor;
+                }
             }
         }
 
@@ -368,6 +397,11 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
         for (auto& astArg : effect->args_)
         {
             Argument arg = Argument::createFromAST(std::move(astArg), bindings);
+            // all args in the effects MUST be bound variables or constants!
+            if (arg.isVariable() && !arg.getAccessor())
+            {
+                throw std::exception(); // unbound variable in rule effect
+            }
             args.push_back(std::move(arg));
         }
 

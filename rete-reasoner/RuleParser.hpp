@@ -48,6 +48,11 @@ class RuleParser : peg::ASTParserDelegate {
     peg::BindAST<peg::ASTString> builtinname = RuleGrammar::get().builtinName;
     peg::BindAST<ast::Builtin> builtin = RuleGrammar::get().builtin;
 
+    peg::BindAST<peg::ASTString> alphaConName = RuleGrammar::get().alphaConditionName;
+    peg::BindAST<ast::GenericAlphaCondition> alphacon = RuleGrammar::get().genericAlphaCondition;
+
+    peg::BindAST<peg::ASTString> effname = RuleGrammar::get().effectName;
+    peg::BindAST<ast::Builtin> geneffect = RuleGrammar::get().genericEffect;
     // effects
     peg::BindAST<ast::InferTriple> inferTriple = RuleGrammar::get().inferTriple;
 

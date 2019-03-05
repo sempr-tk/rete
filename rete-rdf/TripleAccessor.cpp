@@ -55,10 +55,8 @@ bool rete::TripleAccessor::canCompareValues(const Accessor& other) const
     return other.canAs<StringAccessor>();
 }
 
-#include <iostream>
 bool rete::TripleAccessor::valuesEqual(Accessor& other, Token::Ptr token, WME::Ptr wme)
 {
-    std::cout << "Values equal?" << std::endl;
     // if the other is a TripleAccessor, too, don't try to interpret values as numbers!
     // TODO: There should be something more sophisticated here?
     if (other.canAs<TripleAccessor>())

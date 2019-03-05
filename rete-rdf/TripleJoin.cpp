@@ -76,6 +76,7 @@ bool TripleJoin::operator == (const BetaNode& other) const
     auto otherJoin = dynamic_cast<const TripleJoin*>(&other);
     if (!otherJoin) return false;
 
+    if (otherJoin->isNegative() != this->isNegative()) return false;
     if (otherJoin->checks_.size() != this->checks_.size()) return false;
     for (size_t i = 0; i < checks_.size(); i++)
     {

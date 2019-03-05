@@ -17,6 +17,7 @@ namespace rete {
 class WME {
     bool isComputed_;
     friend class Builtin; // the Builtin base class sets the isComputed_ value
+    friend class JoinNode; // negative joins add empty tuples that need to be marked as computed
 public:
     using Ptr = std::shared_ptr<WME>;
     WME();

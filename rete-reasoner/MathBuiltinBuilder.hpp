@@ -2,6 +2,7 @@
 #define RETE_MATH_BUILTIN_BUILDER_HPP_
 
 #include "NodeBuilder.hpp"
+#include "Exceptions.hpp"
 #include "../rete-core/TupleWME.hpp"
 
 namespace rete {
@@ -25,8 +26,10 @@ public:
     {
         MathBuiltin::Ptr builtin(new T());
 
-        if (args.size() < 1) throw std::exception(); // at least an output var would be nice...
-        if (!args[0].isVariable() || args[0].getAccessor()) throw std::exception(); // and it must be unbound
+        if (args.size() < 1)
+            throw NodeBuilderException("MathBuiltins need at least an output variable."); // at least an output var would be nice...
+        if (!args[0].isVariable() || args[0].getAccessor())
+            throw NodeBuilderException("MathBuiltins need the first argument to be an unbound variable (to bind the result to!)."); // and it must be unbound
 
         // TODO: tighter coupling between Builtin and Accessor for the return value?
         Accessor::Ptr resultAccessor(new TupleWME<float>::Accessor<0>());
@@ -37,13 +40,16 @@ public:
             auto& arg = args[i];
             if (arg.isVariable())
             {
+                if (!arg.getAccessor())
+                    throw NodeBuilderException("MathBuiltinBuilder: Unbound variables in operands are not supported. (Variable: " + arg.getVariableName() + ")");
                 std::unique_ptr<Accessor> access(arg.getAccessor()->clone());
                 builtin->addOperand({std::move(access)});
             }
             else
             {
                 auto& ast = arg.getAST();
-                if (!ast.isNumber()) throw std::exception(); // not a number constant given to math builtin
+                if (!ast.isNumber())
+                    throw NodeBuilderException("The given constant is not a number: "+  ast); // not a number constant given to math builtin
                 builtin->addOperand(ast.toFloat());
             }
         }

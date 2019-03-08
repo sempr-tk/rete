@@ -105,6 +105,8 @@ namespace rete {
         public:
             friend std::ostream& operator << (std::ostream&, Precondition&);
 
+            std::string str_;
+
             /**
                 An optional name. Triples don't have one (no name -> implicitly triple), but
                 builtins need one.
@@ -130,6 +132,7 @@ namespace rete {
 
             bool construct(const peg::InputRange& r, peg::ASTStack& st, const peg::ErrorReporter& err)
             {
+                str_ = r.str();
                 noValue_ = false;
 
                 auto str = r.str();
@@ -173,6 +176,9 @@ namespace rete {
 
         class Effect : public peg::ASTContainer {
         public:
+
+            std::string str_;
+
             /**
                 An optional name. InferTriple is shortcut, without a name.
             */
@@ -190,6 +196,13 @@ namespace rete {
                 if (name_) return *name_;
                 return "Triple";
             }
+
+            bool construct(const peg::InputRange& r, peg::ASTStack& st, const peg::ErrorReporter& err)
+            {
+                str_ = r.str();
+                return this->peg::ASTContainer::construct(r, st, err);
+            }
+
         };
 
         class InferTriple : public Effect {
@@ -205,9 +218,17 @@ namespace rete {
 
         class Rule : public peg::ASTContainer {
         public:
+            std::string str_;
+
             peg::ASTPtr<peg::ASTString, true> name_;
             peg::ASTList<Precondition> conditions_;
             peg::ASTList<Effect> effects_;
+
+            bool construct(const peg::InputRange& r, peg::ASTStack& st, const peg::ErrorReporter& err)
+            {
+                str_ = r.str();
+                return this->peg::ASTContainer::construct(r, st, err);
+            }
         };
 
         class Rules : public peg::ASTContainer {

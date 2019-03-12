@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <sstream>
 
 namespace rete {
 
@@ -29,6 +30,11 @@ void Reasoner::performInferenceStep()
     if (agenda->empty()) return;
 
     auto item = agenda->front();
+
+    // update history
+    history_.push_back(item);
+    if (history_.size() > maxHistorySize_) history_.erase(history_.begin());
+
     agenda->pop_front();
 
     Token::Ptr token = std::get<0>(item);
@@ -56,13 +62,35 @@ void Reasoner::performInferenceStep()
     }
 }
 
-void Reasoner::performInference()
+void Reasoner::performInference(size_t maxSteps)
 {
     auto agenda = rete_.getAgenda();
 
+    size_t step = 0;
     while (!agenda->empty())
     {
         performInferenceStep();
+        step++;
+
+        if (maxSteps && step > maxSteps)
+        {
+            std::stringstream ss;
+            ss << "performInference exceeded maxSteps (" << maxSteps << ")." << std::endl;
+            ss << "The last " << history_.size() << " executed productions where:" << std::endl;
+            size_t num = history_.size();
+            for (auto& i : history_)
+            {
+                num--;
+                ss << "    "
+                        << "[" << num << "]"
+                        << (std::get<2>(i) == rete::PropagationFlag::ASSERT ? "[assert]  " : "[retract] ")
+                        << std::get<3>(i) << ": "
+                        // << std::get<1>(i)->getName() << std::endl;
+                        << std::get<0>(i)->toString() << std::endl;
+            }
+
+            throw std::runtime_error(ss.str());
+        }
     }
 }
 

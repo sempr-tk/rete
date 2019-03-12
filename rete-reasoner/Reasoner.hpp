@@ -28,7 +28,15 @@ class Reasoner {
         Index to easily find all WMEs that are backed by a given evidence.
     */
     std::map<Evidence::Ptr, std::vector<WME::Ptr>, EvidenceComparator> evidenceToWME_;
+
+    /**
+        History of executed productions (AgendaItems)
+    */
+    std::vector<AgendaItem> history_;
+    size_t maxHistorySize_;
+
 public:
+    Reasoner(size_t historySize = 10) : maxHistorySize_(historySize) {}
 
     /**
         returns a reference to the internal rete network
@@ -41,8 +49,10 @@ public:
         As long as the Agenda is not empty, takes the first AgendaItem and processes it, adding and
         removing evidence in the process, updating the Agenda. May cause infinite loops if the
         network and productions are ill-formed.
+
+        \param maxSteps throws an exception when exceeded, including a history of the executed agenda items. 0 means no limit (default).
     */
-    void performInference();
+    void performInference(size_t maxSteps = 0);
 
     /**
         Performs a single step of inference by processing only the first entry in the agenda.

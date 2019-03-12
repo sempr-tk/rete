@@ -39,7 +39,7 @@ class RuleParser : peg::ASTParserDelegate {
     peg::BindAST<ast::Variable> variable = RuleGrammar::get().variable;
     peg::BindAST<ast::Number> number = RuleGrammar::get().number;
     peg::BindAST<ast::QuotedString> quotedstring = RuleGrammar::get().quotedString;
-    peg::BindAST<ast::URI> uri = RuleGrammar::get().uri;
+    // peg::BindAST<ast::URI> uri = RuleGrammar::get().uri;
 
     // note: Adding base class of preconditions leads to duplicates / empty objects. AST objects are constructed in reverse order than they are parsed, so while it's tried to parse "precondition" by parsing "triple", if "triple" matches and thus "precondition" matches, too, the triple is parsed first (and with it a precondition, since it subclasses one), and afterwards the precondition-match is tried to construct into a AST node, leading to an empty precondition.
     // peg::BindAST<ast::Precondition> precondition = RuleGrammar::get().precondition;

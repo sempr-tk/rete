@@ -1,4 +1,5 @@
 #include "TripleConditionBuilder.hpp"
+#include "Exceptions.hpp"
 #include <iostream>
 
 namespace rete {
@@ -15,7 +16,9 @@ void TripleConditionBuilder::buildAlpha(ArgumentList& args, std::vector<AlphaNod
     {
         std::cout << "  " << arg.getAST() << std::endl;
     }
-    if (args.size() != 3) throw std::exception(); // wrong number of arguments
+
+    // should never happen, since the parser knows that triples need three arguments
+    if (args.size() != 3) throw NodeBuilderException("Wrong number of arguments"); 
 
     // alpha nodes/conditions never get a bound variable.
     assert(args[0].getAccessor().get() == nullptr);

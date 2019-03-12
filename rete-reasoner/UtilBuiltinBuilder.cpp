@@ -14,18 +14,23 @@ Builtin::Ptr PrintNodeBuilder::buildBuiltin(ArgumentList& args) const
 
     for (auto& arg : args)
     {
-        std::cout << "Build print builtin with argument: " << arg.getAST() << std::endl;
         if (arg.isVariable())
         {
             auto acc = arg.getAccessor();
-            if (!acc) throw std::runtime_error("unbound var in print");
-            if (!acc->canAs<StringAccessor>()) throw std::runtime_error("must implement StringAccessor");
+            if (!acc)
+                throw NodeBuilderException("unbound variable (" + arg.getVariableName() + ") in print");
+            if (!acc->canAs<StringAccessor>())
+                throw NodeBuilderException(
+                        arg.getVariableName() +
+                        "cannot be converted to String. The accessor " +
+                        acc->toString() + " does not implement 'StringAccessor'");
+
             std::unique_ptr<StringAccessor> clone(dynamic_cast<StringAccessor*>(acc->clone()));
             builtin->add(std::move(clone));
         }
         else
         {
-            std::cout << "its not a variable!" << std::endl;
+            // need to copy the string, else we'll get dangling references (getAST returns by reference!)
             builtin->add(std::string(arg.getAST()));
         }
     }

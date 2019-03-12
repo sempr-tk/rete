@@ -7,6 +7,7 @@
 #include "TripleEffectBuilder.hpp"
 #include "MathBuiltinBuilder.hpp"
 #include "UtilBuiltinBuilder.hpp"
+#include "Exceptions.hpp"
 
 #include <map>
 #include <tuple>
@@ -14,9 +15,22 @@
 #include <algorithm>
 #include <sstream>
 #include <iostream>
+#include <stdexcept>
 
 namespace rete {
 namespace peg = pegmatite;
+
+
+void error_reporter(const peg::InputRange& input, const std::string& error)
+{
+    std::cout << "An error occured!" << std::endl;
+    std::cout << "    " << error << std::endl;
+    std::cout << input.str() << std::endl;
+    std::cout << input.start.line << ":" << input.start.col << std::endl;
+    std::cout << input.finish.line << ":" << input.finish.col << std::endl;
+    std::cout << "-----------------" << std::endl;
+}
+
 
 RuleParser::RuleParser()
 {
@@ -47,7 +61,10 @@ void RuleParser::registerNodeBuilder(std::unique_ptr<NodeBuilder> builder)
         std::cout << builder->type() << ", "
                   << (builder->builderType() == NodeBuilder::EFFECT ? "effect" : "condition")
                   << std::endl;
-        throw std::exception(); // already registerd a builder for this type
+        throw std::runtime_error(
+                std::string("Already registered a NodeBuilder for the ") +
+                (builder->builderType() == NodeBuilder::EFFECT ? "effect " : "condition ") +
+                builder->type()); // already registerd a builder for this type
     }
 
     (*map)[t] = std::move(builder);
@@ -70,11 +87,31 @@ bool RuleParser::parseRules(const std::string& rulestring_pre, Network& network)
     }
     std::cout << "parsing rules:" << std::endl;
     std::cout << rulestring << std::endl;
+    std::string ruleStringCopy(rulestring);
 
     std::unique_ptr<ast::Rules> root = nullptr;
-    peg::StringInput input(std::move(rulestring));
-    this->parse(input, g.rules, g.ws, peg::defaultErrorReporter, root);
+    peg::StringInput input(std::move(ruleStringCopy));
+    // this->parse(input, g.rules, g.ws, peg::defaultErrorReporter, root);
 
+    auto reporter = [&rulestring](const peg::InputRange& err_in, const std::string& descr)
+    {
+        size_t maxCharCount = 80;
+        size_t start = 0;
+        if (err_in.begin().index() > maxCharCount) start = err_in.begin().index() - maxCharCount;
+
+        for (size_t i = start; i < err_in.end().index(); i++)
+        {
+            std::cout << rulestring.at(i);
+        }
+        std::cout << std::endl;
+        for (size_t i = start; i < err_in.end().index() -1; i++)
+        {
+            std::cout << "-";
+        }
+        std::cout << "^" << std::endl << descr << std::endl;
+    };
+
+    this->parse(input, g.rules, g.ws, reporter, root);
 
     if (root)
     {
@@ -248,7 +285,7 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
         if (bIt == conditionBuilders_.end())
         {
             std::cout << "no builder for type " << condition->type() << std::endl;
-            throw std::exception(); // no builder for this type
+            throw NoBuilderException(rule.str_, condition->str_, condition->type()); // no builder for this type
         }
         auto& builder = *bIt->second;
 
@@ -286,7 +323,14 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
         {
             // - create and implement the chain of alpha nodes
             std::vector<AlphaNode::Ptr> anodes;
-            builder.buildAlpha(args, anodes);
+            try {
+                builder.buildAlpha(args, anodes);
+            } catch (NodeBuilderException& e) {
+                // rethrow exception with added information
+                e.setRule(rule.str_);
+                e.setPart(condition->str_),
+                throw;
+            }
 
             AlphaNode::Ptr currentAlpha = net.getRoot();
             for (auto alpha : anodes)
@@ -315,7 +359,10 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
                     if (!arg.getAccessor())
                     {
                         // the node did not bind the variable it was given? this is an error!
-                        throw std::exception();
+                        // but a from a development perspective. The nodebuilder was evil.
+                        throw RuleConstructionException(rule.str_, condition->str_,
+                            "The node builder left the variable " + arg.getVariableName() +
+                            " unbound!");
                     }
 
                     Accessor::Ptr beta(bindings[arg.getVariableName()]->clone());
@@ -332,7 +379,8 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
             {
                 if (condition->isNoValue())
                 {
-                    throw std::exception(); // first alpha condition must not be negated!
+                    throw RuleConstructionException(rule.str_, condition->str_,
+                            "The \"noValue\" modifier cannot be applied to the first condition!");
                 }
 
                 BetaNode::Ptr alphabeta = getAlphaBeta(currentAlpha->getAlphaMemory());
@@ -344,11 +392,20 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
         else if (builder.builderType() == NodeBuilder::BUILTIN)
         {
             // rules *must* start with an alpha check
-            if (!currentBeta) throw std::exception();
+            if (!currentBeta)
+                throw RuleConstructionException(rule.str_, condition->str_,
+                        "The first condition must create an alpha network, not a builtin!");
 
             // create and implement the builtin node
-            Builtin::Ptr builtin = builder.buildBuiltin(args);
-            currentBeta = implementBetaNode(builtin, currentBeta, nullptr);
+            try {
+                Builtin::Ptr builtin = builder.buildBuiltin(args);
+                currentBeta = implementBetaNode(builtin, currentBeta, nullptr);
+            } catch (NodeBuilderException& e) {
+                // rethrow with more information
+                e.setRule(rule.str_);
+                e.setPart(condition->str_);
+                throw;
+            }
         }
 
 
@@ -366,8 +423,9 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
                 if (arg.isVariable())
                 {
                     auto accessor = arg.getAccessor();
-                    if (!accessor) throw std::exception(); // a NodeBuilder left a variable unbound!
-
+                    if (!accessor)
+                        throw RuleConstructionException(rule.str_, condition->str_,
+                            "The node builder left the variable " + arg.getVariableName() + " unbound!"); // a NodeBuilder left a variable unbound!
 
                     bindings[arg.getVariableName()] = accessor;
                 }
@@ -397,7 +455,7 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
         if (it == effectBuilders_.end())
         {
             std::cout << "no effect-builder for type " << effect->type() << std::endl;
-            throw std::exception();
+            throw NoBuilderException(rule.str_, effect->str_, effect->type());
         }
 
         // create an argument list. The ast::Arguments are consumed.
@@ -408,19 +466,27 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
             // all args in the effects MUST be bound variables or constants!
             if (arg.isVariable() && !arg.getAccessor())
             {
-                throw std::exception(); // unbound variable in rule effect
+                throw RuleConstructionException(rule.str_, effect->str_,
+                        "Unbound variable in effect: " + arg.getVariableName()); // unbound variable in rule effect
             }
             args.push_back(std::move(arg));
         }
 
         // create the production, encapsulate it in an AgendaNode, and add it to the current pattern results (beta memory)
-        auto production = it->second->buildEffect(args);
-        AgendaNode::Ptr agendaNode(new AgendaNode(production, net.getAgenda()));
+        try {
+            auto production = it->second->buildEffect(args);
+            AgendaNode::Ptr agendaNode(new AgendaNode(production, net.getAgenda()));
 
-        if (rule.name_) agendaNode->setName(*rule.name_);
-        else            agendaNode->setName("");
+            if (rule.name_) agendaNode->setName(*rule.name_);
+            else            agendaNode->setName("");
 
-        currentBeta->getBetaMemory()->addProduction(agendaNode);
+            currentBeta->getBetaMemory()->addProduction(agendaNode);
+        } catch (NodeBuilderException& e) {
+            // rethrow with more information
+            e.setRule(rule.str_);
+            e.setPart(effect->str_);
+            throw;
+        }
     }
 
     // /**

@@ -96,7 +96,6 @@ public:
         \arg rules the string defining the rules
         \arg network the rete network to integrate the rules into
         \return true if parsing and construction of the rules was successfull
-        TODO: throw an exception with more information when the rule syntax was violated and the parsing failed.
     */
     bool parseRules(const std::string& rules, Network& network);
 

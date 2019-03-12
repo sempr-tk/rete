@@ -1,4 +1,5 @@
 #include "NodeBuilder.hpp"
+#include "Exceptions.hpp"
 
 namespace rete {
 
@@ -23,16 +24,16 @@ NodeBuilder::BuilderType NodeBuilder::builderType() const
 
 void NodeBuilder::buildAlpha(ArgumentList&, std::vector<AlphaNode::Ptr>&) const
 {
-    throw std::exception(); // not implemented
+    throw NodeBuilderException("The method buildAlpha has not been implemented!");
 }
 
 Builtin::Ptr NodeBuilder::buildBuiltin(ArgumentList&) const
 {
-    throw std::exception(); // not implemented
+    throw NodeBuilderException("The method buildBuiltin has not been implemented!");
 }
 
 Production::Ptr NodeBuilder::buildEffect(ArgumentList&) const
 {
-    throw std::exception(); // not implemented
+    throw NodeBuilderException("The method buildEffect has not been implemented!");
 }
 } /* rete */

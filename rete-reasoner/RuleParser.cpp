@@ -6,6 +6,7 @@
 #include "TripleConditionBuilder.hpp"
 #include "TripleEffectBuilder.hpp"
 #include "MathBuiltinBuilder.hpp"
+#include "UtilBuiltinBuilder.hpp"
 
 #include <map>
 #include <tuple>
@@ -25,6 +26,13 @@ RuleParser::RuleParser()
     registerNodeBuilder<builtin::MathBuiltinBuilder<builtin::Sum>>();
     registerNodeBuilder<builtin::MathBuiltinBuilder<builtin::Mul>>();
     registerNodeBuilder<builtin::MathBuiltinBuilder<builtin::Div>>();
+    registerNodeBuilder<builtin::CompareNodeBuilder<builtin::Compare::LT>>();
+    registerNodeBuilder<builtin::CompareNodeBuilder<builtin::Compare::LE>>();
+    registerNodeBuilder<builtin::CompareNodeBuilder<builtin::Compare::EQ>>();
+    registerNodeBuilder<builtin::CompareNodeBuilder<builtin::Compare::NEQ>>();
+    registerNodeBuilder<builtin::CompareNodeBuilder<builtin::Compare::GE>>();
+    registerNodeBuilder<builtin::CompareNodeBuilder<builtin::Compare::GT>>();
+    registerNodeBuilder<builtin::PrintNodeBuilder>();
 }
 
 void RuleParser::registerNodeBuilder(std::unique_ptr<NodeBuilder> builder)

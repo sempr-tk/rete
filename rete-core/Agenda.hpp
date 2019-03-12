@@ -5,6 +5,7 @@
 #include <vector>
 #include <set>
 #include <utility>
+#include <string>
 
 
 #include "WME.hpp"
@@ -15,8 +16,9 @@
 
 namespace rete {
 
-// a AgendaItem
-typedef std::tuple<Token::Ptr, Production::Ptr, PropagationFlag> AgendaItem;
+// a AgendaItem:
+// token (data fulfilling conditions), production (what to do), flag (assert/retract), string (name of the rule that triggered this production, just cosmetics)
+typedef std::tuple<Token::Ptr, Production::Ptr, PropagationFlag, std::string> AgendaItem;
 
 /**
     Implements comparison of AgendaItems based on the priority of their Production

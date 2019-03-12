@@ -256,6 +256,53 @@ public:
 };
 
 
+
+/**
+    Accessors for constant values to simplify builtins.
+*/
+template <class T>
+class ConstantNumberAccessor : public SpecificNumAccessor<T> {
+    T value_;
+    T internalValue(WME::Ptr) const override { return value_; }
+public:
+    ConstantNumberAccessor(const T& value) : value_(value) {}
+
+    bool equals(const Accessor& other) const override
+    {
+        auto o = dynamic_cast<const ConstantNumberAccessor*>(&other);
+        if (!o) return false;
+        return value_ == o->value_;
+    }
+
+    ConstantNumberAccessor* clone() const override
+    {
+        return new ConstantNumberAccessor(*this);
+    }
+};
+
+class ConstantStringAccessor : public StringAccessor {
+    std::string value_;
+public:
+    ConstantStringAccessor(const std::string& value) : value_(value) {}
+    void getValue(WME::Ptr, std::string& value) const override
+    {
+        value = value_;
+    }
+
+    bool equals(const Accessor& other) const override
+    {
+        auto o = dynamic_cast<const ConstantStringAccessor*>(&other);
+        if (!o) return false;
+        return value_ == o->value_;
+    }
+
+    ConstantStringAccessor* clone() const override
+    {
+        return new ConstantStringAccessor(*this);
+    }
+
+};
+
 }
 
 

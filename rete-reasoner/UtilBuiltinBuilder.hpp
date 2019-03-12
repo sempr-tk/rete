@@ -2,6 +2,7 @@
 #define RETE_UTIL_BUILTIN_BUILDER_HPP_
 
 #include "NodeBuilder.hpp"
+#include "Exceptions.hpp"
 #include "../rete-core/TupleWME.hpp"
 #include "../rete-core/builtins/Util.hpp"
 #include "../rete-core/Accessors.hpp"
@@ -42,8 +43,10 @@ public:
         }
 
         // and they must be bound
-        if (args[0].isVariable() && !args[0].getAccessor()) throw std::runtime_error("left unbound");
-        if (args[1].isVariable() && !args[1].getAccessor()) throw std::runtime_error("right unbound");
+        if (args[0].isVariable() && !args[0].getAccessor())
+            throw NodeBuilderException("left side of comparison (" + args[0].getVariableName() + ") is unbound");
+        if (args[1].isVariable() && !args[1].getAccessor())
+            throw NodeBuilderException("right side of comparison (" + args[1].getVariableName() + ") is unbound");
 
         std::unique_ptr<Accessor> left, right;
 

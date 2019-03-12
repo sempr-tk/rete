@@ -1,4 +1,5 @@
 #include "TripleEffectBuilder.hpp"
+#include "Exceptions.hpp"
 
 namespace rete {
 
@@ -9,7 +10,9 @@ TripleEffectBuilder::TripleEffectBuilder()
 
 Production::Ptr TripleEffectBuilder::buildEffect(ArgumentList& args) const
 {
-    if (args.size() != 3) throw std::exception(); // wrong number of arguments
+    // should never happen, the parser knows that triples need 3 arguments
+    if (args.size() != 3) throw NodeBuilderException("Wrong number of arguments");
+
     InferTriple::ConstructHelper sub, pred, obj;
 
     // if sub/pred/obj is const: just use the string as written in the rule

@@ -42,7 +42,7 @@ public:
         std::string constructFrom(Token::Ptr token) const;
 
         /* for visualization purposes */
-        std::string getName() const;
+        std::string toString() const;
     };
 
     /**
@@ -58,7 +58,7 @@ public:
     /**
         For visualization purposes.
     */
-    std::string getName() const override;
+    std::string toString() const override;
 
     /**
         Infer the triple from the token iff the PropagationFlag is ASSERT.
@@ -69,6 +69,7 @@ private:
     const ConstructHelper subject_;
     const ConstructHelper predicate_;
     const ConstructHelper object_;
+    std::string name_;
 };
 
 } /* rete */

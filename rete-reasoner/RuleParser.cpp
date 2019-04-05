@@ -448,6 +448,7 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
 
 
     //  create productions / effects
+    size_t effectNo = 0;
     for (auto& effect : rule.effects_)
     {
         // find the correct builder
@@ -477,8 +478,17 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
             auto production = it->second->buildEffect(args);
             AgendaNode::Ptr agendaNode(new AgendaNode(production, net.getAgenda()));
 
-            if (rule.name_) agendaNode->setName(*rule.name_);
-            else            agendaNode->setName("");
+            if (rule.name_)
+            {
+                agendaNode->setName(*rule.name_);
+                production->setName(*rule.name_ + "[" + std::to_string(effectNo) + "]" );
+            }
+            else
+            {
+                agendaNode->setName("");
+                // use the verbose description of the effect if the rule has no name
+                production->setName(production->toString());
+            }
 
             currentBeta->getBetaMemory()->addProduction(agendaNode);
         } catch (NodeBuilderException& e) {
@@ -487,6 +497,7 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
             e.setPart(effect->str_);
             throw;
         }
+        effectNo++;
     }
 
     // /**

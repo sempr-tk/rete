@@ -10,7 +10,7 @@ namespace rete {
 */
 class EvidenceComparator {
 public:
-    bool operator () (const Evidence::Ptr& a, const Evidence::Ptr& b);
+    bool operator () (const Evidence::Ptr& a, const Evidence::Ptr& b) const;
 };
 
 } /* rete */

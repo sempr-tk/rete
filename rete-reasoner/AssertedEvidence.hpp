@@ -10,6 +10,7 @@ namespace rete {
 class AssertedEvidence : public Evidence {
     const std::string source_;
 public:
+    using Ptr = std::shared_ptr<AssertedEvidence>;
     AssertedEvidence(const std::string&);
     bool operator == (const Evidence& other) const override;
     bool operator < (const Evidence& other) const override;

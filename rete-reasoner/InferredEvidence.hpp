@@ -11,6 +11,7 @@ class InferredEvidence : public Evidence {
     const Token::Ptr token_;
     const Production::Ptr production_;
 public:
+    using Ptr = std::shared_ptr<InferredEvidence>;
     InferredEvidence(const Token::Ptr& token, const Production::Ptr& production);
     bool operator == (const Evidence& other) const override;
     bool operator < (const Evidence& other) const override;
@@ -18,6 +19,7 @@ public:
     std::string toString() const override;
 
     Token::Ptr token() const;
+    Production::Ptr production() const;
 
     static const int TypeId = 1; // init allowed because it's const!
 };

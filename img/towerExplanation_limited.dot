@@ -1,0 +1,27 @@
+digraph {
+ rankdir=RL
+node [fontname="Ubuntu Mono", fontsize=13]
+edge[constraint=false]
+"0x711750"[label="(a4 \<level\> 4.000000)", peripheries=2];
+"0x713f80"[style=filled, color=lightgrey, shape=polygon, sides=6, label="OnAnother[0]"];
+"0x713fc0" -> "0x713f80";
+"0x713d10" -> "0x713f80";
+"0x70e260" -> "0x713f80";
+"0x713f80" -> "0x711750";
+"0x713fc0"[label="TupleWME(4.000000)"];
+"0x713d10"[label="(a3 \<level\> 3.000000)"];
+"0x70e260"[label="(a4 \<on\> a3)"];
+"0x713dc0"[style=filled, color=lightgrey, shape=polygon, sides=6, label="OnAnother[0]"];
+"0x713dc0_placeholder"[label="[...]", shape=none];
+"0x713dc0_placeholder" -> "0x713dc0" [constraint=true];
+"0x713dc0" -> "0x713d10";
+"0x713240"[style=filled, color=lightgrey, shape=diamond, label="Asserted(fact-group-1)"];
+"0x713240" -> "0x70e260";
+
+rank0[shape=box] [label="level 0"];
+rank1[shape=box] [label="level 1"];
+rank2[shape=box] [label="level 2"];
+rank3[shape=box] [label="level 3"];
+rank3 -> rank2 -> rank1 -> rank0[constraint=true];
+{ rank=same; rank0 ; "0x711750";}{ rank=same; rank1 ; "0x713f80";}{ rank=same; rank2 ; "0x713fc0" ; "0x713d10" ; "0x70e260";}{ rank=same; rank3 ; "0x713dc0" ; "0x713240";}
+}

@@ -1,0 +1,36 @@
+digraph {
+ rankdir=TB
+node [fontname="Ubuntu Mono", fontsize=13]
+"0x1be1a80"[label="(\<bob\> \<likes\> \<roses\>)", peripheries=2];
+"0x1be25e0"[style=filled, color=lightgrey, shape=polygon, sides=6, label="likeColoredThings[0]"];
+"0x1bdf300" -> "0x1be25e0";
+"0x1be2630" -> "0x1be25e0";
+"0x1be4560" -> "0x1be25e0";
+"0x1be2bc0"[style=filled, color=lightgrey, shape=polygon, sides=6, label="transitiveLikes[0]"];
+"0x1be13d0" -> "0x1be2bc0";
+"0x1be23e0" -> "0x1be2bc0";
+"0x1be25e0" -> "0x1be1a80";
+"0x1be2bc0" -> "0x1be1a80";
+"0x1bdf300"[label="(\<roses\> \<are\> \<red\>)"];
+"0x1be2630"[label="(\<bob\> \<likes\> \<red\>)"];
+"0x1be4560"[label="(\<red\> \<type\> \<color\>)"];
+"0x1be13d0"[label="(\<alice\> \<likes\> \<roses\>)"];
+"0x1be23e0"[label="(\<bob\> \<likes\> \<alice\>)"];
+"0x1be2cc0"[style=filled, color=lightgrey, shape=diamond, label="Asserted(fact-group-1)"];
+"0x1be2cc0" -> "0x1bdf300";
+"0x1be26e0"[style=filled, color=lightgrey, shape=polygon, sides=6, label="transitiveLikes[0]"];
+"0x1be21d0" -> "0x1be26e0";
+"0x1be23e0" -> "0x1be26e0";
+"0x1be26e0" -> "0x1be2630";
+"0x1be2cc0" -> "0x1be4560";
+"0x1be14b0"[style=filled, color=lightgrey, shape=polygon, sides=6, label="likeColoredThings[0]"];
+"0x1bdf300" -> "0x1be14b0";
+"0x1be21d0" -> "0x1be14b0";
+"0x1be4560" -> "0x1be14b0";
+"0x1be14b0" -> "0x1be13d0";
+"0x1be2cc0" -> "0x1be23e0";
+"0x1be21d0"[label="(\<alice\> \<likes\> \<red\>)"];
+"0x1be2cc0" -> "0x1be21d0";
+
+
+}

@@ -1,0 +1,19 @@
+digraph {
+ rankdir=RL
+node [fontname="Ubuntu Mono", fontsize=13]
+edge[constraint=false]
+"0x1d0ba80"[label="(\<bob\> \<likes\> \<roses\>)", peripheries=2];
+"0x1d0c5e0"[style=filled, color=lightgrey, shape=polygon, sides=6, label="likeColoredThings[0]"];
+"0x1d0c5e0_placeholder"[label="[...]", shape=none];
+"0x1d0c5e0_placeholder" -> "0x1d0c5e0" [constraint=true];
+"0x1d0cbc0"[style=filled, color=lightgrey, shape=polygon, sides=6, label="transitiveLikes[0]"];
+"0x1d0cbc0_placeholder"[label="[...]", shape=none];
+"0x1d0cbc0_placeholder" -> "0x1d0cbc0" [constraint=true];
+"0x1d0c5e0" -> "0x1d0ba80";
+"0x1d0cbc0" -> "0x1d0ba80";
+
+rank0[shape=box] [label="level 0"];
+rank1[shape=box] [label="level 1"];
+rank1 -> rank0[constraint=true];
+{ rank=same; rank0 ; "0x1d0ba80";}{ rank=same; rank1 ; "0x1d0c5e0" ; "0x1d0cbc0";}
+}

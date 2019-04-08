@@ -18,7 +18,7 @@ The project is split into three parts:
 
 
 
-## Feature Example
+## Feature Examples
 
 The following sections will explain the core of this rete implementation, the types of nodes, how they are connected, how a reasoner is constructed using the rete network, what else has to be taken into account for the reasoning to work correctly, and how a network can be parsed from a textual representation of rules. Many examples given will focus on a single aspect of the functionalities and are helpful to understand what's going on "under the hood", but might not be what you are searching for if you just want to use this library. So before going into the internals, lets look at an artificial example to show what can be done with this library, and how you set everything up.
 
@@ -85,7 +85,51 @@ A smaller, but just as expressive example can be seen in [Blockstower.cpp](examp
 infer the height level that each block is located at. If a block is not located on something else, it is at level 0, else it is one level above the block it is standing on. The resulting network is seen below:
 ![blockstower](img/blockstower.dot.png)
 
-That's it. You can also implement your own builtins (in the examples we have used `sum` and `mul`), alpha conditions, and effects. The rest of the readme should give you a good understanding on how to do this, and how everything works, starting from the basic network components, up to the reasoner and rule parser.
+You can also implement your own builtins (in the examples we have used `sum` and `mul`), alpha conditions, and effects. The following sections of this readme should give you a good understanding on how to do this.
+
+However, before moving on with detailed internals of this module, there is another feature to showcase: Since you now inferred e.g. the triple `(a4 <level> 4.000000)`, you might wonder how the reasoner came to this conclusion. To get an explanation in graph form you can access the inference state of the reasoner and traverse the sub-graph explaining a given WME:
+
+```c++
+#inculde <rete-reasoner/ExplanationToDotVisitor.hpp>
+// [...]
+
+// after reasoner.performInference():
+rete::ExplanationToDotVisitor visitor;
+WME::Ptr toExplain(new Triple("a4", "<level>", "4.000000"));
+reasoner.getCurrentState().traverseExplanation(toExplain, visitor);
+
+std::ofstream towerExplanation("towerExplanation.dot");
+towerExplanation << visitor.str(rete::ExplanationToDotVisitor::FORCE_LOWEST_RANK);
+towerExplanation.close();
+```
+
+The parameter `FORCE_LOWEST_RANK`  adds a few helper nodes to force the WMEs and Evidences in the inference graph to appear as far left as possible,  right when they are used "first". It is completely optional, and can be combined with/replaced by other parameters. Have a look at [ExplanationToDotVisitor.hpp](rete-reasoner/ExplanationToDotVisitor.hpp) for all available flags.
+
+The resulting explanation can be seen here:
+![towerExplanation.dot](img/towerExplanation.dot.png)
+
+> _**Note:** The occurrence of the term `level` in both the triples and the topmost box-shaped nodes in the graph is a coincidence. They are not related. The rectangular nodes are just helper nodes inserted solely for visualization purposes._
+
+To limit the length of the explanation, the visitor can be configured with a maximum depth _before traversing the inference state:_
+
+```c++
+// [...]
+visitor.reset();
+visitor.setMaxDepth(3);
+reasoner.getCurrentState().traverseExplanation(toExplain, visitor);
+{
+	std::ofstream towerExplanation("towerExplanation_limited.dot");
+	towerExplanation << visitor.str(rete::ExplanationToDotVisitor::FORCE_LOWEST_RANK);
+	towerExplanation.close();
+}
+```
+
+Produces:
+![towerExplanation_limited.dot](img/towerExplanation_limited.dot.png)
+
+For a detailed description of this feature and an additional example, please see forward to the section _Reasoning/Explaining inferred knowledge_.
+
+The following sections describe the this project/library in more detail, starting from the basic network components, up to the reasoner and rule parser.
 
 
 
@@ -268,6 +312,48 @@ Assume that the fact does not hold and check if any of its evidences is still va
 An evidence is valid if it is an AssertedEvidence, or an InferredEvidence for which all WMEs/facts involved still hold. To check the facts in the InferredEvidence, the algorithm recurses, adding the facts to this list of facts we assume to not hold, in order to break any cycle. If a fact is found to be valid it is again removed from the list. At the end of the algorithm we know if the fact we wanted to check is still valid, and if not we also have a list of facts that do not hold anymore and are part of the cycle that held the original fact alive. All those facts are removed from the reasoner and the rete network, and thus evidences containing these facts are removed, too, and the whole process recurses until the network is consistent again, where all inferred facts can be tracked down to external assertions.
 
 Yes this is overhead. But necessary.
+
+### Explaining inferred knowledge
+
+As shown in the feature-example section above, you can ask the reasoner to explain why a given WME holds in the current inference state. All you need is access to the `InferenceState` of the reasoner and an `ExplanationVisitor`. 
+
+The method `InferenceState::traverseExplanation(WME::Ptr, ExplanationVisitor&)` traverses every fact and evidence in a breadth-first search, making sure that all WMEs in layer `n` are visited before the first evidence in layer `n+1`.
+
+```c++
+// after reasoner.performInference():
+WME::Ptr toExplain; // Whatever you want to be explained
+rete::ExplanationToDotVisitor visitor;
+reasoner.getCurrentState().traverseExplanation(toExplain, visitor);
+
+std::ofstream dotFile("explanation.dot");
+dotFile << visitor.str();
+dotFile.close();
+```
+
+The `ExplanationToDotVisitor::str(VizSettings)` method allows setting a few parameters to influence the visualization:
+
+- `NONE` (default)
+- `FORCE_LOWEST_RANK` forces nodes to be drawn in the order of their appearance (leftmost, closest to the WME to explain).
+- `HIDE_RANK_NODES` hide the nodes inserted when using `FORCE_LOWEST_RANK`
+- `EDGE_FORCE_HEAD_EAST` forces edges to end on the right side of a node
+- `EDGE_FORCE_TAIL_WEST` forces edges to start on the left side of a node
+- `TOP_DOWN` draws the inference graph top down, instead of right-to-left.
+
+With `ExplanationToDotVisitor::setMaxDepth(size_t depth)` you can set the maximum depth of the explanation to visualize (before calling `InferenceState::traverseExplanation`!), `0` meaning no limit.
+
+Let's have a look at the explanation shown previously, in the Blockstower-example:
+
+![towerExplanation_limited.dot](img/towerExplanation_limited.dot.png)
+
+Elliptical nodes are asserted or inferred facts (e.g. `(a4 <on> a3)`) or the results of a builtin (in this case e.g., `(TupleWME(4.000000))` is the result of the `sum(?la ?lb 1)` condition in the `OnAnother` rule). The one with a double-border is the WME you asked the reasoner to explain. Grey, hexagonal nodes represent the application of one effect of a rule. The WMEs to the right of it (incoming arrows) constitute the token, the match of facts and computations needed to activate the rule whose name is now the first part of the nodes label. The second part, the number in square brackets, is the index of the effect in the rule. So `OnAnother[0] ` is the application of the first effect of the `OnAnother`-rule. All WMEs needed for the rule activation are linked to the effect, even if some of them were not directly used in the effect -- in the end, the effect would not have been triggered if any of the WMEs were missing. The grey, diamond-shaped nodes are assertion-evidences which do not need to be explained any further, as they were given to the reasoner as raw, basic facts to work with.
+
+Another example can be found in [Explain.cpp](examples/Explain.cpp): The domain has two rules: People like things that are of a color they like, and people like the same things as the people they like (not very realistic, but something like "a friend of a friend is a friend of mine". Please bear with me :slightly_smiling_face:). Now we ask why Bob likes roses, and get this answer:
+
+![Explanation.dot](/home/nils/rete/img/Explanation.dot.png)
+
+Here we see that Bob likes roses because Bob likes Alice and Alice likes roses; but also because Bob likes red and roses are red; Alice likes roses because roses are red and Alice likes red, which are asserted facts; etc. ...
+
+
 
 ## Reasoning with RDF triples
 

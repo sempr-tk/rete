@@ -1,0 +1,49 @@
+digraph graphname { 
+graph [fontname = "Ubuntu Mono"]
+node  [fontname = "Ubuntu Mono"]
+"0xe07260" [label=Root];
+"0xe0bca0" [label="TripleCheck\n (?pred == \<type\>)"];
+"0xe07260" -> "0xe0bca0";
+"0xe0b030" [label="TripleCheck\n (?pred == \<likes\>)"];
+"0xe07260" -> "0xe0b030";
+"0xe0b6d0" [label="TripleCheck\n (?pred == \<are\>)"];
+"0xe07260" -> "0xe0b6d0";
+"0xe0b8a0" [shape=record, label="{AlphaMemory|(\<roses\> \<are\> \<red\>)|(\<violets\> \<are\> \<blue\>)}"];
+"0xe0b6d0" -> "0xe0b8a0";
+"0xe0b200" [shape=record, label="{AlphaMemory|(\<alice\> \<likes\> \<red\>)|(\<alice\> \<likes\> \<roses\>)|(\<bob\> \<likes\> \<alice\>)|(\<bob\> \<likes\> \<blue\>)|(\<bob\> \<likes\> \<red\>)|(\<bob\> \<likes\> \<roses\>)|(\<bob\> \<likes\> \<violets\>)}"];
+"0xe0b030" -> "0xe0b200";
+"0xe0ec20" [label="TripleCheck\n (?obj == \<color\>)"];
+"0xe0bca0" -> "0xe0ec20";
+"0xe0fd70" [shape=record, label="{AlphaMemory|(\<blue\> \<type\> \<color\>)|(\<red\> \<type\> \<color\>)}"];
+"0xe0ec20" -> "0xe0fd70";
+"0xe0b200" -> "0xe0b260";
+"0xe0b260" [label="GenericJoin\nTriple[0].?sub == Triple.?obj"]
+;
+"0xe0b200" -> "0xe0bf10";
+"0xe0bf10" [label="GenericJoin\nTriple[0].?obj == Triple.?sub"]
+;
+"0xe0b200" -> "0xe0bb70";
+"0xe0bb70" [label="AB-Adapter"];
+"0xe0b8a0" -> "0xe0fec0";
+"0xe0fec0" [label="GenericJoin\nTriple[0].?obj == Triple.?obj"]
+;
+"0xe0fd70" -> "0xe06000";
+"0xe06000" [label="AB-Adapter"];
+"0xe0b9b0" [shape=record, label="{BetaMemory|(\<red\> \<type\> \<color\>)|(\<blue\> \<type\> \<color\>)}"];
+"0xe06000" -> "0xe0b9b0";
+"0xe0b9b0" -> "0xe0b260";
+"0xe0ff50" [shape=record, label="{BetaMemory|[(\<roses\> \<are\> \<red\>) [(\<alice\> \<likes\> \<red\>) (\<red\> \<type\> \<color\>)]]|[(\<violets\> \<are\> \<blue\>) [(\<bob\> \<likes\> \<blue\>) (\<blue\> \<type\> \<color\>)]]|[(\<roses\> \<are\> \<red\>) [(\<bob\> \<likes\> \<red\>) (\<red\> \<type\> \<color\>)]]}"];
+"0xe0fec0" -> "0xe0ff50";
+"0xe10640" [label="AgendaNode 'likeColoredThings'\nInferTriple (Triple[1].?sub \<likes\> Triple[0].?sub)"];
+"0xe0ff50" -> "0xe10640";
+"0xe0b670" [shape=record, label="{BetaMemory|(\<alice\> \<likes\> \<red\>)|(\<bob\> \<likes\> \<blue\>)|(\<bob\> \<likes\> \<alice\>)|(\<bob\> \<likes\> \<red\>)|(\<bob\> \<likes\> \<roses\>)|(\<bob\> \<likes\> \<violets\>)|(\<alice\> \<likes\> \<roses\>)}"];
+"0xe0bb70" -> "0xe0b670";
+"0xe0b670" -> "0xe0bf10";
+"0xe0bfa0" [shape=record, label="{BetaMemory|[(\<alice\> \<likes\> \<red\>) (\<bob\> \<likes\> \<alice\>)]|[(\<alice\> \<likes\> \<roses\>) (\<bob\> \<likes\> \<alice\>)]}"];
+"0xe0bf10" -> "0xe0bfa0";
+"0xe0c4b0" [label="AgendaNode 'transitiveLikes'\nInferTriple (Triple[1].?sub \<likes\> Triple[0].?obj)"];
+"0xe0bfa0" -> "0xe0c4b0";
+"0xe0b2f0" [shape=record, label="{BetaMemory|[(\<alice\> \<likes\> \<red\>) (\<red\> \<type\> \<color\>)]|[(\<bob\> \<likes\> \<blue\>) (\<blue\> \<type\> \<color\>)]|[(\<bob\> \<likes\> \<red\>) (\<red\> \<type\> \<color\>)]}"];
+"0xe0b260" -> "0xe0b2f0";
+"0xe0b2f0" -> "0xe0fec0";
+}

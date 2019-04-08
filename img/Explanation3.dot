@@ -1,0 +1,42 @@
+digraph {
+ rankdir=RL
+node [fontname="Ubuntu Mono", fontsize=13]
+edge[constraint=false]
+"0x1d0ba80"[label="(\<bob\> \<likes\> \<roses\>)", peripheries=2];
+"0x1d0c5e0"[style=filled, color=lightgrey, shape=polygon, sides=6, label="likeColoredThings[0]"];
+"0x1d09300" -> "0x1d0c5e0";
+"0x1d0c630" -> "0x1d0c5e0";
+"0x1d0e560" -> "0x1d0c5e0";
+"0x1d0cbc0"[style=filled, color=lightgrey, shape=polygon, sides=6, label="transitiveLikes[0]"];
+"0x1d0b3d0" -> "0x1d0cbc0";
+"0x1d0c3e0" -> "0x1d0cbc0";
+"0x1d0c5e0" -> "0x1d0ba80";
+"0x1d0cbc0" -> "0x1d0ba80";
+"0x1d09300"[label="(\<roses\> \<are\> \<red\>)"];
+"0x1d0c630"[label="(\<bob\> \<likes\> \<red\>)"];
+"0x1d0e560"[label="(\<red\> \<type\> \<color\>)"];
+"0x1d0b3d0"[label="(\<alice\> \<likes\> \<roses\>)"];
+"0x1d0c3e0"[label="(\<bob\> \<likes\> \<alice\>)"];
+"0x1d0ccc0"[style=filled, color=lightgrey, shape=diamond, label="Asserted(fact-group-1)"];
+"0x1d0ccc0" -> "0x1d09300";
+"0x1d0c6e0"[style=filled, color=lightgrey, shape=polygon, sides=6, label="transitiveLikes[0]"];
+"0x1d0c6e0_placeholder"[label="[...]", shape=none];
+"0x1d0c6e0_placeholder" -> "0x1d0c6e0" [constraint=true];
+"0x1d0c3e0" -> "0x1d0c6e0";
+"0x1d0c6e0" -> "0x1d0c630";
+"0x1d0ccc0" -> "0x1d0e560";
+"0x1d0b4b0"[style=filled, color=lightgrey, shape=polygon, sides=6, label="likeColoredThings[0]"];
+"0x1d09300" -> "0x1d0b4b0";
+"0x1d0b4b0_placeholder"[label="[...]", shape=none];
+"0x1d0b4b0_placeholder" -> "0x1d0b4b0" [constraint=true];
+"0x1d0e560" -> "0x1d0b4b0";
+"0x1d0b4b0" -> "0x1d0b3d0";
+"0x1d0ccc0" -> "0x1d0c3e0";
+
+rank0[shape=box] [label="level 0"];
+rank1[shape=box] [label="level 1"];
+rank2[shape=box] [label="level 2"];
+rank3[shape=box] [label="level 3"];
+rank3 -> rank2 -> rank1 -> rank0[constraint=true];
+{ rank=same; rank0 ; "0x1d0ba80";}{ rank=same; rank1 ; "0x1d0c5e0" ; "0x1d0cbc0";}{ rank=same; rank2 ; "0x1d09300" ; "0x1d0c630" ; "0x1d0e560" ; "0x1d0b3d0" ; "0x1d0c3e0";}{ rank=same; rank3 ; "0x1d0ccc0" ; "0x1d0c6e0" ; "0x1d0b4b0";}
+}

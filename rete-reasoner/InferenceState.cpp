@@ -65,60 +65,82 @@ void InferenceState::traverseExplanation(WME::Ptr toExplain, ExplanationVisitor&
     auto toExplainIt = backedWMEs_.find({toExplain});
     if (toExplainIt == backedWMEs_.end()) return; // its not backed, so we won't even visit the one to explain.
 
-    traverse(toExplainIt->getWME(), visitor, 0);
-}
 
-void InferenceState::traverse(WME::Ptr toExplain, ExplanationVisitor& visitor, int depth) const
-{
-    if (explained_.find(toExplain) != explained_.end()) return;
+    // breadth first search for correct depth of WMEs (first occurence, closes to the WME toExplain
+    // in any chain!).
+    typedef std::pair<WME::Ptr, size_t> WMEDepth;
+    typedef std::pair<WMESupportedBy, size_t> EvidenceDepth;
 
-    explained_.insert(toExplain);
+    std::vector<WMEDepth> currentWMELayer;
+    std::vector<EvidenceDepth> currentEvidenceLayer;
 
-    auto support = this->explain(toExplain);
-    if (!support.evidences_.empty())
+    currentWMELayer.push_back({toExplain, 0});
+
+    std::set<WME::Ptr> explained;
+    // as long as there are still WMEs to process (chains always end in evidences!)
+    while (!currentWMELayer.empty())
     {
-        // first visit all the nodes
-        visitor.visit(toExplain, depth);
-        for (auto evidence : support.evidences_)
+        // process all the WMEs
+        for (auto entry : currentWMELayer)
         {
-            traverse(evidence, visitor, depth+1);
+            WME::Ptr wme = entry.first;
+            size_t depth = entry.second;
+
+            // prevent circles
+            if (explained.find(wme) != explained.end()) continue;
+            explained.insert(wme);
+
+
+            // visit the wme
+            visitor.visit(wme, depth);
+
+            // remember to visit the evidences after visiting all wmes in this layer
+            auto support = this->explain(wme);
+            currentEvidenceLayer.push_back({support, depth+1});
         }
-        // visit the connections between WME and evidence after visiting the both
-        visitor.visit(support, depth);
-    }
 
-}
+        // wme layer fully processed, reset:
+        currentWMELayer.clear();
 
-void InferenceState::traverse(Evidence::Ptr evidence, ExplanationVisitor& visitor, int depth) const
-{
-    //visitor.visit(evidence)
-    // sadly, need to cast.
-    // the correct way would be to give the Evidence an accept(visitor) method to do the dispatching
-    // but since all the datastructures are using shared_ptr, getting a raw Evidence* doesn't really
-    // help the visitor. (Needs to find it in sets of Evidence::Ptr etc.)
-    auto asserted = std::dynamic_pointer_cast<AssertedEvidence>(evidence);
-    if (asserted)
-    {
-        visitor.visit(asserted, depth);
-    }
-    else
-    {
-        auto inferred = std::dynamic_pointer_cast<InferredEvidence>(evidence);
-        if (inferred)
+        // next level: evidences, and record new WMEs to process
+        for (auto supportEntry : currentEvidenceLayer)
         {
-            visitor.visit(inferred, depth);
-            auto token = inferred->token();
-            while (token)
+            auto support = supportEntry.first;
+            size_t depth = supportEntry.second;
+
+            for (auto evidence : support.evidences_)
             {
-                traverse(token->wme, visitor, depth+1);
-                token = token->parent;
+                // differ between asserted and inferred
+                auto asserted = std::dynamic_pointer_cast<AssertedEvidence>(evidence);
+                if (asserted) visitor.visit(asserted, depth);
+                else
+                {
+                    auto inferred = std::dynamic_pointer_cast<InferredEvidence>(evidence);
+                    if (inferred)
+                    {
+                        visitor.visit(inferred, depth);
+                        Token::Ptr token = inferred->token();
+                        while (token)
+                        {
+                            WME::Ptr next = token->wme;
+                            currentWMELayer.push_back({next, depth+1});
+                            token = token->parent;
+                        }
+                    }
+                    else
+                    {
+                        // should never happen, only asserted and inferred evidences exist
+                        visitor.visit(evidence, depth);
+                    }
+                }
             }
+            // visit the connection. +1 on depth, since the reference evidences are one level deeper
+            // in the chain
+            visitor.visit(support, depth);
         }
-        else
-        {
-            // ?! I didn't implement anything else besides inferred and asserted evidences...
-            visitor.visit(evidence, depth);
-        }
+
+        // evidence layer processed, reset:
+        currentEvidenceLayer.clear();
     }
 }
 

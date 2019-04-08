@@ -58,8 +58,8 @@ class InferenceState {
     // list of WMEs already explained or queued for explanation
     mutable std::set<WME::Ptr> explained_;
     // helper methods for traverseExplanation
-    void traverse(WME::Ptr, ExplanationVisitor&, int depth) const;
-    void traverse(Evidence::Ptr, ExplanationVisitor&, int depth) const;
+    void traverse(WME::Ptr, ExplanationVisitor&, size_t depth) const;
+    void traverse(Evidence::Ptr, ExplanationVisitor&, size_t depth) const;
 public:
     /**
         Returns all evidences that back a given WME.

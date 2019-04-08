@@ -69,12 +69,24 @@ int main()
     ExplanationToDotVisitor visitor;
     auto state = reasoner.getCurrentState();
     auto t = likes("<bob>", "<roses>");
-    state.traverseExplanation(t, visitor);
+
+    for (int i = 0; i < 5; i++)
+    {
+        visitor.reset();
+        visitor.setMaxDepth(i);
+        state.traverseExplanation(t, visitor);
+
+        std::ofstream expl("Explanation" + std::to_string(i) + ".dot");
+
+        using VizSettings = rete::ExplanationToDotVisitor::VizSettings;
+        expl << visitor.str(VizSettings::FORCE_LOWEST_RANK);
+        expl.close();
+    }
+
 
     std::ofstream expl("Explanation.dot");
     expl << visitor.str();
     expl.close();
-
 
     return 0;
 }

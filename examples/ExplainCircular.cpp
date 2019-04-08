@@ -68,11 +68,17 @@ int main()
     auto state = reasoner.getCurrentState();
     // auto t = std::make_shared<Triple>("<B>", "<equivalent>", "<A>");
     auto t = std::make_shared<Triple>("<X>", "<Y>", "<Z>");
-    state.traverseExplanation(t, visitor);
 
-    std::ofstream expl("ExplanationCircular.dot");
-    expl << visitor.str();
-    expl.close();
+    for (int i = 0; i < 6; i++)
+    {
+        visitor.reset();
+        visitor.setMaxDepth(i);
+        state.traverseExplanation(t, visitor);
+
+        std::ofstream expl("ExplanationCircular" + std::to_string(i) + ".dot");
+        expl << visitor.str();
+        expl.close();
+    }
 
 
     return 0;

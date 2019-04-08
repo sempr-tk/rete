@@ -23,15 +23,15 @@ class ExplanationVisitor {
 public:
     virtual ~ExplanationVisitor() {}
     /** Process information about which evidences support a WME */
-    virtual void visit(WMESupportedBy&, int depth) = 0;
+    virtual void visit(WMESupportedBy&, size_t depth) = 0;
 
     /** Process WMEs */
-    virtual void visit(WME::Ptr, int depth) = 0;
+    virtual void visit(WME::Ptr, size_t depth) = 0;
 
     /** Process Evidences */
-    virtual void visit(Evidence::Ptr, int depth) = 0;
-    virtual void visit(AssertedEvidence::Ptr, int depth) = 0;
-    virtual void visit(InferredEvidence::Ptr, int depth) = 0;
+    virtual void visit(Evidence::Ptr, size_t depth) = 0;
+    virtual void visit(AssertedEvidence::Ptr, size_t depth) = 0;
+    virtual void visit(InferredEvidence::Ptr, size_t depth) = 0;
 };
 
 } /* rete */

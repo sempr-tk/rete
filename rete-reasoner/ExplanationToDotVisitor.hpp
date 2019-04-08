@@ -60,11 +60,12 @@ public:
 
     enum VizSettings {
         NONE = 0,
-        FORCE_LOWEST_RANK = 1,      // Inserts nodes and edges to force the nodes to be drawn in the
-                                    // order of their appearance, from left to right.
-        HIDE_RANK_NODES = 2,        // Hide the nodes added with ENFORCE_LOWEST_RANK.
-        EDGE_FORCE_HEAD_EAST = 4,   // Force edges to connect to the right side of the target node
-        EDGE_FORCE_TAIL_WEST = 8    // Force edges to connect to the left side of the source node
+        FORCE_LOWEST_RANK =     1 << 0, // Inserts nodes and edges to force the nodes to be drawn
+                                        // in the order of their appearance, from left to right.
+        HIDE_RANK_NODES =       1 << 1, // Hide the nodes added with ENFORCE_LOWEST_RANK.
+        EDGE_FORCE_HEAD_EAST =  1 << 2, // Force edges to connect to the right side of the target
+        EDGE_FORCE_TAIL_WEST =  1 << 3, // Force edges to connect to the left side of the source
+        TOP_DOWN =              1 << 4, // Set layout top top-down (instead of right-left)
     };
 
 

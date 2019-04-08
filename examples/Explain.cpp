@@ -85,7 +85,7 @@ int main()
 
 
     std::ofstream expl("Explanation.dot");
-    expl << visitor.str();
+    expl << visitor.str(rete::ExplanationToDotVisitor::VizSettings::TOP_DOWN);
     expl.close();
 
     return 0;

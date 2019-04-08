@@ -166,7 +166,9 @@ void ExplanationToDotVisitor::addPlaceholderFor(Evidence::Ptr ev)
 std::string ExplanationToDotVisitor::str(VizSettings settings) const
 {
     std::stringstream ss;
-    ss << "digraph {\n rankdir=RL\n";
+    if (settings & VizSettings::TOP_DOWN) ss << "digraph {\n rankdir=TB\n";
+    else                                  ss << "digraph {\n rankdir=RL\n";
+
     ss << "node [fontname=\"Ubuntu Mono\", fontsize=13]\n";
 
     if (settings & FORCE_LOWEST_RANK) ss << "edge[constraint=false]\n";

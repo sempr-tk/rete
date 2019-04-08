@@ -14,12 +14,14 @@ namespace rete {
 */
 class Production {
     const int priority_;
+    std::string name_;
 public:
     using Ptr = std::shared_ptr<Production>;
     /**
         The priority of the ProductionNode influences their order on the agenda.
+        The name is only used for visualization purposes.
     */
-    Production(int priority = 0);
+    Production(int priority = 0, const std::string& name = "");
     virtual ~Production() {};
 
     /**
@@ -42,7 +44,14 @@ public:
     /**
         Get the name of the production for visualization purposes.
     */
-    virtual std::string getName() const = 0;
+    std::string getName() const;
+    void setName(const std::string&);
+
+    /**
+        Get a string representation of the production for visualization purposes. (More verbose
+        than getName())
+    */
+    virtual std::string toString() const;
 };
 
 } /* rete */

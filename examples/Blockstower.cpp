@@ -6,6 +6,7 @@
 #include "../rete-reasoner/Reasoner.hpp"
 #include "../rete-reasoner/RuleParser.hpp"
 #include "../rete-reasoner/AssertedEvidence.hpp"
+#include "../rete-reasoner/ExplanationToDotVisitor.hpp"
 
 
 using namespace rete;
@@ -67,6 +68,25 @@ int main()
     reasoner.performInference();
 
     save(reasoner.net(), "blockstower.dot");
+
+    rete::ExplanationToDotVisitor visitor;
+    WME::Ptr toExplain(new Triple("a4", "<level>", "4.000000"));
+    reasoner.getCurrentState().traverseExplanation(toExplain, visitor);
+
+    {
+        std::ofstream towerExplanation("towerExplanation.dot");
+        towerExplanation << visitor.str(rete::ExplanationToDotVisitor::FORCE_LOWEST_RANK);
+        towerExplanation.close();
+    }
+
+    visitor.reset();
+    visitor.setMaxDepth(3);
+    reasoner.getCurrentState().traverseExplanation(toExplain, visitor);
+    {
+        std::ofstream towerExplanation("towerExplanation_limited.dot");
+        towerExplanation << visitor.str(rete::ExplanationToDotVisitor::FORCE_LOWEST_RANK);
+        towerExplanation.close();
+    }
 
     return 0;
 }

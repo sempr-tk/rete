@@ -9,6 +9,8 @@ set(REASONER_SRC
     AssertedEvidence.cpp
     BackedWME.cpp
     EvidenceComparator.cpp
+    ExplanationToDotVisitor.cpp
+    InferenceState.cpp
     InferredEvidence.cpp
     Reasoner.cpp
     RuleGrammar.cpp

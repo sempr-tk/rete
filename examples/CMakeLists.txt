@@ -16,3 +16,9 @@ target_link_libraries(Blocksworld rete-core rete-rdf rete-reasoner)
 
 add_executable(Blockstower Blockstower.cpp)
 target_link_libraries(Blockstower rete-core rete-rdf rete-reasoner)
+
+add_executable(Explain Explain.cpp)
+target_link_libraries(Explain rete-core rete-rdf rete-reasoner)
+
+add_executable(ExplainCircular ExplainCircular.cpp)
+target_link_libraries(ExplainCircular rete-core rete-rdf rete-reasoner)

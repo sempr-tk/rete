@@ -67,7 +67,7 @@ std::string InferTriple::ConstructHelper::constructFrom(Token::Ptr token) const
     return accessor_->as<StringAccessor>()->getString(token);
 }
 
-std::string InferTriple::ConstructHelper::getName() const
+std::string InferTriple::ConstructHelper::toString() const
 {
     if (isPredefined_) return string_;
     return accessor_->toString();
@@ -79,12 +79,12 @@ InferTriple::InferTriple(ConstructHelper&& sub, ConstructHelper&& pred, Construc
 {
 }
 
-std::string InferTriple::getName() const
+std::string InferTriple::toString() const
 {
     std::string s, p, o;
-    s = util::dotEscape(subject_.getName());
-    p = util::dotEscape(predicate_.getName());
-    o = util::dotEscape(object_.getName());
+    s = util::dotEscape(subject_.toString());
+    p = util::dotEscape(predicate_.toString());
+    o = util::dotEscape(object_.toString());
 
     return "InferTriple (" + s + " " + p + " " + o + ")";
 }

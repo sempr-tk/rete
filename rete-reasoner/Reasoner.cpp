@@ -19,6 +19,11 @@ const Network& Reasoner::net() const
     return rete_;
 }
 
+InferenceState Reasoner::getCurrentState() const
+{
+    return state_;
+}
+
 void Reasoner::setCallback(std::function<void(WME::Ptr, rete::PropagationFlag)> fn)
 {
     callback_ = fn;
@@ -98,7 +103,7 @@ void Reasoner::performInference(size_t maxSteps)
 void Reasoner::addEvidence(WME::Ptr wme, Evidence::Ptr evidence)
 {
     BackedWME nBacked(wme);
-    auto p = backedWMEs_.insert(nBacked);
+    auto p = state_.backedWMEs_.insert(nBacked);
     p.first->addEvidence(evidence); // whether new or old, add the evidence.
 
     // callback
@@ -109,7 +114,7 @@ void Reasoner::addEvidence(WME::Ptr wme, Evidence::Ptr evidence)
     }
 
     // remember that the evidence is used to back the WME (indexing)
-    evidenceToWME_[evidence].push_back(wme);
+    state_.evidenceToWME_[evidence].push_back(wme);
 
     // announce to rete
     rete_.getRoot()->activate(wme, rete::ASSERT);
@@ -117,8 +122,8 @@ void Reasoner::addEvidence(WME::Ptr wme, Evidence::Ptr evidence)
 
 void Reasoner::removeEvidence(Evidence::Ptr evidence)
 {
-    auto it = evidenceToWME_.find(evidence);
-    if (it == evidenceToWME_.end())
+    auto it = state_.evidenceToWME_.find(evidence);
+    if (it == state_.evidenceToWME_.end())
     {
         // this evidence backs nothing.
     }
@@ -129,7 +134,7 @@ void Reasoner::removeEvidence(Evidence::Ptr evidence)
         // removeEvidence(wme, evidence) when the index is updated.
         std::vector<WME::Ptr> wmes;
         it->second.swap(wmes);
-        evidenceToWME_.erase(it);
+        state_.evidenceToWME_.erase(it);
 
         for (auto wme : wmes)
         {
@@ -141,14 +146,14 @@ void Reasoner::removeEvidence(Evidence::Ptr evidence)
 void Reasoner::removeEvidence(WME::Ptr wme, Evidence::Ptr evidence)
 {
     BackedWME nBacked(wme);
-    auto it = backedWMEs_.find(nBacked);
-    if (it != backedWMEs_.end())
+    auto it = state_.backedWMEs_.find(nBacked);
+    if (it != state_.backedWMEs_.end())
     {
         it->removeEvidence(evidence);
 
         // also, update the index:
-        auto indexIt = evidenceToWME_.find(evidence);
-        if (indexIt != evidenceToWME_.end())
+        auto indexIt = state_.evidenceToWME_.find(evidence);
+        if (indexIt != state_.evidenceToWME_.end())
         {
             auto vIt = std::remove_if(indexIt->second.begin(), indexIt->second.end(),
                                         [wme](WME::Ptr w) -> bool
@@ -165,7 +170,7 @@ void Reasoner::removeEvidence(WME::Ptr wme, Evidence::Ptr evidence)
             // lost all evidence --> remove WME!
             rete_.getRoot()->activate(wme, rete::RETRACT);
             if (callback_) callback_(wme, rete::RETRACT);
-            backedWMEs_.erase(it);
+            state_.backedWMEs_.erase(it);
         } else {
             // the WME seems to be still backed -- but really? check and clean up loops!
             cleanupInferenceLoops(wme);
@@ -240,8 +245,8 @@ bool Reasoner::checkIfFactHolds(WME::Ptr fact, std::set<WME::Ptr>& notHolding)
     notHolding.insert(fact);
 
     // check if it even exists
-    auto backed = backedWMEs_.find(fact);
-    if (backed == backedWMEs_.end()) return false;
+    auto backed = state_.backedWMEs_.find(fact);
+    if (backed == state_.backedWMEs_.end()) return false;
 
     // check every evidence
     for (auto evidence : *backed)
@@ -262,7 +267,7 @@ bool Reasoner::checkIfFactHolds(WME::Ptr fact, std::set<WME::Ptr>& notHolding)
 void Reasoner::remove(WME::Ptr fact)
 {
     BackedWME backed(fact);
-    backedWMEs_.erase(backed);
+    state_.backedWMEs_.erase(backed);
 
     rete_.getRoot()->activate(fact, rete::RETRACT);
 

@@ -42,4 +42,9 @@ Token::Ptr InferredEvidence::token() const
     return token_;
 }
 
+Production::Ptr InferredEvidence::production() const
+{
+    return production_;
+}
+
 } /* rete */

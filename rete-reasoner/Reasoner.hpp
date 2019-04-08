@@ -8,6 +8,7 @@
 #include "../rete-core/Network.hpp"
 #include "BackedWME.hpp"
 #include "EvidenceComparator.hpp"
+#include "InferenceState.hpp"
 
 namespace rete {
 
@@ -20,14 +21,13 @@ namespace rete {
     inferred facts as a result from adding / removing some from the outside.
 */
 class Reasoner {
-    std::set<BackedWME, BackedWME::SameWME> backedWMEs_;
     Network rete_;
     std::function<void(WME::Ptr, rete::PropagationFlag)> callback_;
 
     /**
-        Index to easily find all WMEs that are backed by a given evidence.
+        All information about which evidence backs which wme.
     */
-    std::map<Evidence::Ptr, std::vector<WME::Ptr>, EvidenceComparator> evidenceToWME_;
+    InferenceState state_;
 
     /**
         History of executed productions (AgendaItems)
@@ -44,6 +44,13 @@ public:
     Network& net();
     const Network& net() const;
 
+
+    /**
+        Returns a snapshot of the inference state.
+        This only contains the inferred and asserted WMEs as well as their Evidences, but not the
+        rete network and the (partial) matches, or anything on the agenda.
+    */
+    InferenceState getCurrentState() const;
 
     /**
         As long as the Agenda is not empty, takes the first AgendaItem and processes it, adding and

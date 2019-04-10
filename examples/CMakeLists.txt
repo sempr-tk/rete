@@ -22,3 +22,6 @@ target_link_libraries(Explain rete-core rete-rdf rete-reasoner)
 
 add_executable(ExplainCircular ExplainCircular.cpp)
 target_link_libraries(ExplainCircular rete-core rete-rdf rete-reasoner)
+
+add_executable(SubClassOf2 SubClassOf2.cpp)
+target_link_libraries(SubClassOf2 rete-core rete-rdf rete-reasoner)

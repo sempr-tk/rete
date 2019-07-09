@@ -43,7 +43,7 @@ public:
         auto o = dynamic_cast<const TupleWME*>(&other);
         if (o)
         {
-            return value_ == o->value_;
+            return value_ < o->value_;
         }
         return true; // should not happen
     }

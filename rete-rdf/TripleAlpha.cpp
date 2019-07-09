@@ -15,6 +15,7 @@ void TripleAlpha::activate(WME::Ptr wme, PropagationFlag flag)
     {
         // shortcut: without any (expensive) check, just propagate!
         propagate(wme, PropagationFlag::RETRACT);
+        return;
     }
 
     if (Triple::Ptr triple = std::dynamic_pointer_cast<Triple>(wme))

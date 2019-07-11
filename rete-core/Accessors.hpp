@@ -278,6 +278,11 @@ public:
     {
         return new ConstantNumberAccessor(*this);
     }
+
+    std::string toString() const override
+    {
+        return std::to_string(value_);
+    }
 };
 
 class ConstantStringAccessor : public StringAccessor {
@@ -299,6 +304,11 @@ public:
     ConstantStringAccessor* clone() const override
     {
         return new ConstantStringAccessor(*this);
+    }
+
+    std::string toString() const override
+    {
+        return value_;
     }
 
 };

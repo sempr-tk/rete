@@ -39,6 +39,21 @@ public:
     that, too, so in that case the same tuple of the token and the production is added to the
     agenda, but with a removal-parameter as the third entry (PropagationFlag::RETRACT instead of
     PropagationFlag::ASSERT).
+
+    A difficult addition is the introduction of mutable WMEs. For these we need UPDATE-flags
+    whenever their internal values change. The productions of a match that includes a changed WME
+    have to be re-run even if the whole conditions/match still holds, since the result might be
+    different. So we also need to add AgendaItems with UPDATE flags, and have to think about what to
+    do when adding a new AgendaItem for an existing <Token, Production> combination with a different
+    flag.
+    [already there] + [new to add] = [what to do]
+    ASSERT  + RETRACT = remove both from agenda
+    RETRACT + ASSERT  = cannot happen, new match will be a new token (same content, still different)
+    ASSERT  + UPDATE  = UPDATE unnecessary, noone was informed of the existence of the match yet
+    RETRACT + UPDATE  = cannot happen, no way to "UPDATE" a match that was retracted from the net
+    UPDATE  + ASSERT  = cannot happen, why should the match be ASSERTED again when it was even updated before?
+    UPDATE  + RETRACT = UPDATE needs to be removed from the agenda, RETRACT added.
+
 */
 class Agenda {
     std::set<AgendaItem, AgendaItemComparator> queue_;

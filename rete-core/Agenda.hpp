@@ -56,16 +56,6 @@ public:
     */
     bool remove(AgendaItem);
 
-    /**
-        Remove an item from the agenda. Returns true if an AgendaItem was found and removed.
-        This method compares tokens in the items by value. This is useful to find a RETRACT-token
-        that is equivalent to an ASSERT-token we want to add (because the ASSERT one is created
-        new), while for finding an ASSERT-token we want to RETRACT the normal remove(..) is
-        sufficient as they will be pointer-equivalent.
-
-        This method checks every AgendaItem individually, and uses the more expensive Token::equals.
-    */
-    bool removeEquivalent(AgendaItem);
 
     /**
         Check if the Agenda is empty

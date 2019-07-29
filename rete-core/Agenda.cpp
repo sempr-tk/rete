@@ -41,28 +41,6 @@ bool Agenda::remove(AgendaItem item)
     return (queue_.erase(item) > 0);
 }
 
-bool Agenda::removeEquivalent(AgendaItem item)
-{
-    auto matches = [&item](const AgendaItem& other) {
-        if (std::get<2>(item) != std::get<2>(other)) return false; // different flag
-        if (std::get<1>(item) != std::get<1>(other)) return false; // different production-ptr
-        return std::get<0>(item)->equals(*std::get<0>(other)); // token equality
-    };
-
-    // search for a match one by one
-    for (auto entry : queue_)
-    {
-        if (matches(entry)) {
-            // erase first match and return
-            queue_.erase(entry);
-            return true;
-        }
-    }
-
-    return false;
-}
-
-
 bool Agenda::empty() const
 {
     return queue_.empty();

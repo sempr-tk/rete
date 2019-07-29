@@ -20,15 +20,6 @@ struct Token {
     WME::Ptr wme;
 
     std::string toString() const;
-
-
-    /**
-        returns true if all WMEs in the two token match -- they are equal (but not necessarily the
-        same instances).
-        This is needed to correctly update the agenda when adding and removing tokens, to check if
-        a new token matches one that were to be retracted previously.
-    */
-    bool equals(const Token& other) const;
 };
 
 } /* rete */

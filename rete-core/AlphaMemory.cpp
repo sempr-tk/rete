@@ -28,6 +28,31 @@ void AlphaMemory::activate(WME::Ptr wme, PropagationFlag flag)
             propagate(wme, flag);
         }
     }
+    else if (flag == PropagationFlag::UPDATE)
+    {
+        /**
+            UPDATEs are a difficult to handle: Does a match still hold? Then UPDATE must be
+            propagated. Does it match only since the change? Then it is actually an ASSERT. Or does
+            it no longer match? RETRACT, then.
+            Since the Alpha/Beta-*Memory* nodes hold the previous matches and can thus decide
+            whether a match is new etc., the strategy to deal with UPDATEs is the following:
+            Alpha/Beta-*Node*s do their checks on an UPDATE as usual, and propagate either RETRACT
+            if it does not match or UPDATE if it matches. The next Memory-node then decides if an
+            UPDATE is a true UPDATE or an ASSERT and propagates the event accordingly.
+            NOTE: This also means that join nodes must re-evaluate all combinations with the
+            UPDATEd token/wme and *explicitely* propagate RETRACTs.
+        */
+        if (wmes_.find(wme) != wmes_.end())
+        {
+            // has been a match before --> UPDATE
+            propagate(wme, PropagationFlag::UPDATE);
+        }
+        else
+        {
+            // has not been a match before --> ASSERT
+            propagate(wme, PropagationFlag::ASSERT);
+        }
+    }
 }
 
 void AlphaMemory::propagate(WME::Ptr wme, PropagationFlag flag)

@@ -31,6 +31,11 @@ public:
         Activate gets called whenever a new WME arrives and needs to be checked. If the check
         succeeds the implementation of this method must call propagate(wme) in order to propagate
         the wme further to its children.
+        It also needs to differ between the propagation flags ASSERT, RETRACT and UPDATE. ASSERTs
+        are described above, RETRACTs can be forwarded and left for the alpha memory to handle it.
+        On UPDATE the AlphaNode should re-evaluate the WME, and propagate either UPDATE (on match)
+        or RETRACT. The AlphaMemory nodes only propagate RETRACTs when it was actually a previous
+        match, and convert an UPDATE into an ASSERT if it wasn't a match before.
     */
     virtual void activate(WME::Ptr, PropagationFlag) = 0;
 

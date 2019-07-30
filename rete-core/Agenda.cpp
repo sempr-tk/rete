@@ -33,7 +33,7 @@ bool AgendaItemComparator::operator() (const AgendaItem& a, const AgendaItem& b)
 
     // if tokens differ, use them for the ordering
     if (std::get<0>(a) != std::get<0>(b)) return std::get<0>(a) < std::get<0>(b); // just pointer comparison...
-    // NOTE: For comparison of tokens I only use pointer-comparison here. The assumption is that they will be different -- else the rete network is malformed and there are two equivalent BetaNodes. For a clean Agenda it might be necessary to relax the token-comparision to by-value (with token->equals(other)). This is implemented in removeEquivalent(AgendaItem)
+    // NOTE: For comparison of tokens I only use pointer-comparison here. The assumption is that they will be different -- else the rete network is malformed and there are two equivalent BetaNodes.
 
     // if tokens are the same, at least the production node might be different...
     if (std::get<1>(a) != std::get<1>(b)) return std::get<1>(a) < std::get<1>(b);

@@ -25,24 +25,32 @@ void save(Network& net, const std::string& filename)
     A very simple mutable WME.
 */
 class MutableWME : public WME {
+    static const std::string type_;
 public:
     using Ptr = std::shared_ptr<MutableWME>;
     std::string value_;
 
     std::string toString() const override { return "Mutable: " + value_; }
+
+    const std::string& type() const override
+    {
+        return type_;
+    }
+
     bool operator < (const WME& other) const override
     {
+        if (type() != other.type()) return type() < other.type();
+
         auto o = dynamic_cast<const MutableWME*>(&other);
         if (o)
         {
             return this < o;
         }
-        else
-        {
-            return true;
-        }
+        throw std::exception();
     }
 };
+const std::string MutableWME::type_("MutableWME");
+
 
 /**
     An accessor for the MutableWME
@@ -220,22 +228,12 @@ int main()
     wmes = reasoner.getCurrentState().getWMEs();
 
 
-    if (wmes.size() != 6)
-    {
-        ExplanationToDotVisitor visitor;
+    if (wmes.size() != 6) return 5;
 
-        for (auto wme : wmes)
-        {
-            std::cout << wme->toString() << std::endl;
-        }
+    visitor.reset();
+    reasoner.getCurrentState().traverseExplanation(wmes[3], visitor);
+    std::ofstream("explain_wme3-2.dot") << visitor.str();
 
-        reasoner.getCurrentState().traverseExplanation(wmes[3], visitor);
-        std::ofstream("explain_wme3-2.dot") << visitor.str();
-
-        reasoner.printHistory();
-
-        return 5;
-    }
     // check for rule2 success
     if (!containsTriple(wmes, "<test_2>", "<result>", "<success>")) return 6;
     // check for correct value un rule4 and 5:

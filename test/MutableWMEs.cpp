@@ -240,5 +240,11 @@ int main()
     if (!containsTriple(wmes, "<join>", "<right>", "<value_B>") ||
         !containsTriple(wmes, "<join>", "<left>", "<value_B>")) return 7;
 
+
+    // now I'm just curious: What happens on an UPDATE when nothing has changed?
+    std::cout << "------ I changed... nothing: ------" << std::endl;
+    reasoner.net().getRoot()->activate(wme1, PropagationFlag::UPDATE); // TODO: convenience method?
+    reasoner.performInference();
+
     return 0;
 }

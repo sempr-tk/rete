@@ -81,9 +81,13 @@ void BetaMemory::leftActivate(Token::Ptr t, WME::Ptr wme, PropagationFlag flag)
             UPDATE.
         */
         // long story short: We always expect both token and wme given when getting an UPDATE:
-        if (!t || !wme) throw std::exception();
+        // EXCEPT: From AlphaBetaAdapters. They only give us a wme, but no token.
+        if (!wme) throw std::exception();
 
         // if the wme is computed we only need to search for the one entry with the given token.
+        // note: the edge case where there is no token and only a computed wme given cannot appear,
+        // as only AlphaBetaAdapters propagate updates without a token to a beta memory, and they
+        // always have a non-computed WME. Right?
         if (wme->isComputed())
         {
             for (auto mt : tokens_)

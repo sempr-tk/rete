@@ -15,6 +15,8 @@ namespace rete {
 */
 template <class... Types>
 class TupleWME : public WME {
+    static const std::string type_;
+
 public:
     std::tuple<Types...> value_;
 
@@ -38,17 +40,28 @@ public:
         // return "TupleWME[" + std::to_string(sizeof...(Types)) + "]";
     }
 
+    const std::string& type() const override
+    {
+        return TupleWME::type_;
+    }
+
     bool operator < (const WME& other) const override
     {
+        // for different types
+        if (type() != other.type()) return type() < other.type();
+
+        // for same type
         auto o = dynamic_cast<const TupleWME*>(&other);
         if (o)
         {
             return value_ < o->value_;
         }
-        return true; // should not happen
+        throw std::exception(); // should not happen
     }
 };
 
+// use typeid to create a unique name for the tuple type
+template <class... Types> const std::string TupleWME<Types...>::type_(typeid(TupleWME<Types...>).name());
 
 typedef TupleWME<> EmptyWME;
 

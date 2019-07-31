@@ -30,10 +30,20 @@ public:
     */
     virtual std::string toString() const = 0;
 
+
+    /**
+        Returns a string that unambiguously identifies the type of wme.
+        It shall be used in the operator < to consistently compare WMEs of different types.
+    */
+    virtual const std::string& type() const = 0;
+
+
     /**
         In order to keep unique sets of WMEs and find identical ones, we need a less-than
         comparison for them.
-        Note: Of course no WME can know all other types of WMEs and provide a strict ordering between all of them. But since the first layer of alpha nodes are usually TypeNodes (which are implicit in this implementation), we can assume that the AlphaMemories only contain exactly one type of WME. So if MyWMEType implements the operator < only for other MyWMETypes correctly we should be fine. I think in other cases it should return "1", so that (a < b) && (b < a) shows both the conflict and the inequality.
+        It is advised to first check if the "type()" identifiers are different, and if they are use
+        those for the comparison. Only if they are equal, and therefore the other wme can be casted
+        to the type of this, do a by-internal-value-comparison.
     */
     virtual bool operator < (const WME& other) const = 0;
 

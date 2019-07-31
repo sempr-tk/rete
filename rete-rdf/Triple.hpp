@@ -8,8 +8,7 @@
 namespace rete {
 
 class Triple : public WME {
-    // used for comparisons
-    const std::string concat_;
+    static const std::string type_;
 public:
     using Ptr = std::shared_ptr<Triple>;
     const std::string subject;
@@ -28,6 +27,8 @@ public:
 
     const std::string& getField(Field) const;
     std::string toString() const override;
+
+    const std::string& type() const override;
 
     bool operator < (const WME& other) const override;
 

@@ -5,7 +5,7 @@ namespace rete {
 Triple::Triple( const std::string& s,
                 const std::string& p,
                 const std::string& o)
-    : concat_(s + p + o), subject(s), predicate(p), object(o)
+    : subject(s), predicate(p), object(o)
 {
 }
 
@@ -23,14 +23,26 @@ std::string Triple::toString() const
     return "(" + subject + " " + predicate + " " + object + ")";
 }
 
+const std::string Triple::type_("Triple");
+const std::string& Triple::type() const
+{
+    return Triple::type_;
+}
 
 bool Triple::operator < (const WME& other) const
 {
+    if (type() != other.type()) return type() < other.type();
+
     if (const Triple* t = dynamic_cast<const Triple*>(&other))
     {
-        return concat_ < t->concat_;
+        if (subject != t->subject) return subject < t->subject;
+        else if (predicate != t->predicate) return predicate < t->predicate;
+        else if (object != t->object) return object < t->object;
+        else return false;
     }
-    return true;
+
+    throw std::exception(); // although the type() equals the cast failed!
+    // TODO: I guess I should rely on the type and just static_cast
 }
 
 

@@ -15,12 +15,21 @@ void TripleAlpha::activate(WME::Ptr wme, PropagationFlag flag)
     {
         // shortcut: without any (expensive) check, just propagate!
         propagate(wme, PropagationFlag::RETRACT);
-        return;
     }
-
-    if (Triple::Ptr triple = std::dynamic_pointer_cast<Triple>(wme))
+    else if (flag == PropagationFlag::ASSERT)
     {
-        if (triple->getField(field_) == value_) propagate(wme, flag);
+        if (Triple::Ptr triple = std::dynamic_pointer_cast<Triple>(wme))
+        {
+            if (triple->getField(field_) == value_) propagate(wme, flag);
+        }
+    }
+    else if (flag == PropagationFlag::UPDATE)
+    {
+        if (Triple::Ptr triple = std::dynamic_pointer_cast<Triple>(wme))
+        {
+            if (triple->getField(field_) == value_) propagate(wme, PropagationFlag::UPDATE);
+            else propagate(wme, PropagationFlag::RETRACT);
+        }
     }
 }
 

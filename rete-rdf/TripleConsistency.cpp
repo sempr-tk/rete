@@ -11,17 +11,20 @@ TripleConsistency::TripleConsistency(Triple::Field a, Triple::Field b)
 void TripleConsistency::activate(WME::Ptr wme, PropagationFlag flag)
 {
     Triple::Ptr t = std::dynamic_pointer_cast<Triple>(wme);
-    if (!t) return;
 
     if (flag == rete::RETRACT)
     {
-        propagate(wme, flag);
-        return;
+        if (t) propagate(wme, flag);
     }
     else if (flag == rete::ASSERT)
     {
         // the actual check.
-        if (t->getField(field1_) == t->getField(field2_)) propagate(wme, flag);
+        if (t && t->getField(field1_) == t->getField(field2_)) propagate(wme, flag);
+    }
+    else if (flag == rete::UPDATE)
+    {
+        if (t && t->getField(field1_) == t->getField(field2_)) propagate(wme, rete::UPDATE);
+        else propagate(wme, rete::RETRACT);
     }
 }
 

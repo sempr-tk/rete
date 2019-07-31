@@ -19,6 +19,29 @@ const Network& Reasoner::net() const
     return rete_;
 }
 
+void Reasoner::printHistory() const
+{
+    std::cout << "Reasoner History -- oldest to youngest" << std::endl;
+    for (auto item : history_)
+    {
+        std::cout << std::get<0>(item)->toString() << " | ";
+        std::cout << std::get<1>(item)->toString() << " | ";
+        switch(std::get<2>(item))
+        {
+        case PropagationFlag::ASSERT:
+            std::cout << "ASSERT";
+            break;
+        case PropagationFlag::RETRACT:
+            std::cout << "RETRACT";
+            break;
+        case PropagationFlag::UPDATE:
+            std::cout << "UPDATE";
+            break;
+        }
+        std::cout << " | " << std::get<3>(item) << std::endl;
+    }
+}
+
 InferenceState Reasoner::getCurrentState() const
 {
     return state_;
@@ -64,6 +87,23 @@ void Reasoner::performInferenceStep()
         // the agenda, too
         Evidence::Ptr evidence(new InferredEvidence(token, production));
         removeEvidence(evidence);
+    }
+    else if (flag == rete::UPDATE)
+    {
+        /*
+            "UPDATE" of a match means that something inside has changed.
+            The production has already been informed and should have computed new inferred data,
+            while the old one has to be retracted.
+        */
+        // first: retract, to get rid of all data that has only been inferred by this.
+        Evidence::Ptr evidence(new InferredEvidence(token, production));
+        removeEvidence(evidence);
+
+        // now, assert the newly computed stuff
+        for (auto wme : inferred)
+        {
+            addEvidence(wme, evidence);
+        }
     }
 }
 

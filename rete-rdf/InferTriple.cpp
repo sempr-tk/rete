@@ -89,10 +89,9 @@ std::string InferTriple::toString() const
     return "InferTriple (" + s + " " + p + " " + o + ")";
 }
 
-
 void InferTriple::execute(Token::Ptr token, PropagationFlag flag, std::vector<WME::Ptr>& inferred)
 {
-    if (flag == PropagationFlag::ASSERT)
+    if (flag == PropagationFlag::ASSERT || flag == PropagationFlag::UPDATE)
     {
         auto wme = std::make_shared<Triple>(
             subject_.constructFrom(token),

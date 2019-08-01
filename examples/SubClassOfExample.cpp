@@ -35,9 +35,13 @@ int main()
     auto adapter = std::make_shared<AlphaBetaAdapter>();
     BetaNode::connect(adapter, nullptr, foo->getAlphaMemory());
 
-    // join where object of the most recent wme in the token matches the subject of the wme in the
-    //bin                                    |--- C1.?b ------|----- C2.?b -----|
-    auto join = std::make_shared<TripleJoin>(0, Triple::OBJECT, Triple::SUBJECT);
+    // join where object of the most recent wme in the token matches the subject of the wme
+    TripleAccessor::Ptr acc0(new TripleAccessor(Triple::OBJECT));
+    acc0->index() = 0;
+    TripleAccessor::Ptr acc1(new TripleAccessor(Triple::SUBJECT));
+
+    auto join = std::make_shared<GenericJoin>();
+    join->addCheck(acc0, acc1);
     BetaNode::connect(join, adapter->getBetaMemory(), foo->getAlphaMemory());
 
 

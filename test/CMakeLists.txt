@@ -13,10 +13,6 @@ add_executable(NoDuplicateInAlpha NoDuplicateInAlpha.cpp)
 target_link_libraries(NoDuplicateInAlpha rete-core rete-rdf rete-reasoner)
 add_test(NAME NoDuplicateInAlpha COMMAND NoDuplicateInAlpha)
 
-add_executable(TripleJoinTest TripleJoinTest.cpp)
-target_link_libraries(TripleJoinTest rete-core rete-rdf rete-reasoner)
-add_test(NAME TripleJoinTest COMMAND TripleJoinTest)
-
 add_executable(RemoveCycle1 RemoveCycle1.cpp)
 target_link_libraries(RemoveCycle1 rete-core rete-rdf rete-reasoner)
 add_test(NAME RemoveCycle1 COMMAND RemoveCycle1)

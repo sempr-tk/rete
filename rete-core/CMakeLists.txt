@@ -10,7 +10,6 @@ set(CORE_SRC
     BetaNode.cpp
     Builtin.cpp
     JoinNode.cpp
-    JoinUnconditional.cpp
     Network.cpp
     Node.cpp
     Production.cpp

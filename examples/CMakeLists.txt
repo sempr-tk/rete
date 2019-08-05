@@ -25,3 +25,9 @@ target_link_libraries(ExplainCircular rete-core rete-rdf rete-reasoner)
 
 add_executable(SubClassOf2 SubClassOf2.cpp)
 target_link_libraries(SubClassOf2 rete-core rete-rdf rete-reasoner)
+
+add_executable(ManualSetup ManualSetup.cpp)
+target_link_libraries(ManualSetup rete-core rete-rdf rete-reasoner)
+
+add_executable(network-ctor ctor/ctor.cpp)
+target_link_libraries(network-ctor rete-core rete-rdf rete-reasoner)

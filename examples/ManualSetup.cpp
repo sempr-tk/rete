@@ -19,8 +19,7 @@ void save(Network& net, const std::string& filename)
 
 int main()
 {
-    Reasoner reasoner;
-    Network& net = reasoner.net();
+    Network net;
 
     // setup network
     //        C1                     C2
@@ -57,13 +56,6 @@ int main()
         std::move(accC)
     ));
 
-    // alternative construction
-    // auto infer = std::make_shared<InferTriple>(
-    //     InferTriple::ConstructHelper{1, Triple::SUBJECT},
-    //     "rdfs:subClassOf",
-    //     InferTriple::ConstructHelper{0, Triple::OBJECT}
-    // );
-
     // create an AgendaNode for the production
     auto inferNode = std::make_shared<AgendaNode>(infer, net.getAgenda());
     join->getBetaMemory()->addProduction(inferNode);
@@ -73,19 +65,15 @@ int main()
     auto t2 = std::make_shared<Triple>("B", "rdfs:subClassOf", "C");
     auto t3 = std::make_shared<Triple>("C", "rdfs:subClassOf", "D");
 
-    AssertedEvidence::Ptr source(new AssertedEvidence("some named graph or just anything"));
-    reasoner.addEvidence(t1, source);
-    reasoner.addEvidence(t2, source);
-    reasoner.addEvidence(t3, source);
+    net.getRoot()->activate(t1, PropagationFlag::ASSERT);
+    net.getRoot()->activate(t2, PropagationFlag::ASSERT);
+    net.getRoot()->activate(t3, PropagationFlag::ASSERT);
 
+    save(net, "manual_setup_add.dot");
 
+    net.getRoot()->activate(t2, PropagationFlag::RETRACT);
 
-    save(net, "0.dot");  // before inference
-    reasoner.performInference();
-    save(net, "1.dot");  // after inference
-    reasoner.removeEvidence(t2, source); // remove "B foo C"
-    reasoner.performInference();
-    save(net, "2.dot"); // after removing t2
+    save(net, "manual_setup_retract.dot");
 
     return 0;
 }

@@ -13,10 +13,6 @@ add_executable(NoDuplicateInAlpha NoDuplicateInAlpha.cpp)
 target_link_libraries(NoDuplicateInAlpha rete-core rete-rdf rete-reasoner)
 add_test(NAME NoDuplicateInAlpha COMMAND NoDuplicateInAlpha)
 
-add_executable(TripleJoinTest TripleJoinTest.cpp)
-target_link_libraries(TripleJoinTest rete-core rete-rdf rete-reasoner)
-add_test(NAME TripleJoinTest COMMAND TripleJoinTest)
-
 add_executable(RemoveCycle1 RemoveCycle1.cpp)
 target_link_libraries(RemoveCycle1 rete-core rete-rdf rete-reasoner)
 add_test(NAME RemoveCycle1 COMMAND RemoveCycle1)
@@ -44,6 +40,10 @@ add_test(NAME NoValue COMMAND NoValue)
 add_executable(ParserExceptions ParserExceptions.cpp)
 target_link_libraries(ParserExceptions rete-core rete-rdf rete-reasoner)
 add_test(NAME ParserExceptions COMMAND ParserExceptions)
+
+add_executable(MutableWMEs MutableWMEs.cpp)
+target_link_libraries(MutableWMEs rete-core rete-rdf rete-reasoner)
+add_test(NAME MutableWMEs COMMAND MutableWMEs)
 
 add_executable(test_rete main.cpp)
 target_link_libraries(test_rete rete-core rete-rdf rete-reasoner)

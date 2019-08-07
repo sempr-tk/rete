@@ -19,6 +19,29 @@ const Network& Reasoner::net() const
     return rete_;
 }
 
+void Reasoner::printHistory() const
+{
+    std::cout << "Reasoner History -- oldest to youngest" << std::endl;
+    for (auto item : history_)
+    {
+        std::cout << std::get<0>(item)->toString() << " | ";
+        std::cout << std::get<1>(item)->toString() << " | ";
+        switch(std::get<2>(item))
+        {
+        case PropagationFlag::ASSERT:
+            std::cout << "ASSERT";
+            break;
+        case PropagationFlag::RETRACT:
+            std::cout << "RETRACT";
+            break;
+        case PropagationFlag::UPDATE:
+            std::cout << "UPDATE";
+            break;
+        }
+        std::cout << " | " << std::get<3>(item) << std::endl;
+    }
+}
+
 InferenceState Reasoner::getCurrentState() const
 {
     return state_;
@@ -64,6 +87,59 @@ void Reasoner::performInferenceStep()
         // the agenda, too
         Evidence::Ptr evidence(new InferredEvidence(token, production));
         removeEvidence(evidence);
+    }
+    else if (flag == rete::UPDATE)
+    {
+        /*
+            "UPDATE" of a match means that something inside has changed.
+            The production has already been informed and should have computed new inferred data,
+            while the old one has to be retracted.
+        */
+
+        // TODO: I'm not sure about the order of processing things here. Remove first, or infer first? If I infer first, an existing and "re-inferred" WME can be kept and just given a new InferredEvidence, while removing first leads to retracting and asserting things again (the callback will be called for both), on the whole inference chain. Because retracts will be added to the agenda, and the incoming asserts will not clear (new tokens). So what to do? Go through all WMEs backed by this evidence, back those which are inferred again with the new evidence (which should be equal to the old one, since it is an UPDATE of an existing token), and retract all that were not re-inferred. Good to have a working WME::operator <  for this now. Beware: The newly inferred WMEs might not be added, since they may be equal to existing ones -- so the existing ones will just get more evidence.
+
+
+        // // first: retract, to get rid of all data that has only been inferred by this.
+        // Evidence::Ptr evidence(new InferredEvidence(token, production));
+        // removeEvidence(evidence);
+        //
+        // // now, assert the newly computed stuff
+        // for (auto wme : inferred)
+        // {
+        //     addEvidence(wme, evidence);
+        // }
+
+        Evidence::Ptr evidence(new InferredEvidence(token, production));
+        auto previouslyInferred = state_.explainedBy(evidence);
+        for (auto wme : previouslyInferred.wmes_)
+        {
+            bool found = false;
+            for (auto newWME = inferred.begin(); newWME != inferred.end(); ++newWME)
+            {
+                if (*wme == **newWME)
+                {
+                    // found an equivalent wme among the re-inferred wmes, so all is good and the
+                    // evidence can stay.
+                    found = true;
+                    // also, remove the newWME from the list, as it is not needed anymore.
+                    // the old instance will suffice.
+                    inferred.erase(newWME);
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                // previously inferred WME is not re-inferred, so remove the evidence.
+                removeEvidence(wme, evidence);
+            }
+        }
+
+        // what is left in the inferred-vector are the things that previously were not inferred and have to be added
+        for (auto wme : inferred)
+        {
+            addEvidence(wme, evidence);
+        }
     }
 }
 

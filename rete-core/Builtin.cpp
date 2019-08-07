@@ -28,7 +28,7 @@ void Builtin::leftActivate(Token::Ptr token, PropagationFlag flag)
         // shortcut: just tell the BetaMemory to remove all these tokens.
         bmem_->leftActivate(token, nullptr, PropagationFlag::RETRACT);
     }
-    else
+    else if (flag == PropagationFlag::ASSERT)
     {
         // process the submatch
         auto computed = process(token);
@@ -39,6 +39,24 @@ void Builtin::leftActivate(Token::Ptr token, PropagationFlag flag)
             // mark the WME as a computed one --> does not need evidence to hold inside a token.
             computed->isComputed_ = true;
             bmem_->leftActivate(token, computed, flag);
+        }
+    }
+    else if (flag == PropagationFlag::UPDATE)
+    {
+        // In case of an UPDATE we don't know if it was a match previously, so we need to compute it
+        // and explicitely propagate RETRACT, or UPDATE if it matches. The BetaMemory figures out
+        // if it actually is an UPDATE, a new match (ASSERT), a no longer match (RETRACT), or if it
+        // didnt match before and still doesnt.
+        auto computed = process(token);
+
+        if (computed)
+        {
+            computed->isComputed_ = true;
+            bmem_->leftActivate(token, computed, PropagationFlag::UPDATE);
+        }
+        else
+        {
+            bmem_->leftActivate(token, nullptr, PropagationFlag::RETRACT);
         }
     }
 }

@@ -1,0 +1,1 @@
+[(?a <type> <car>), (?a <color> <red>) -> (<foo> <bar> <baz>)]

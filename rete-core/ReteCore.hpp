@@ -11,7 +11,6 @@
 #include "defs.hpp"
 #include "GenericJoin.hpp"
 #include "JoinNode.hpp"
-#include "JoinUnconditional.hpp"
 #include "Network.hpp"
 #include "Node.hpp"
 #include "Production.hpp"

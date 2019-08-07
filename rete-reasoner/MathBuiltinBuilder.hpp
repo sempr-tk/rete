@@ -4,6 +4,7 @@
 #include "NodeBuilder.hpp"
 #include "Exceptions.hpp"
 #include "../rete-core/TupleWME.hpp"
+#include "../rete-core/builtins/Math.hpp"
 
 namespace rete {
 namespace builtin {

@@ -32,10 +32,14 @@ int main()
     AlphaBetaAdapter::Ptr ab(new AlphaBetaAdapter());
     BetaNode::connect(ab, nullptr, a2->getAlphaMemory());
 
-    TripleJoin::Ptr j1(new TripleJoin(0, Triple::SUBJECT, Triple::SUBJECT));
+    GenericJoin::Ptr j1(new GenericJoin());
+    TripleAccessor::Ptr acc0(new TripleAccessor(Triple::SUBJECT));
+    acc0->index() = 0;
+    TripleAccessor::Ptr acc1(new TripleAccessor(Triple::SUBJECT));
+    j1->addCheck(acc0, acc1);
     BetaNode::connect(j1, ab->getBetaMemory(), b2->getAlphaMemory());
 
-    JoinNode::Ptr j2(new JoinUnconditional());
+    GenericJoin::Ptr j2(new GenericJoin());
     BetaNode::connect(j2, j1->getBetaMemory(), b2->getAlphaMemory());
 
 

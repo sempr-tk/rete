@@ -3,4 +3,3 @@
 #include "TripleAccessor.hpp"
 #include "TripleAlpha.hpp"
 #include "TripleConsistency.hpp"
-#include "TripleJoin.hpp"

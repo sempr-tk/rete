@@ -36,7 +36,7 @@ public:
             t.wme = w
         to this BetaMemory, and leftActivates all child-BetaNodes.
         Or, if the PropagationFlag::RETRACT is used instead of PropagationFlag::ASSERT:
-        Find all stored tokens with t.parent = t_old and removes them.
+        Find all stored tokens that match the given token and wme and retract them.
     */
     void leftActivate(Token::Ptr, WME::Ptr, PropagationFlag);
 

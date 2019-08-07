@@ -4,7 +4,6 @@ set(RDF_SRC
     TripleAccessor.cpp
     TripleAlpha.cpp
     TripleConsistency.cpp
-    TripleJoin.cpp
 )
 
 include_directories(${PROJECT_SOURCE_DIR})

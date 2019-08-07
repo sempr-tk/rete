@@ -44,6 +44,11 @@ public:
     Network& net();
     const Network& net() const;
 
+    /**
+        Print the history of processed agenda items to cout
+    */
+    void printHistory() const;
+
 
     /**
         Returns a snapshot of the inference state.

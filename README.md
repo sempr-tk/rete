@@ -10,6 +10,32 @@ For a detailed documentation please **[visit the WIKI](https://git.ni.dfki.de/se
 
 
 
+## Install
+
+This project is _mostly_ independent. The only external project you will need is the `pegmatite` parser library:
+
+```
+git clone git@git.ni.dfki.de:sempr/Pegmatite.git
+cd Pegmatite
+mkdir build && cd build
+cmake ..
+make -j8 && make install
+```
+
+> Note: Make sure that your `$PKG_CONFIG_PATH` is configured correctly so that pegmatite can be found.
+
+Afterwards you can install rete:
+
+```
+git clone git@git.ni.dfki.de:sempr/rete.git
+cd rete
+mkdir build && cd build
+cmake ..
+make -j8 && make install
+```
+
+
+
 ## Features
 
 - C++ implementation of the rete algorithm

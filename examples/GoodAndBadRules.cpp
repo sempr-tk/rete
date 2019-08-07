@@ -25,7 +25,7 @@ int main()
         joint node will be created, the sub-network duplicated.
     */
     p.parseRules(
-        "[(?a <foo> ?b), (?b <bar> ?c), (?c <baz> ?d) -> (?a <foobaz> ?d), (<x> <y> <z>)]"
+        "[(?a <foo> ?b), (?b <bar> ?c), (?c <baz> ?d) -> (?a <foobaz> ?d)]"
         "[(?b <bar> ?c), (?a <foo> ?b), (?c <zab> ?d) -> (?a <foozab> ?d)]",
         reasoner.net()
     );

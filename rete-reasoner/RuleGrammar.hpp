@@ -72,9 +72,9 @@ public:
     Rule prefixuri = rtrace("prefixuri", iriref);
     Rule prefixdef = rtrace("prefixdef", "@PREFIX"_E >> prefixname >> ':' >> prefixuri);
 
-    Rule prefixedURI = rtrace("prefixedURI", term(+alphanum >> ':' >> +alphanum));
+    Rule prefixedURI = rtrace("prefixedURI", term(+alphanum >> ':' >> +(alphanum | "_"_E)));
 
-    Rule stringliteralquote = '\"'_E >> *((!("\x22\x5C\xA\xD"_S)) | echar) >> '\"';
+    Rule stringliteralquote = '\"'_E >> *((!("\x22\x5C\xA\xD"_S) >> any()) | echar) >> '\"';
     Rule langtag = '@'_E >> +alpha >> *('-' >> +alphanum);
 
     Rule literal =          (stringliteralquote >> -("^^" >> iriref | langtag));

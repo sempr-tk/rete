@@ -7,6 +7,8 @@
 #include "defs.hpp"
 
 namespace rete {
+    class BetaMemory;
+    typedef std::shared_ptr<BetaMemory> BetaMemoryPtr;
 
 /**
     This class represents the terminal nodes in the rete network. They contain a production that
@@ -17,6 +19,7 @@ namespace rete {
 */
 class ProductionNode : public Node {
 protected:
+    BetaMemoryPtr parent_;
     Production::Ptr production_;
     std::string getDOTAttr() const override;
     std::string name_;
@@ -32,6 +35,10 @@ public:
     void setName(const std::string&);
     std::string getName() const;
 
+    /**
+        Connect a ProductionNode to its beta-memory parent
+    */
+    friend void SetParent(BetaMemoryPtr parent, ProductionNode::Ptr child);
 
     /**
         Called when a Token is asserted/retracted.

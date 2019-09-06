@@ -55,12 +55,14 @@ public:
     using WPtr = std::weak_ptr<BetaMemory>;
 
     /**
-        Connect a BetaMemoryr to its parent BetaNode
+        Connect a BetaMemory to its parent BetaNode
     */
     friend void SetParent(BetaNodePtr parent, BetaMemory::Ptr child);
 
     // defined in BetaNode, but friend to allow modification of beta memory children.
     friend void SetParents(BetaMemory::Ptr, AlphaMemoryPtr, BetaNodePtr);
+    // defined in ProductionNode
+    friend void SetParent(BetaMemory::Ptr , ProductionNodePtr);
 
     /**
         Given a Token t_old and a WME w, adds a new Token t with

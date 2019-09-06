@@ -200,7 +200,7 @@ AlphaNode::Ptr implementAlphaNode(AlphaNode::Ptr alpha, AlphaNode::Ptr parent)
     else
     {
         std::cout << "Adding AlphaNode " << alpha->getDOTId() << " beneath " << parent->getDOTId()  << std::endl;
-        parent->addChild(alpha);
+        SetParent(parent, alpha);
     }
 
     return alpha;
@@ -235,8 +235,8 @@ BetaNode::Ptr implementBetaNode(BetaNode::Ptr node, BetaNode::Ptr parentBeta, Al
     else
     {
         std::cout << "Adding BetaNode " << beta->getDOTId() << " beneath " << parentBeta->getDOTId() << " and " << (parentAlpha ? parentAlpha->getDOTId() : " 0x0") << std::endl;
-        BetaNode::connect(beta, parentBeta->getBetaMemory(),
-                 (parentAlpha ? parentAlpha->getAlphaMemory() : nullptr));
+
+        SetParents(parentBeta->getBetaMemory(), (parentAlpha ? parentAlpha->getAlphaMemory() : nullptr), beta);
     }
     return beta;
 }
@@ -260,7 +260,7 @@ AlphaBetaAdapter::Ptr getAlphaBeta(AlphaMemory::Ptr amem)
     );
 
     if (it != amemChildren.end()) adapter = std::dynamic_pointer_cast<AlphaBetaAdapter>(*it);
-    else BetaNode::connect(adapter, nullptr, amem);
+    else SetParents(nullptr, amem, adapter);
 
     return adapter;
 }
@@ -337,7 +337,13 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
             {
                 currentAlpha = implementAlphaNode(alpha, currentAlpha);
             }
-            currentAlpha->initAlphaMemory(); // no-op if already initialized.
+
+            auto amem = currentAlpha->getAlphaMemory();
+            if (!amem)
+            {
+                amem.reset(new AlphaMemory());
+                SetParent(currentAlpha, amem);
+            }
 
             // - if there has been a beta node before, create a join
             // - else create an AlphaBetaAdapter
@@ -490,7 +496,15 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
                 production->setName(production->toString());
             }
 
-            currentBeta->getBetaMemory()->addProduction(agendaNode);
+            auto bmem = currentBeta->getBetaMemory();
+            if (!bmem)
+            {
+                bmem.reset(new BetaMemory());
+                SetParent(currentBeta, bmem);
+            }
+            
+            SetParent(bmem, agendaNode);
+
         } catch (NodeBuilderException& e) {
             // rethrow with more information
             e.setRule(rule.str_);

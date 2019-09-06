@@ -25,6 +25,7 @@ namespace {
 
 namespace rete {
 
+
 void Network::DummyAlpha::activate(WME::Ptr wme, PropagationFlag flag)
 {
     propagate(wme, flag);
@@ -42,8 +43,9 @@ std::string Network::DummyAlpha::getDOTAttr() const
 
 
 Network::Network()
-    : root_(new Network::DummyAlpha()), agenda_(new Agenda())
+    : root_(new Network::DummyAlpha()), holdAlive_(new AlphaMemory()), agenda_(new Agenda())
 {
+    SetParent(root_, holdAlive_);
 }
 
 Network::~Network()

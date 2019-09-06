@@ -11,6 +11,9 @@ JoinNode::JoinNode()
 
 void JoinNode::rightActivate(WME::Ptr wme, PropagationFlag flag)
 {
+    auto bmem = bmem_.lock();
+    if (!bmem) throw std::exception(); // should not be possible, as the bmem holds this alive.
+
     // --- RETRACT ---
     if (flag == PropagationFlag::RETRACT)
     {
@@ -44,7 +47,7 @@ void JoinNode::rightActivate(WME::Ptr wme, PropagationFlag flag)
                         it = heldBackTokens_.erase(it);
                         EmptyWME::Ptr empty(new EmptyWME());
                         empty->isComputed_ = true;
-                        bmem_->leftActivate(token, empty, PropagationFlag::ASSERT);
+                        bmem->leftActivate(token, empty, PropagationFlag::ASSERT);
                     }
                 }
                 else
@@ -57,7 +60,7 @@ void JoinNode::rightActivate(WME::Ptr wme, PropagationFlag flag)
         {
             // no check todo. just pass on to the memory.
             // this is a shortcut so we won't need to scan the parentBeta_ memory again
-            bmem_->rightRemoval(wme);
+            bmem->rightRemoval(wme);
         }
     }
 
@@ -68,19 +71,19 @@ void JoinNode::rightActivate(WME::Ptr wme, PropagationFlag flag)
         {
             // check the output memory if we need to retract something due to a new match
             std::vector<Token::Ptr> toRetract;
-            for (auto token : *bmem_)
+            for (auto token : *bmem)
             {
-                // remember: the token is bmem_ is one element longer, last one is an empty wme.
+                // remember: the token is bmem is one element longer, last one is an empty wme.
                 if (isValidCombination(token->parent, wme))
                 {
                     heldBackTokens_[token->parent] = wme;
                     toRetract.push_back(token->parent);
                 }
             }
-            // dont remove (leftActivate with retract) from the bmem_ while iterating it!
+            // dont remove (leftActivate with retract) from the bmem while iterating it!
             for (auto token : toRetract)
             {
-                bmem_->leftActivate(token, nullptr, PropagationFlag::RETRACT);
+                bmem->leftActivate(token, nullptr, PropagationFlag::RETRACT);
             }
         }
         else
@@ -90,7 +93,7 @@ void JoinNode::rightActivate(WME::Ptr wme, PropagationFlag flag)
             {
                 if (isValidCombination(token, wme))
                 {
-                    bmem_->leftActivate(token, wme, flag);
+                    bmem->leftActivate(token, wme, flag);
                 }
             }
         }
@@ -173,7 +176,7 @@ void JoinNode::rightActivate(WME::Ptr wme, PropagationFlag flag)
                                 heldBackTokens_.erase(it);
                                 EmptyWME::Ptr empty(new EmptyWME());
                                 empty->isComputed_ = true;
-                                bmem_->leftActivate(token, empty, PropagationFlag::ASSERT);
+                                bmem->leftActivate(token, empty, PropagationFlag::ASSERT);
                             }
                         }
                     }
@@ -190,7 +193,7 @@ void JoinNode::rightActivate(WME::Ptr wme, PropagationFlag flag)
                     {
                         // retract and hold back because of the match
                         heldBackTokens_[token] = wme;
-                        bmem_->leftActivate(token, nullptr, PropagationFlag::RETRACT);
+                        bmem->leftActivate(token, nullptr, PropagationFlag::RETRACT);
                     }
                     else
                     {
@@ -209,11 +212,11 @@ void JoinNode::rightActivate(WME::Ptr wme, PropagationFlag flag)
             {
                 if (isValidCombination(token, wme))
                 {
-                    bmem_->leftActivate(token, wme, PropagationFlag::UPDATE);
+                    bmem->leftActivate(token, wme, PropagationFlag::UPDATE);
                 }
                 else
                 {
-                    bmem_->leftActivate(token, wme, PropagationFlag::RETRACT);
+                    bmem->leftActivate(token, wme, PropagationFlag::RETRACT);
                 }
             }
         }
@@ -222,11 +225,14 @@ void JoinNode::rightActivate(WME::Ptr wme, PropagationFlag flag)
 
 void JoinNode::leftActivate(Token::Ptr token, PropagationFlag flag)
 {
+    auto bmem = bmem_.lock();
+    if (!bmem) throw std::exception();
+
     // --- RETRACT ---
     if (flag == PropagationFlag::RETRACT)
     {
         // shortcut: just tell the BetaMemory to remove all these tokens.
-        bmem_->leftActivate(token, nullptr, PropagationFlag::RETRACT);
+        bmem->leftActivate(token, nullptr, PropagationFlag::RETRACT);
         return;
     }
 
@@ -248,7 +254,7 @@ void JoinNode::leftActivate(Token::Ptr token, PropagationFlag flag)
                 }
                 else
                 {
-                    bmem_->leftActivate(token, wme, flag);
+                    bmem->leftActivate(token, wme, flag);
                 }
             }
         }
@@ -258,7 +264,7 @@ void JoinNode::leftActivate(Token::Ptr token, PropagationFlag flag)
         {
             EmptyWME::Ptr empty(new EmptyWME());
             empty->isComputed_ = true;
-            bmem_->leftActivate(token, empty, PropagationFlag::ASSERT);
+            bmem->leftActivate(token, empty, PropagationFlag::ASSERT);
         }
     }
     else if (flag == PropagationFlag::UPDATE)
@@ -304,7 +310,7 @@ void JoinNode::leftActivate(Token::Ptr token, PropagationFlag flag)
                         heldBackTokens_.erase(it);
                         EmptyWME::Ptr empty(new EmptyWME());
                         empty->isComputed_ = true;
-                        bmem_->leftActivate(token, empty, PropagationFlag::ASSERT);
+                        bmem->leftActivate(token, empty, PropagationFlag::ASSERT);
                     }
                 }
             }
@@ -318,7 +324,7 @@ void JoinNode::leftActivate(Token::Ptr token, PropagationFlag flag)
                     {
                         // yep! RETRACT it!
                         heldBackTokens_[token] = alpha;
-                        bmem_->leftActivate(token, nullptr, PropagationFlag::RETRACT);
+                        bmem->leftActivate(token, nullptr, PropagationFlag::RETRACT);
                         break;
                     }
                 }
@@ -327,7 +333,7 @@ void JoinNode::leftActivate(Token::Ptr token, PropagationFlag flag)
                 {
                     // no, still don't need to hold it back, so now propagate the UPDATE on the
                     // token.
-                    bmem_->leftActivate(token, nullptr, PropagationFlag::UPDATE);
+                    bmem->leftActivate(token, nullptr, PropagationFlag::UPDATE);
                 }
             }
         }
@@ -342,11 +348,11 @@ void JoinNode::leftActivate(Token::Ptr token, PropagationFlag flag)
             {
                 if (isValidCombination(token, alpha))
                 {
-                    bmem_->leftActivate(token, alpha, PropagationFlag::UPDATE);
+                    bmem->leftActivate(token, alpha, PropagationFlag::UPDATE);
                 }
                 else
                 {
-                    bmem_->leftActivate(token, alpha, PropagationFlag::RETRACT);
+                    bmem->leftActivate(token, alpha, PropagationFlag::RETRACT);
                 }
             }
         }

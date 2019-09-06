@@ -13,7 +13,7 @@ namespace rete {
 */
 class BetaComparator {
 public:
-    bool operator () (const BetaNode::Ptr& a, const BetaNode::Ptr& b);
+    bool operator () (const BetaNode::WPtr& a, const BetaNode::WPtr& b);
 };
 
 } /* rete */

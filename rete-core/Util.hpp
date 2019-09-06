@@ -3,6 +3,7 @@
 
 #include <string>
 #include <tuple>
+#include <memory>
 
 namespace rete {
 namespace util {
@@ -11,6 +12,20 @@ namespace util {
 std::string ptrToStr(const void* const ptr);
 // currently only converts " to \"
 std::string dotEscape(const std::string& str);
+
+
+/**
+    Equality check for weak_ptr
+*/
+template <class T>
+struct EqualWeak {
+    std::shared_ptr<T> value;
+    EqualWeak(std::weak_ptr<T> v) : value(v.lock()) {}
+    bool operator () (const std::weak_ptr<T>& other)
+    {
+        return other.lock() == value;
+    }
+};
 
 
 /**

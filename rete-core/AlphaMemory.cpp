@@ -1,4 +1,5 @@
 #include "AlphaMemory.hpp"
+#include "AlphaNode.hpp"
 #include "BetaComparator.hpp"
 #include "Util.hpp"
 
@@ -59,7 +60,8 @@ void AlphaMemory::propagate(WME::Ptr wme, PropagationFlag flag)
 {
     for (auto child : children_)
     {
-        child->rightActivate(wme, flag);
+        auto c = child.lock();
+        if (c) c->rightActivate(wme, flag);
     }
 }
 
@@ -71,10 +73,33 @@ void AlphaMemory::addChild(BetaNode::Ptr beta)
     std::sort(children_.begin(), children_.end(), BetaComparator());
 }
 
+void AlphaMemory::removeChild(BetaNode::WPtr child)
+{
+    children_.erase(
+        std::find_if(children_.begin(), children_.end(), util::EqualWeak<BetaNode>(child)),
+        children_.end()
+    );
+}
+
+void SetParent(std::shared_ptr<AlphaNode> parent, AlphaMemory::Ptr child)
+{
+    if (parent->amem_.lock()) throw std::exception(); // new parent already has a child amem!
+
+    if (child->parent_) child->parent_->amem_.reset();
+    child->parent_ = parent;
+
+    parent->amem_ = child;
+}
+
+
 void AlphaMemory::getChildren(std::vector<BetaNode::Ptr>& children)
 {
     children.reserve(children_.size());
-    for (auto c : children_) children.push_back(c);
+    for (auto c : children_)
+    {
+        auto child = c.lock();
+        if (child) children.push_back(child);
+    }
 }
 
 
@@ -103,14 +128,5 @@ std::string AlphaMemory::getDOTAttr() const
     return "[shape=record, label=\"{AlphaMemory" + record + "}\"]";
 }
 
-
-void AlphaMemory::tearDown()
-{
-    for (auto child : children_)
-    {
-        child->tearDown();
-    }
-    children_.clear();
-}
 
 } /* rete */

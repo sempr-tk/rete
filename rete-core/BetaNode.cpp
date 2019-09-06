@@ -1,17 +1,18 @@
 #include "BetaNode.hpp"
 #include "AlphaMemory.hpp"
+#include "BetaMemory.hpp"
 
 namespace rete {
 
 BetaNode::BetaNode()
-    : bmem_(new BetaMemory())
 {
 }
 
-void BetaNode::connect(BetaNode::Ptr node, BetaMemory::Ptr bmem, AlphaMemory::Ptr amem)
+void SetParents(BetaMemory::Ptr bmem, AlphaMemory::Ptr amem, BetaNode::Ptr node)
 {
     node->parentAlpha_ = amem;
     node->parentBeta_ = bmem;
+
 
     // NOTE: Order matters!
     // The child entities of the AlphaMemory are sorted, with descendants < ancestors.
@@ -34,21 +35,12 @@ AlphaMemory::Ptr BetaNode::getParentAlpha() const
 
 BetaMemory::Ptr BetaNode::getBetaMemory() const
 {
-    return bmem_;
+    return bmem_.lock();
 }
 
 std::string BetaNode::getDOTAttr() const
 {
     return "[label=BetaNode]";
-}
-
-void BetaNode::tearDown()
-{
-    if (bmem_)
-    {
-        bmem_->tearDown();
-        bmem_.reset();
-    }
 }
 
 } /* rete */

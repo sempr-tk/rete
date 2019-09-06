@@ -48,9 +48,6 @@ Network::Network()
 
 Network::~Network()
 {
-    // tear down the nodes
-    root_->tearDown();
-
     // clear the agenda
     while (!agenda_->empty()) agenda_->pop_front();
 }
@@ -89,9 +86,9 @@ std::string Network::toDot() const
         toVisitANodes.pop_back();
 
         // alphamemory?
-        if (last->hasAlphaMemory())
+        auto amem = last->getAlphaMemory();
+        if (amem)
         {
-            auto amem = last->getAlphaMemory();
             amems.insert(amem); // remember for second phase
             // draw edge
             dot += drawNode(amem);

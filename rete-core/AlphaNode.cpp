@@ -1,5 +1,8 @@
+#include <algorithm>
+
 #include "AlphaNode.hpp"
 #include "AlphaMemory.hpp"
+#include "Util.hpp"
 
 namespace rete {
 
@@ -8,10 +11,29 @@ void AlphaNode::addChild(AlphaNode::Ptr node)
     children_.push_back(node);
 }
 
+void AlphaNode::removeChild(AlphaNode::WPtr node)
+{
+    children_.erase(
+        std::remove_if(children_.begin(), children_.end(), util::EqualWeak<AlphaNode>(node)),
+        children_.end()
+    );
+}
+
+
+void SetParent(AlphaNode::Ptr parent, AlphaNode::Ptr child)
+{
+    if (child->parent_) child->parent_->removeChild(child);
+    parent->addChild(child);
+}
+
 void AlphaNode::getChildren(std::vector<AlphaNode::Ptr>& children)
 {
     children.reserve(children_.size());
-    for (auto c : children_) children.push_back(c);
+    for (auto c : children_) {
+        auto cl = c.lock();
+        if (cl) children.push_back(cl);
+        // else the child has been destroyed. Cleanup? TODO
+    }
 }
 
 
@@ -19,49 +41,23 @@ void AlphaNode::propagate(WME::Ptr wme, PropagationFlag flag)
 {
     for (auto child :children_)
     {
-        child->activate(wme, flag);
+        auto c = child.lock();
+        if (c) c->activate(wme, flag);
     }
 
-    if (amem_) amem_->activate(wme, flag);
+    auto amem = amem_.lock();
+    if (amem) amem->activate(wme, flag);
 }
 
-bool AlphaNode::hasAlphaMemory() const
-{
-    return amem_.get();
-}
-
-void AlphaNode::initAlphaMemory()
-{
-    if (hasAlphaMemory()) return;
-    amem_.reset(new AlphaMemory());
-
-    // TODO: Initialize with known WMEs? Currently don't support adding rules on the fly.
-}
 
 AlphaMemory::Ptr AlphaNode::getAlphaMemory() const
 {
-    return amem_;
+    return amem_.lock();
 }
 
 std::string AlphaNode::getDOTAttr() const
 {
     return "[label=AlphaNode]";
-}
-
-void AlphaNode::tearDown()
-{
-    for (auto child : children_)
-    {
-        child->tearDown();
-    }
-    children_.clear();
-
-    if (amem_)
-    {
-        amem_->tearDown();
-        amem_.reset();
-    }
-
 }
 
 } /* rete */

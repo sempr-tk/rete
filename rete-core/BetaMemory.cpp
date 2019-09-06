@@ -19,12 +19,14 @@ void BetaMemory::leftActivate(Token::Ptr t, WME::Ptr wme, PropagationFlag flag)
 
         for (auto child : children_)
         {
-            child->leftActivate(tNew, PropagationFlag::ASSERT);
+            auto c = child.lock();
+            if (c) c->leftActivate(tNew, PropagationFlag::ASSERT);
         }
 
-        for (auto p : productions_)
+        for (auto production : productions_)
         {
-            p->activate(tNew, PropagationFlag::ASSERT);
+            auto p = production.lock();
+            if (p) p->activate(tNew, PropagationFlag::ASSERT);
         }
     }
     else if (flag == PropagationFlag::RETRACT)
@@ -57,12 +59,14 @@ void BetaMemory::leftActivate(Token::Ptr t, WME::Ptr wme, PropagationFlag flag)
 
             for (auto child : children_)
             {
-                child->leftActivate(mt, PropagationFlag::RETRACT);
+                auto c = child.lock();
+                if (c) c->leftActivate(mt, PropagationFlag::RETRACT);
             }
 
-            for (auto p : productions_)
+            for (auto production : productions_)
             {
-                p->activate(mt, PropagationFlag::RETRACT);
+                auto p = production.lock();
+                if (p) p->activate(mt, PropagationFlag::RETRACT);
             }
         }
     }
@@ -99,11 +103,13 @@ void BetaMemory::leftActivate(Token::Ptr t, WME::Ptr wme, PropagationFlag flag)
 
                     for (auto child : children_)
                     {
-                        child->leftActivate(mt, PropagationFlag::UPDATE);
+                        auto c = child.lock();
+                        if (c) c->leftActivate(mt, PropagationFlag::UPDATE);
                     }
-                    for (auto p : productions_)
+                    for (auto production : productions_)
                     {
-                        p->activate(mt, PropagationFlag::UPDATE);
+                        auto p = production.lock();
+                        if (p) p->activate(mt, PropagationFlag::UPDATE);
                     }
 
                     // nothing more to do, only needed to find the first entry.
@@ -128,12 +134,14 @@ void BetaMemory::leftActivate(Token::Ptr t, WME::Ptr wme, PropagationFlag flag)
                     // got it! propagate an update.
                     for (auto child : children_)
                     {
-                        child->leftActivate(mt, PropagationFlag::UPDATE);
+                        auto c = child.lock();
+                        if (c) c->leftActivate(mt, PropagationFlag::UPDATE);
                     }
 
-                    for (auto p : productions_)
+                    for (auto production : productions_)
                     {
-                        p->activate(mt, PropagationFlag::UPDATE);
+                        auto p = production.lock();
+                        if (p) p->activate(mt, PropagationFlag::UPDATE);
                     }
 
                     // nothing more to do, only this one instance.
@@ -163,15 +171,26 @@ void BetaMemory::rightRemoval(WME::Ptr wme)
 
         for (auto child : children_)
         {
-            child->leftActivate(t, PropagationFlag::RETRACT);
+            auto c = child.lock();
+            if (c) c->leftActivate(t, PropagationFlag::RETRACT);
         }
 
-        for (auto p : productions_)
+        for (auto production : productions_)
         {
-            p->activate(t, PropagationFlag::RETRACT);
+            auto p = production.lock();
+            if (p) p->activate(t, PropagationFlag::RETRACT);
         }
     }
 
+}
+
+void SetParent(BetaNode::Ptr parent, BetaMemory::Ptr child)
+{
+    if (parent->bmem_.lock()) throw std::exception(); // new parent already has a bmem!
+
+    if (child->parent_) child->parent_->bmem_.reset();
+    child->parent_ = parent;
+    parent->bmem_ = child;
 }
 
 void BetaMemory::addChild(BetaNode::Ptr node)
@@ -179,10 +198,22 @@ void BetaMemory::addChild(BetaNode::Ptr node)
     children_.push_back(node);
 }
 
+void BetaMemory::removeChild(BetaNode::WPtr child)
+{
+    children_.erase(
+        std::find_if(children_.begin(), children_.end(), util::EqualWeak<BetaNode>(child)),
+        children_.end()
+    );
+}
+
 void BetaMemory::getChildren(std::vector<BetaNode::Ptr>& children)
 {
     children.reserve(children_.size());
-    for (auto c : children_) children.push_back(c);
+    for (auto child : children_)
+    {
+        auto c = child.lock();
+        if (c) children.push_back(c);
+    }
 }
 
 void BetaMemory::addProduction(ProductionNode::Ptr p)
@@ -190,10 +221,22 @@ void BetaMemory::addProduction(ProductionNode::Ptr p)
     productions_.push_back(p);
 }
 
+void BetaMemory::removeProduction(ProductionNode::WPtr p)
+{
+    productions_.erase(
+        std::remove_if(productions_.begin(), productions_.end(), util::EqualWeak<ProductionNode>(p)),
+        productions_.end()
+    );
+}
+
 void BetaMemory::getProductions(std::vector<ProductionNode::Ptr>& children)
 {
     children.reserve(productions_.size());
-    for (auto c : productions_) children.push_back(c);
+    for (auto production : productions_)
+    {
+        auto p = production.lock();
+        if (p) children.push_back(p);
+    }
 }
 
 size_t BetaMemory::size() const
@@ -219,21 +262,6 @@ std::string BetaMemory::getDOTAttr() const
         record += "|" + util::dotEscape(t->toString());
     }
     return "[shape=record, label=\"{BetaMemory" + record + "}\"]";
-}
-
-void BetaMemory::tearDown()
-{
-    for (auto child : children_)
-    {
-        child->tearDown();
-    }
-    children_.clear();
-
-    for (auto production : productions_)
-    {
-        production->tearDown();
-    }
-    productions_.clear();
 }
 
 } /* rete */

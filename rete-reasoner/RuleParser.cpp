@@ -266,6 +266,24 @@ AlphaBetaAdapter::Ptr getAlphaBeta(AlphaMemory::Ptr amem)
 }
 
 
+/*
+    To construct the rule in the network, we do the following:
+        1. Create the first condition in the alpha network
+        2. Create an AlphaBetaAdapter, track the latest beta-memory
+        3. While there are still conditions left:
+            3.1 Create the next condition
+            3.2 Create a join node between the latest beta memory and the new condition
+            3.3 Update latest beta memory to be the one of the join node
+            3.4 Update the set of known variables (with additions from 3.1)
+        4. Add the consequences through ProductionNodes to the latest beta memory
+
+    In order to correctly create join nodes we need to keep track of the occurences of variable
+    names. Therefore we keep a set with variable names, the condition index (to be used in the
+    tokens in the partial matches in the rete) and the field (since the WMEs addressed by the
+    condition index are triples with subject, predicate, object).
+*/
+
+
 /**
     Implement the rule in the given network.
 */
@@ -421,7 +439,7 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
         //       But be aware: If the condition is negated with "noValue", new variables are
         //       actually placeholders and cannot be bound -- there is "noValue" to bind them to.
         //       The NodeBuilder will create accessors nevertheless, which would lead to segfaults
-        //       and undefined behavious, as we would e.g. try to cast an EmptyWME to a Triple.
+        //       and undefined behaviour, as we would e.g. try to cast an EmptyWME to a Triple.
         if (!condition->isNoValue())
         {
             for (auto& arg : args)
@@ -502,7 +520,7 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
                 bmem.reset(new BetaMemory());
                 SetParent(currentBeta, bmem);
             }
-            
+
             SetParent(bmem, agendaNode);
 
         } catch (NodeBuilderException& e) {
@@ -513,37 +531,6 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
         }
         effectNo++;
     }
-
-    // /**
-    //     To construct the rule in the network, we do the following:
-    //         1. Create the first condition in the alpha network
-    //         2. Create an AlphaBetaAdapter, track the latest beta-memory
-    //         3. While there are still conditions left:
-    //             3.1 Create the next condition
-    //             3.2 Create a join node between the latest beta memory and the new condition
-    //             3.3 Update latest beta memory to be the one of the join node
-    //             3.4 Update the set of known variables (with additions from 3.1)
-    //         4. Add the consequences through ProductionNodes to the latest beta memory
-    //
-    //     In order to correctly create join nodes we need to keep track of the occurences of variable
-    //     names. Therefore we keep a set with variable names, the condition index (to be used in the
-    //     tokens in the partial matches in the rete) and the field (since the WMEs addressed by the
-    //     condition index are triples with subject, predicate, object).
-    // */
-
-    //
-    // // 4. add the consequences to the end of the condition-chain (the betaMemory we kept track of)
-
-    //     // create the InferTriple production
-    //     InferTriple::Ptr infer(new InferTriple(s, p, o));
-    //     AgendaNode::Ptr inferNode(new AgendaNode(infer, net.getAgenda()));
-    //     if (rule.name_)
-    //         inferNode->setName(*rule.name_);
-    //     else
-    //         inferNode->setName("");
-    //
-    //     betaMemory->addProduction(inferNode);
-    // }
 }
 
 

@@ -81,16 +81,6 @@ void AlphaMemory::removeChild(BetaNode::WPtr child)
     );
 }
 
-void SetParent(std::shared_ptr<AlphaNode> parent, AlphaMemory::Ptr child)
-{
-    if (parent->amem_.lock()) throw std::exception(); // new parent already has a child amem!
-
-    if (child->parent_) child->parent_->amem_.reset();
-    child->parent_ = parent;
-
-    parent->amem_ = child;
-}
-
 
 void AlphaMemory::getChildren(std::vector<BetaNode::Ptr>& children)
 {

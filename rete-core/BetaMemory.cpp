@@ -184,14 +184,6 @@ void BetaMemory::rightRemoval(WME::Ptr wme)
 
 }
 
-void SetParent(BetaNode::Ptr parent, BetaMemory::Ptr child)
-{
-    if (parent->bmem_.lock()) throw std::exception(); // new parent already has a bmem!
-
-    if (child->parent_) child->parent_->bmem_.reset();
-    child->parent_ = parent;
-    parent->bmem_ = child;
-}
 
 void BetaMemory::addChild(BetaNode::Ptr node)
 {

@@ -8,6 +8,7 @@
 #include "Node.hpp"
 #include "WME.hpp"
 #include "AlphaMemory.hpp"
+#include "connect.hpp"
 
 namespace rete {
 
@@ -42,8 +43,8 @@ public:
         Connects an AlphaNode to its parent and vice versa. Implemented as a static function since
         we need shared/weak ptr for both sides.
     */
-    friend void SetParent(AlphaNode::Ptr parent, AlphaNode::Ptr child);
-    friend void SetParent(AlphaNode::Ptr parent, AlphaMemory::Ptr child);
+    friend void rete::SetParent(AlphaNode::Ptr parent, AlphaNode::Ptr child);
+    friend void rete::SetParent(AlphaNode::Ptr parent, AlphaMemory::Ptr child);
 
     void getChildren(std::vector<AlphaNode::Ptr>& children);
 

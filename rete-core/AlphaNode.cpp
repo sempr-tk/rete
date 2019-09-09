@@ -20,12 +20,6 @@ void AlphaNode::removeChild(AlphaNode::WPtr node)
 }
 
 
-void SetParent(AlphaNode::Ptr parent, AlphaNode::Ptr child)
-{
-    if (child->parent_) child->parent_->removeChild(child);
-    parent->addChild(child);
-}
-
 void AlphaNode::getChildren(std::vector<AlphaNode::Ptr>& children)
 {
     children.reserve(children_.size());

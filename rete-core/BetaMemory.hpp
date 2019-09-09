@@ -8,6 +8,7 @@
 #include "defs.hpp"
 #include "Node.hpp"
 #include "Token.hpp"
+#include "connect.hpp"
 
 namespace rete {
     class AlphaMemory;
@@ -57,12 +58,10 @@ public:
     /**
         Connect a BetaMemory to its parent BetaNode
     */
-    friend void SetParent(BetaNodePtr parent, BetaMemory::Ptr child);
+    friend void rete::SetParent(BetaNodePtr parent, BetaMemory::Ptr child);
 
-    // defined in BetaNode, but friend to allow modification of beta memory children.
-    friend void SetParents(BetaMemory::Ptr, AlphaMemoryPtr, BetaNodePtr);
-    // defined in ProductionNode
-    friend void SetParent(BetaMemory::Ptr , ProductionNodePtr);
+    friend void rete::SetParents(BetaMemory::Ptr, AlphaMemoryPtr, BetaNodePtr);
+    friend void rete::SetParent(BetaMemory::Ptr , ProductionNodePtr);
 
     /**
         Given a Token t_old and a WME w, adds a new Token t with

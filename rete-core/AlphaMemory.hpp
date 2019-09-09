@@ -10,6 +10,7 @@
 #include "WME.hpp"
 #include "BetaNode.hpp"
 #include "WMEComparator.hpp"
+#include "connect.hpp"
 
 namespace rete {
 
@@ -55,11 +56,11 @@ public:
         Sets the parent node of an AlphaMemory. The parent keeps a weak_ptr to its child,
         the child a shared_ptr to its parent.
     */
-    friend void SetParent(std::shared_ptr<AlphaNode> parent, AlphaMemory::Ptr child);
+    friend void rete::SetParent(std::shared_ptr<AlphaNode> parent, AlphaMemory::Ptr child);
 
     // defined in BetaNode, but friend to allow modification of alpha memory children.
-    friend void SetParents(BetaMemory::Ptr, AlphaMemoryPtr, BetaNodePtr);
-    
+    friend void rete::SetParents(BetaMemory::Ptr, AlphaMemoryPtr, BetaNodePtr);
+
 
     size_t size() const;
     void activate(WME::Ptr, PropagationFlag);

@@ -35,10 +35,8 @@ public:
         Connects a BetaNode with the given memories. Lets the BetaNode remember the memories for
         later lookup and also adds the BetaNode as a child of the memories to forward new matches.
     */
-    friend void SetParents(BetaMemory::Ptr parentLeft, AlphaMemoryPtr parentRight, BetaNode::Ptr child);
-
-    // defined in BetaMemory
-    friend void SetParent(BetaNode::Ptr parent, BetaMemory::Ptr child);
+    friend void rete::SetParents(BetaMemory::Ptr parentLeft, AlphaMemoryPtr parentRight, BetaNode::Ptr child);
+    friend void rete::SetParent(BetaNode::Ptr parent, BetaMemory::Ptr child);
 
     /**
         Called upon changes in the connected AlphaMemory.

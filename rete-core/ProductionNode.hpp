@@ -5,6 +5,7 @@
 #include "Node.hpp"
 #include "Token.hpp"
 #include "defs.hpp"
+#include "connect.hpp"
 
 namespace rete {
     class BetaMemory;
@@ -38,7 +39,7 @@ public:
     /**
         Connect a ProductionNode to its beta-memory parent
     */
-    friend void SetParent(BetaMemoryPtr parent, ProductionNode::Ptr child);
+    friend void rete::SetParent(BetaMemoryPtr parent, ProductionNode::Ptr child);
 
     /**
         Called when a Token is asserted/retracted.

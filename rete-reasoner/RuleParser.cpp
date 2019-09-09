@@ -18,8 +18,6 @@
 #include <stdexcept>
 
 namespace rete {
-namespace peg = pegmatite;
-
 
 void error_reporter(const peg::InputRange& input, const std::string& error)
 {
@@ -211,12 +209,13 @@ AlphaNode::Ptr implementAlphaNode(AlphaNode::Ptr alpha, AlphaNode::Ptr parent)
     Try to find an equivalent node at the parent. If not found add the given node. Returns the node
     which is connected to the parent after this operation.
 */
-BetaNode::Ptr implementBetaNode(BetaNode::Ptr node, BetaNode::Ptr parentBeta, AlphaNode::Ptr parentAlpha)
+BetaMemory::Ptr implementBetaNode(BetaNode::Ptr node, BetaMemory::Ptr parentBeta, AlphaMemory::Ptr parentAlpha)
 {
     BetaNode::Ptr beta = node;
+    BetaMemory::Ptr betamem = nullptr;
 
     std::vector<BetaNode::Ptr> candidates;
-    parentBeta->getBetaMemory()->getChildren(candidates);
+    parentBeta->getChildren(candidates);
     auto it = std::find_if(candidates.begin(), candidates.end(),
         [beta] (BetaNode::Ptr other) -> bool
         {
@@ -225,20 +224,22 @@ BetaNode::Ptr implementBetaNode(BetaNode::Ptr node, BetaNode::Ptr parentBeta, Al
     );
 
     // reuse or connect new, if the same join was found in the beta parent that connects to the wanted alpha
-    AlphaMemory::Ptr pamem = (parentAlpha ? parentAlpha->getAlphaMemory() : nullptr);
-
-    if (it != candidates.end() && (*it)->getParentAlpha() == pamem)
+    if (it != candidates.end() && (*it)->getParentAlpha() == parentAlpha)
     {
         std::cout << "Reusing BetaNode " << (*it)->getDOTId() << std::endl;
         beta = *it;
+        betamem = beta->getBetaMemory();
     }
     else
     {
         std::cout << "Adding BetaNode " << beta->getDOTId() << " beneath " << parentBeta->getDOTId() << " and " << (parentAlpha ? parentAlpha->getDOTId() : " 0x0") << std::endl;
 
-        SetParents(parentBeta->getBetaMemory(), (parentAlpha ? parentAlpha->getAlphaMemory() : nullptr), beta);
+        SetParents(parentBeta, parentAlpha, beta);
+        // add a beta memory for the added node
+        betamem.reset(new BetaMemory());
+        SetParent(beta, betamem);
     }
-    return beta;
+    return betamem;
 }
 
 
@@ -289,8 +290,8 @@ AlphaBetaAdapter::Ptr getAlphaBeta(AlphaMemory::Ptr amem)
 */
 void RuleParser::construct(ast::Rule& rule, Network& net) const
 {
-    // keep track of the last implemented beta node
-    BetaNode::Ptr currentBeta = nullptr;
+    // keep track of the last implemented beta memory
+    BetaMemory::Ptr currentBeta = nullptr;
 
     // remember already bound variables
     std::map<std::string, Accessor::Ptr> bindings;
@@ -397,7 +398,7 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
                 }
 
                 // add the join.
-                currentBeta = implementBetaNode(join, currentBeta, currentAlpha);
+                currentBeta = implementBetaNode(join, currentBeta, amem);
             }
             else
             {
@@ -410,7 +411,13 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
                 BetaNode::Ptr alphabeta = getAlphaBeta(currentAlpha->getAlphaMemory());
                 std::cout << "Adding AlphaBetaNode " << alphabeta << " beneath <nullptr> and " << currentAlpha << std::endl;
 
-                currentBeta = alphabeta;
+                BetaMemory::Ptr abmem = alphabeta->getBetaMemory();
+                if (!abmem)
+                {
+                    abmem.reset(new BetaMemory());
+                    SetParent(alphabeta, abmem);
+                }
+                currentBeta = abmem;
             }
         }
         else if (builder.builderType() == NodeBuilder::BUILTIN)
@@ -513,15 +520,8 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
                 // use the verbose description of the effect if the rule has no name
                 production->setName(production->toString());
             }
-
-            auto bmem = currentBeta->getBetaMemory();
-            if (!bmem)
-            {
-                bmem.reset(new BetaMemory());
-                SetParent(currentBeta, bmem);
-            }
-
-            SetParent(bmem, agendaNode);
+            SetParent(currentBeta, agendaNode);
+            net.addProduction(agendaNode);
 
         } catch (NodeBuilderException& e) {
             // rethrow with more information

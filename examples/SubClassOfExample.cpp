@@ -28,12 +28,15 @@ int main()
 
     // predicate check
     auto foo = std::make_shared<TripleAlpha>(Triple::PREDICATE, "rdfs:subClassOf");
-    net.getRoot()->addChild(foo);
-    foo->initAlphaMemory();
+    SetParent(reasoner.net().getRoot(), foo);
+    auto foomem = std::make_shared<AlphaMemory>();
+    SetParent(foo, foomem);
 
     // adapter for first (and only) join
     auto adapter = std::make_shared<AlphaBetaAdapter>();
-    BetaNode::connect(adapter, nullptr, foo->getAlphaMemory());
+    SetParents(nullptr, foomem, adapter);
+    auto adaptermem = std::make_shared<BetaMemory>();
+    SetParent(adapter, adaptermem);
 
     // join where object of the most recent wme in the token matches the subject of the wme
     TripleAccessor::Ptr acc0(new TripleAccessor(Triple::OBJECT));
@@ -42,8 +45,9 @@ int main()
 
     auto join = std::make_shared<GenericJoin>();
     join->addCheck(acc0, acc1);
-    BetaNode::connect(join, adapter->getBetaMemory(), foo->getAlphaMemory());
-
+    auto joinmem = std::make_shared<BetaMemory>();
+    SetParent(join, joinmem);
+    SetParents(adaptermem, foomem, join);
 
     std::unique_ptr<Accessor> accA(new TripleAccessor(Triple::SUBJECT));
     accA->index() = 1;
@@ -66,7 +70,10 @@ int main()
 
     // create an AgendaNode for the production
     auto inferNode = std::make_shared<AgendaNode>(infer, net.getAgenda());
-    join->getBetaMemory()->addProduction(inferNode);
+    SetParent(joinmem, inferNode);
+
+    // to keep the network alive beyond the scope of the inferNode pointer
+    reasoner.net().addProduction(inferNode);
 
     // put in some data
     auto t1 = std::make_shared<Triple>("A", "rdfs:subClassOf", "B");

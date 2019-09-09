@@ -89,7 +89,7 @@ int main()
     }
 
     // net network must be really ugly by now :D
-    save(reasoner.net(), "prefixes.dot");
+    save(reasoner.net(), "exceptions.dot");
 
     return 0;
 }

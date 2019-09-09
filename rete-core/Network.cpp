@@ -64,6 +64,11 @@ Agenda::Ptr Network::getAgenda()
     return agenda_;
 }
 
+void Network::addProduction(ProductionNode::Ptr p)
+{
+    productions_.push_back(p);
+}
+
 std::string Network::toDot() const
 {
     std::string dot = "digraph graphname { \n" \

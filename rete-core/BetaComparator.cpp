@@ -25,9 +25,12 @@ bool BetaComparator::operator() (const BetaNode::WPtr& aw, const BetaNode::WPtr&
 
         // else: continue the search.
         auto mem = last->getBetaMemory();
-        std::vector<BetaNode::Ptr> children;
-        mem->getChildren(children);
-        toVisit.insert(toVisit.end(), children.begin(), children.end());
+        if (mem)
+        {
+            std::vector<BetaNode::Ptr> children;
+            mem->getChildren(children);
+            toVisit.insert(toVisit.end(), children.begin(), children.end());
+        }
     }
 
     return false;

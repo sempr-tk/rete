@@ -8,6 +8,7 @@
 #include "BetaComparator.hpp"
 #include "BetaMemory.hpp"
 #include "BetaNode.hpp"
+#include "connect.hpp"
 #include "defs.hpp"
 #include "GenericJoin.hpp"
 #include "JoinNode.hpp"

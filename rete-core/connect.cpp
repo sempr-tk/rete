@@ -13,6 +13,7 @@ void SetParent(AlphaNode::Ptr parent, AlphaNode::Ptr child)
 {
     if (child->parent_) child->parent_->removeChild(child);
     parent->addChild(child);
+    child->parent_ = parent;
 }
 
 // AlphaNode <- AlphaMemory

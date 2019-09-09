@@ -64,6 +64,16 @@ public:
     // simply stores the node in an internal vector. It will not be connected to the network automatically - how should it even?
     void addProduction(ProductionNode::Ptr);
 
+    // get a list of the stored production nodes.
+    std::vector<ProductionNode::Ptr> getProductions() const;
+
+    /**
+        Removes the given production from the internal list.
+        The corresponding parts of the rete network collapse as soon as the production is destroyed.
+        TODO: Trigger removal of matches before actually removing!
+    */
+    void removeProduction(ProductionNode::Ptr);
+
     /**
         Traverses the graph of nodes and returns it in the dot-format for visualization
     */

@@ -18,24 +18,38 @@ void save(Network& net, const std::string& filename)
 
 int main()
 {
+    /* ------------------ */
+    /* ----- STEP 1 ----- */
+    /* ------------------ */
     Network net;
 
     // setup network
     //        C1                     C2
     // (?a rdfs:subClassOf ?b) (?b rdfs:subClassOf ?c)
 
+    /* ------------------ */
+    /* ----- STEP 2 ----- */
+    /* ------------------ */
     // predicate check
     auto foo = std::make_shared<TripleAlpha>(Triple::PREDICATE, "rdfs:subClassOf");
     SetParent(net.getRoot(), foo);
+
+    /* ------------------ */
+    /* ----- STEP 3 ----- */
+    /* ------------------ */
     auto foomem = std::make_shared<AlphaMemory>();
     SetParent(foo, foomem);
 
     // adapter for first (and only) join
     auto adapter = std::make_shared<AlphaBetaAdapter>();
     SetParents(nullptr, foo->getAlphaMemory(), adapter);
+
     auto adapterMem = std::make_shared<BetaMemory>();
     SetParent(adapter, adapterMem);
 
+    /* ------------------ */
+    /* ----- STEP 4 ----- */
+    /* ------------------ */
     // join where object of the most recent wme in the token matches the subject of the wme
     TripleAccessor::Ptr acc0(new TripleAccessor(Triple::OBJECT));
     acc0->index() = 0;
@@ -44,10 +58,14 @@ int main()
     auto join = std::make_shared<GenericJoin>();
     join->addCheck(acc0, acc1);
     SetParents(adapter->getBetaMemory(), foo->getAlphaMemory(), join);
+
     auto joinmem = std::make_shared<BetaMemory>();
     SetParent(join, joinmem);
 
 
+    /* ------------------ */
+    /* ----- STEP 5 ----- */
+    /* ------------------ */
     std::unique_ptr<Accessor> accA(new TripleAccessor(Triple::SUBJECT));
     accA->index() = 1;
     std::unique_ptr<Accessor> accC(new TripleAccessor(Triple::OBJECT));
@@ -64,10 +82,16 @@ int main()
     auto inferNode = std::make_shared<AgendaNode>(infer, net.getAgenda());
     rete::SetParent(join->getBetaMemory(), inferNode);
 
+    /* ------------------ */
+    /* ----- STEP 6 ----- */
+    /* ------------------ */
     // save the production node to keep the network alive!
     net.addProduction(inferNode);
     // now we may forget the inferNode-pointer.
 
+    /* ------------------ */
+    /* ----- STEP 7 ----- */
+    /* ------------------ */
     // put in some data
     auto t1 = std::make_shared<Triple>("A", "rdfs:subClassOf", "B");
     auto t2 = std::make_shared<Triple>("B", "rdfs:subClassOf", "C");

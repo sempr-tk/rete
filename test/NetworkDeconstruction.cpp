@@ -67,5 +67,19 @@ int main()
     deconstruct("rule4");
     save(reasoner.net(), "deconstruct_4.dot");
 
-    return 1;
+
+    // only the retes root node and its alpha memory should remain
+    auto root = reasoner.net().getRoot();
+    auto rootmem = root->getAlphaMemory();
+
+    std::vector<AlphaNode::Ptr> rootChildren;
+    root->getChildren(rootChildren);
+
+    std::vector<BetaNode::Ptr> rootmemChildren;
+    rootmem->getChildren(rootmemChildren);
+
+    if (!rootChildren.empty()) return 1;
+    if (!rootmemChildren.empty()) return 2;
+
+    return 0;
 }

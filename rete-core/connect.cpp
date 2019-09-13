@@ -12,7 +12,7 @@ namespace rete {
 void SetParent(AlphaNode::Ptr parent, AlphaNode::Ptr child)
 {
     if (child->parent_) child->parent_->removeChild(child);
-    parent->addChild(child);
+    if (parent) parent->addChild(child);
     child->parent_ = parent;
 }
 
@@ -21,10 +21,16 @@ void SetParent(AlphaNode::Ptr parent, AlphaMemory::Ptr child)
 {
     if (parent->amem_.lock()) throw std::exception(); // new parent already has a child amem!
 
-    if (child->parent_) child->parent_->amem_.reset();
-    child->parent_ = parent;
+    if (child->parent_)
+    {
+        child->parent_->amem_.reset();
+        child->wmes_.clear(); // TODO RETRACT?
+    }
 
-    parent->amem_ = child;
+    child->parent_ = parent;
+    if (parent) parent->amem_ = child;
+
+    child->initialize();
 }
 
 // BetaNode <- BetaMemory
@@ -32,9 +38,16 @@ void SetParent(BetaNode::Ptr parent, BetaMemory::Ptr child)
 {
     if (parent->bmem_.lock()) throw std::exception(); // new parent already has a bmem!
 
-    if (child->parent_) child->parent_->bmem_.reset();
+    if (child->parent_)
+    {
+        child->parent_->bmem_.reset();
+        child->tokens_.clear(); // TODO: retract?
+    }
+
     child->parent_ = parent;
-    parent->bmem_ = child;
+    if (parent) parent->bmem_ = child;
+
+    child->initialize();
 }
 
 // (left) BetaMemory <----.
@@ -57,9 +70,18 @@ void SetParents(BetaMemory::Ptr bmem, AlphaMemory::Ptr amem, BetaNode::Ptr node)
 // BetaMemory <- ProductionNode
 void SetParent(BetaMemoryPtr parent, ProductionNode::Ptr child)
 {
-    if (child->parent_) child->parent_->removeProduction(child);
+    if (child->parent_)
+    {
+        child->parent_->removeProduction(child);
+        for (auto entry : *child->parent_)
+        {
+            child->activate(entry, PropagationFlag::RETRACT);
+        }
+    }
+
     child->parent_ = parent;
-    parent->addProduction(child);
+    if (parent) parent->addProduction(child);
+    child->initialize();
 }
 
 

@@ -21,11 +21,22 @@ namespace rete {
     "atomic" tests on single WMEs.
 */
 class BetaNode : public Node {
+    friend class BetaMemory;
     std::string getDOTAttr() const override;
+
+    /**
+        Initializes this node. Basically a helper for recursive initialization of the child beta
+        memory. Iterates over the contents of its parent memory and call left- or rightActivate
+        with an ASSERT flag, respectively. If it has both left and right parent (i.e., is a join),
+        it only iterates over the left parent.
+    */
+    void initialize() override;
+
 protected:
     AlphaMemoryPtr parentAlpha_;
     BetaMemory::Ptr parentBeta_;
     BetaMemory::WPtr bmem_;
+
 public:
     using Ptr = std::shared_ptr<BetaNode>;
     using WPtr = std::weak_ptr<BetaNode>;

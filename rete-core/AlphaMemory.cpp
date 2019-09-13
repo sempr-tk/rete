@@ -119,4 +119,19 @@ std::string AlphaMemory::getDOTAttr() const
 }
 
 
+void AlphaMemory::initialize()
+{
+    if (parent_)
+    {
+        // remove all children -- only this memory node shall get the activations.
+        std::vector<AlphaNode::WPtr> backup;
+        backup.swap(parent_->children_);
+
+        parent_->initialize();
+
+        // reset children
+        backup.swap(parent_->children_);
+    }
+}
+
 } /* rete */

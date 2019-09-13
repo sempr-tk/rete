@@ -6,6 +6,41 @@
 
 namespace rete {
 
+void AlphaNode::initialize()
+{
+    if (this->parent_)
+    {
+        auto amem = this->parent_->amem_.lock();
+        if (amem)
+        {
+            for (auto entry : *amem)
+            {
+                this->activate(entry, PropagationFlag::ASSERT);
+            }
+        }
+        else
+        {
+            // parent has no alpha memory?
+            // make sure we are the only child of parent, and initialize parent.
+            std::vector<AlphaNode::WPtr> childrenBackup = this->parent_->children_;
+            auto newEnd = std::remove_if(parent_->children_.begin(), parent_->children_.end(),
+                [this](AlphaNode::WPtr entry)
+                {
+                    auto node = entry.lock();
+                    return !node || node.get() != this;
+                }
+            );
+            parent_->children_.erase(newEnd, parent_->children_.end());
+
+            // now initialize the parent
+            parent_->initialize();
+
+            // and undo the changes to its children.
+            parent_->children_ = childrenBackup;
+        }
+    }
+}
+
 void AlphaNode::addChild(AlphaNode::Ptr node)
 {
     children_.push_back(node);

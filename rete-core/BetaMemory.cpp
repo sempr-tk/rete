@@ -7,6 +7,12 @@
 
 namespace rete {
 
+
+void BetaMemory::initialize()
+{
+    if (parent_) parent_->initialize();
+}
+
 void BetaMemory::leftActivate(Token::Ptr t, WME::Ptr wme, PropagationFlag flag)
 {
     if (flag == PropagationFlag::ASSERT)

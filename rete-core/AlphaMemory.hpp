@@ -74,6 +74,16 @@ public:
     Iterator begin();
     Iterator end();
 
+
+    /**
+        Calls initialize() on the parent alpha node, which will search its
+        parent for WMEs to process, or disconnect all siblings from its parent
+        and call initialize() on it, recursively.
+
+        Basically: Search upwards for the smallest set of WMEs relevant for this
+        node, and process them only in the direct chain towards this node.
+    */
+    void initialize() override;
 };
 
 } /* rete */

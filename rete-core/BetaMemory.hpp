@@ -64,6 +64,14 @@ public:
     friend void rete::SetParent(BetaMemory::Ptr , ProductionNodePtr);
 
     /**
+        Initializes this BetaMemory by calling initialize() on its parent BetaNode.
+        Does **not** check if the whole chain has been initialized yet. Take care to initialize
+        the nodes top down one by one.
+    */
+    void initialize() override;
+
+
+    /**
         Given a Token t_old and a WME w, adds a new Token t with
             t.parent = t_old
             t.wme = w

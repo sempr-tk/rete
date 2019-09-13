@@ -18,6 +18,7 @@ namespace rete {
     check on a WME and propagates it forward if it succeeds.
 */
 class AlphaNode : public Node {
+    friend class AlphaMemory;
 public:
     using Ptr = std::shared_ptr<AlphaNode>;
     using WPtr = std::weak_ptr<AlphaNode>;
@@ -37,6 +38,17 @@ private:
     */
     void removeChild(AlphaNode::WPtr);
 
+    /**
+        Initialize this node. This will look at its parent: If the parent has an alpha-memory,
+        it will process all the WMEs in there (again), as if they were just added. If the parent
+        does not have an alpha-memory, it will temporally remove all its siblings from the parents
+        children-list and call parent->initialize(). That way only the WMEs from the nearest memory
+        need to be re-evaluated, and only on the path to this node.
+
+        You should not need to call this method at any time. It is only relevant when a memory is
+        newly connected to the node, and you want to initialize the memory node.
+    */
+    void initialize() override;
 
 public:
     /**
@@ -64,7 +76,6 @@ public:
         Returns the AlphaMemory of this node, if it is set. Nullptr else.
     */
     AlphaMemory::Ptr getAlphaMemory() const;
-
 
     /**
         It must be possible to test two AlphaNodes on equality, in order to reuse existing nodes

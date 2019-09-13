@@ -30,6 +30,12 @@ public:
     ProductionNode(Production::Ptr);
 
     /**
+        Initializes the ProductionNode by iterating over the parents contents and calling
+        activate on all of them.
+    */
+    void initialize() override;
+
+    /**
         Set the name of the production node. Used in conjunction with the productions name to form
         the label in the dot-graph.
     */

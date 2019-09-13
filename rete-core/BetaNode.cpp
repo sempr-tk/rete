@@ -8,6 +8,24 @@ BetaNode::BetaNode()
 {
 }
 
+void BetaNode::initialize()
+{
+    if (parentBeta_)
+    {
+        for (auto entry : *parentBeta_)
+        {
+            leftActivate(entry, PropagationFlag::ASSERT);
+        }
+    }
+    else if (parentAlpha_)
+    {
+        for (auto entry : *parentAlpha_)
+        {
+            rightActivate(entry, PropagationFlag::ASSERT);
+        }
+    }
+}
+
 BetaMemory::Ptr BetaNode::getParentBeta() const
 {
     return parentBeta_;

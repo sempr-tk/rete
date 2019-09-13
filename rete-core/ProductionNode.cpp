@@ -7,6 +7,17 @@ rete::ProductionNode::ProductionNode(Production::Ptr p)
 {
 }
 
+void rete::ProductionNode::initialize()
+{
+    if (parent_)
+    {
+        for (auto entry : *parent_)
+        {
+            activate(entry, PropagationFlag::ASSERT);
+        }
+    }
+}
+
 void rete::ProductionNode::setName(const std::string& name)
 {
     name_ = name;

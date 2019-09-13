@@ -4,9 +4,16 @@
 #include "../rete-reasoner/AssertedEvidence.hpp"
 #include "../rete-rdf/ReteRDF.hpp"
 #include <vector>
+#include <fstream>
 
 using namespace rete;
 
+void save(Network& net, const std::string& filename)
+{
+    std::ofstream out(filename);
+    out << net.toDot();
+    out.close();
+}
 
 bool containsTriple(const std::vector<WME::Ptr>& wmes,
                     const std::string& s, const std::string& p, const std::string& o)
@@ -53,6 +60,9 @@ int main()
     // add a fact
     auto t = std::make_shared<Triple>("<a>", "<foo>", "<b>");
     reasoner.addEvidence(t, evidence);
+    reasoner.performInference();
+    save(reasoner.net(), "AddingRulesAfterData_0.dot");
+
 
     // and a rule
     parser.parseRules(
@@ -62,6 +72,7 @@ int main()
 
     // draw conclusions
     reasoner.performInference();
+    save(reasoner.net(), "AddingRulesAfterData_1.dot");
 
     // check if it worked
     if (!containsTriple(reasoner.getCurrentState().getWMEs(), "<result>", "<of>", "<rule1>"))
@@ -77,6 +88,7 @@ int main()
         reasoner.net()
     );
     reasoner.performInference();
+    save(reasoner.net(), "AddingRulesAfterData_2.dot");
 
     if (!containsTriple(reasoner.getCurrentState().getWMEs(), "<result>", "<of>", "<rule2>"))
     {
@@ -91,6 +103,7 @@ int main()
         reasoner.net()
     );
     reasoner.performInference();
+    save(reasoner.net(), "AddingRulesAfterData_3.dot");
 
     auto wmes = reasoner.getCurrentState().getWMEs();
     if (!containsTriple(wmes, "<rule3>", "<result>", "<foo>") ||

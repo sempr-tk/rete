@@ -5,8 +5,11 @@
 #include "Node.hpp"
 #include "Token.hpp"
 #include "defs.hpp"
+#include "connect.hpp"
 
 namespace rete {
+    class BetaMemory;
+    typedef std::shared_ptr<BetaMemory> BetaMemoryPtr;
 
 /**
     This class represents the terminal nodes in the rete network. They contain a production that
@@ -17,11 +20,13 @@ namespace rete {
 */
 class ProductionNode : public Node {
 protected:
+    BetaMemoryPtr parent_;
     Production::Ptr production_;
     std::string getDOTAttr() const override;
     std::string name_;
 public:
     using Ptr = std::shared_ptr<ProductionNode>;
+    using WPtr = std::weak_ptr<ProductionNode>;
     ProductionNode(Production::Ptr);
 
     /**
@@ -31,13 +36,15 @@ public:
     void setName(const std::string&);
     std::string getName() const;
 
+    /**
+        Connect a ProductionNode to its beta-memory parent
+    */
+    friend void rete::SetParent(BetaMemoryPtr parent, ProductionNode::Ptr child);
 
     /**
         Called when a Token is asserted/retracted.
     */
     virtual void activate(Token::Ptr, PropagationFlag) = 0;
-
-    void tearDown() override;
 };
 
 

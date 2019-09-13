@@ -8,6 +8,7 @@
 #include "Node.hpp"
 #include "WME.hpp"
 #include "AlphaMemory.hpp"
+#include "connect.hpp"
 
 namespace rete {
 
@@ -17,14 +18,34 @@ namespace rete {
     check on a WME and propagates it forward if it succeeds.
 */
 class AlphaNode : public Node {
-    std::string getDOTAttr() const override;
-
 public:
     using Ptr = std::shared_ptr<AlphaNode>;
+    using WPtr = std::weak_ptr<AlphaNode>;
+
+private:
+    std::string getDOTAttr() const override;
+
     /**
         Child notes will get activated with the results of their parents.
+        Stores only a weak_ptr to the child.
     */
     void addChild(AlphaNode::Ptr);
+
+    /**
+        Don't need a full shared_ptr to remove children. Also, there are no shared_ptr for expired
+        weak_ptr.
+    */
+    void removeChild(AlphaNode::WPtr);
+
+
+public:
+    /**
+        Connects an AlphaNode to its parent and vice versa. Implemented as a static function since
+        we need shared/weak ptr for both sides.
+    */
+    friend void rete::SetParent(AlphaNode::Ptr parent, AlphaNode::Ptr child);
+    friend void rete::SetParent(AlphaNode::Ptr parent, AlphaMemory::Ptr child);
+
     void getChildren(std::vector<AlphaNode::Ptr>& children);
 
     /**
@@ -40,10 +61,8 @@ public:
     virtual void activate(WME::Ptr, PropagationFlag) = 0;
 
     /**
-        If requested, the AlphaNode may maintain an AlphaMemory.
+        Returns the AlphaMemory of this node, if it is set. Nullptr else.
     */
-    bool hasAlphaMemory() const;
-    void initAlphaMemory();
     AlphaMemory::Ptr getAlphaMemory() const;
 
 
@@ -57,8 +76,6 @@ public:
     */
     virtual bool operator == (const AlphaNode& other) const = 0;
 
-    void tearDown() override;
-
 protected:
     /**
         Calls activate(wme) on all registered child nodes.
@@ -66,8 +83,9 @@ protected:
     void propagate(WME::Ptr, PropagationFlag);
 
 private:
-    AlphaMemory::Ptr amem_;
-    std::vector<AlphaNode::Ptr> children_;
+    AlphaMemory::WPtr amem_;
+    AlphaNode::Ptr parent_;
+    std::vector<AlphaNode::WPtr> children_;
 };
 
 } /* rete */

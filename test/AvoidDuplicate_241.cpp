@@ -20,28 +20,42 @@ int main()
             (?y color red)
     */
     auto root = net.getRoot();
-    TripleAlpha::Ptr a1(new TripleAlpha(Triple::PREDICATE, "self")); root->addChild(a1);
+    TripleAlpha::Ptr a1(new TripleAlpha(Triple::PREDICATE, "self"));
+    SetParent(root, a1);
     TripleConsistency::Ptr a2(new TripleConsistency(Triple::SUBJECT, Triple::OBJECT));
-    a1->addChild(a2);
+    SetParent(a1, a2);
 
-    TripleAlpha::Ptr b1(new TripleAlpha(Triple::PREDICATE, "color")); root->addChild(b1);
-    TripleAlpha::Ptr b2(new TripleAlpha(Triple::OBJECT, "red")); b1->addChild(b2);
-    a2->initAlphaMemory();
-    b2->initAlphaMemory();
+    TripleAlpha::Ptr b1(new TripleAlpha(Triple::PREDICATE, "color"));
+    SetParent(root, b1);
+    TripleAlpha::Ptr b2(new TripleAlpha(Triple::OBJECT, "red"));
+    SetParent(b1, b2);
+
+    auto a2mem = std::make_shared<AlphaMemory>();
+    auto b2mem = std::make_shared<AlphaMemory>();
+    SetParent(a2, a2mem);
+    SetParent(b2, b2mem);
 
     AlphaBetaAdapter::Ptr ab(new AlphaBetaAdapter());
-    BetaNode::connect(ab, nullptr, a2->getAlphaMemory());
+    SetParents(nullptr, a2mem, ab);
+    auto abmem = std::make_shared<BetaMemory>();
+    SetParent(ab, abmem);
 
     GenericJoin::Ptr j1(new GenericJoin());
     TripleAccessor::Ptr acc0(new TripleAccessor(Triple::SUBJECT));
     acc0->index() = 0;
     TripleAccessor::Ptr acc1(new TripleAccessor(Triple::SUBJECT));
     j1->addCheck(acc0, acc1);
-    BetaNode::connect(j1, ab->getBetaMemory(), b2->getAlphaMemory());
+
+    SetParents(abmem, b2mem, j1);
+    auto j1mem = std::make_shared<BetaMemory>();
+    SetParent(j1, j1mem);
 
     GenericJoin::Ptr j2(new GenericJoin());
-    BetaNode::connect(j2, j1->getBetaMemory(), b2->getAlphaMemory());
+    SetParents(j1mem, b2mem, j2);
+    auto j2mem = std::make_shared<BetaMemory>();
+    SetParent(j2, j2mem);
 
+    // j2 keeps everything alive.
 
     // add knowledge
     Triple::Ptr t1(new Triple("B1", "self", "B1"));

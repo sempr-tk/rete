@@ -6,8 +6,11 @@
 
 namespace rete {
 
-bool BetaComparator::operator() (const BetaNode::Ptr& a, const BetaNode::Ptr& b)
+bool BetaComparator::operator() (const BetaNode::WPtr& aw, const BetaNode::WPtr& bw)
 {
+    auto a = aw.lock();
+    auto b = bw.lock();
+
     // question: is "a" a descendent of "b"?
     std::vector<BetaNode::Ptr> toVisit;
     toVisit.push_back(b);
@@ -22,9 +25,12 @@ bool BetaComparator::operator() (const BetaNode::Ptr& a, const BetaNode::Ptr& b)
 
         // else: continue the search.
         auto mem = last->getBetaMemory();
-        std::vector<BetaNode::Ptr> children;
-        mem->getChildren(children);
-        toVisit.insert(toVisit.end(), children.begin(), children.end());
+        if (mem)
+        {
+            std::vector<BetaNode::Ptr> children;
+            mem->getChildren(children);
+            toVisit.insert(toVisit.end(), children.begin(), children.end());
+        }
     }
 
     return false;

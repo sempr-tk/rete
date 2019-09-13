@@ -25,17 +25,18 @@ class BetaNode : public Node {
 protected:
     AlphaMemoryPtr parentAlpha_;
     BetaMemory::Ptr parentBeta_;
-    BetaMemory::Ptr bmem_;
+    BetaMemory::WPtr bmem_;
 public:
     using Ptr = std::shared_ptr<BetaNode>;
-    // BetaNode(BetaMemory::Ptr, AlphaMemoryPtr);
+    using WPtr = std::weak_ptr<BetaNode>;
     BetaNode();
 
     /**
         Connects a BetaNode with the given memories. Lets the BetaNode remember the memories for
         later lookup and also adds the BetaNode as a child of the memories to forward new matches.
     */
-    static void connect(BetaNode::Ptr, BetaMemory::Ptr, AlphaMemoryPtr);
+    friend void rete::SetParents(BetaMemory::Ptr parentLeft, AlphaMemoryPtr parentRight, BetaNode::Ptr child);
+    friend void rete::SetParent(BetaNode::Ptr parent, BetaMemory::Ptr child);
 
     /**
         Called upon changes in the connected AlphaMemory.
@@ -48,7 +49,7 @@ public:
     virtual void leftActivate(Token::Ptr, PropagationFlag) = 0;
 
     /**
-        Get access to the associated beta memory node.
+        Get access to the associated beta memory node. Returns nullptr of none is set.
     */
     BetaMemory::Ptr getBetaMemory() const;
 
@@ -68,9 +69,6 @@ public:
         constructing the network, before connecting the node in question.
     */
     virtual bool operator == (const BetaNode& other) const = 0;
-
-
-    void tearDown() override;
 };
 
 } /* rete */

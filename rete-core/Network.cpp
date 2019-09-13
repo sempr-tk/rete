@@ -10,6 +10,7 @@
 
 #include <sstream>
 #include <string>
+#include <algorithm>
 
 namespace {
     std::string drawEdge(rete::Node::Ptr source, rete::Node::Ptr target)
@@ -24,6 +25,7 @@ namespace {
 }
 
 namespace rete {
+
 
 void Network::DummyAlpha::activate(WME::Ptr wme, PropagationFlag flag)
 {
@@ -42,15 +44,13 @@ std::string Network::DummyAlpha::getDOTAttr() const
 
 
 Network::Network()
-    : root_(new Network::DummyAlpha()), agenda_(new Agenda())
+    : root_(new Network::DummyAlpha()), holdAlive_(new AlphaMemory()), agenda_(new Agenda())
 {
+    SetParent(root_, holdAlive_);
 }
 
 Network::~Network()
 {
-    // tear down the nodes
-    root_->tearDown();
-
     // clear the agenda
     while (!agenda_->empty()) agenda_->pop_front();
 }
@@ -64,6 +64,22 @@ Agenda::Ptr Network::getAgenda()
 {
     return agenda_;
 }
+
+void Network::addProduction(ProductionNode::Ptr p)
+{
+    productions_.push_back(p);
+}
+
+void Network::removeProduction(ProductionNode::Ptr p)
+{
+    productions_.erase(std::remove(productions_.begin(), productions_.end(), p), productions_.end());
+}
+
+std::vector<ProductionNode::Ptr> Network::getProductions() const
+{
+    return productions_;
+}
+
 
 std::string Network::toDot() const
 {
@@ -89,9 +105,9 @@ std::string Network::toDot() const
         toVisitANodes.pop_back();
 
         // alphamemory?
-        if (last->hasAlphaMemory())
+        auto amem = last->getAlphaMemory();
+        if (amem)
         {
-            auto amem = last->getAlphaMemory();
             amems.insert(amem); // remember for second phase
             // draw edge
             dot += drawNode(amem);

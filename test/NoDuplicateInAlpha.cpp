@@ -20,16 +20,23 @@ int main()
     */
 
     auto root = net.getRoot();
-    TripleAlpha::Ptr a1(new TripleAlpha(Triple::PREDICATE, "self")); root->addChild(a1);
-    TripleAlpha::Ptr b1(new TripleAlpha(Triple::PREDICATE, "color")); root->addChild(b1);
-    a1->initAlphaMemory();
-    b1->initAlphaMemory();
+    TripleAlpha::Ptr a1(new TripleAlpha(Triple::PREDICATE, "self")); SetParent(root, a1);
+    TripleAlpha::Ptr b1(new TripleAlpha(Triple::PREDICATE, "color")); SetParent(root, b1);
+
+    auto a1mem = std::make_shared<AlphaMemory>();
+    auto b1mem = std::make_shared<AlphaMemory>();
+    SetParent(a1, a1mem);
+    SetParent(b1, b1mem);
 
     AlphaBetaAdapter::Ptr ab(new AlphaBetaAdapter());
-    BetaNode::connect(ab, nullptr, a1->getAlphaMemory());
+    SetParents(nullptr, a1mem, ab);
+    auto abmem = std::make_shared<BetaMemory>();
+    SetParent(ab, abmem);
 
     JoinNode::Ptr j1(new GenericJoin());
-    BetaNode::connect(j1, ab->getBetaMemory(), b1->getAlphaMemory());
+    SetParents(abmem, b1mem, j1);
+    auto j1mem = std::make_shared<BetaMemory>();
+    SetParent(j1, j1mem);
 
 
     // add knowledge

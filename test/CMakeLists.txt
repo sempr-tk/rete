@@ -57,6 +57,10 @@ add_executable(AddingRulesAfterData AddingRulesAfterData.cpp)
 target_link_libraries(AddingRulesAfterData rete-core rete-rdf rete-reasoner)
 add_test(NAME AddingRulesAfterData COMMAND AddingRulesAfterData)
 
+add_executable(RemovingRules RemovingRules.cpp)
+target_link_libraries(RemovingRules rete-core rete-rdf rete-reasoner)
+add_test(NAME RemovingRules COMMAND RemovingRules)
+
 add_executable(test_rete main.cpp)
 target_link_libraries(test_rete rete-core rete-rdf rete-reasoner)
 add_test(NAME main COMMAND test_rete)

@@ -73,6 +73,9 @@ void Network::addProduction(ProductionNode::Ptr p)
 void Network::removeProduction(ProductionNode::Ptr p)
 {
     productions_.erase(std::remove(productions_.begin(), productions_.end(), p), productions_.end());
+
+    // disconnects the production, and calls RETRACT for all previously asserted matches
+    SetParent(nullptr, p);
 }
 
 std::vector<ProductionNode::Ptr> Network::getProductions() const

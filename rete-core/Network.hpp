@@ -68,9 +68,16 @@ public:
     std::vector<ProductionNode::Ptr> getProductions() const;
 
     /**
-        Removes the given production from the internal list.
-        The corresponding parts of the rete network collapse as soon as the production is destroyed.
-        TODO: Trigger removal of matches before actually removing!
+        Removes the given production from the internal list, retracts all data that was inferred
+        through it and disconnects it from the network. The nodes that are no longer needed in the
+        network collapse automatically.
+
+        TODO: Is this inconsistent? "addProduction" does not connect or initialize anything, but
+        "removeProduction" disconnects stuff? Well, in the end it _is_ called
+        "Network::removeProduction" ... should be fine, right?
+        NOTE: The method could return the previous parent of the ProductionNode? That would keep
+        the network untouched, and the user could still reconnect everything, or just forget the
+        BetaMemory::Ptr and let the network collapse.
     */
     void removeProduction(ProductionNode::Ptr);
 

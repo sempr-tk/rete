@@ -19,6 +19,13 @@ void save(Network& net, const std::string& filename)
     out.close();
 }
 
+
+/**
+    This test only checks if the network gets deconstructed properly, i.e. nodes are removed
+    when all their children are gone. It's a test if the pointer-structure was implemented
+    correctly, but does **not** check if activations are retracted. This is done in
+    "RemovingRules.cpp".
+*/
 int main()
 {
     Reasoner reasoner;

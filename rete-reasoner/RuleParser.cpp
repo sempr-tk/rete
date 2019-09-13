@@ -238,6 +238,9 @@ BetaMemory::Ptr implementBetaNode(BetaNode::Ptr node, BetaMemory::Ptr parentBeta
         // add a beta memory for the added node
         betamem.reset(new BetaMemory());
         SetParent(beta, betamem);
+
+        // initialize in case there has been data before!
+        betamem->initialize();
     }
     return betamem;
 }
@@ -362,6 +365,9 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
             {
                 amem.reset(new AlphaMemory());
                 SetParent(currentAlpha, amem);
+
+                // initialize, in case there has been data before!
+                amem->initialize();
             }
 
             // - if there has been a beta node before, create a join
@@ -416,6 +422,9 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
                 {
                     abmem.reset(new BetaMemory());
                     SetParent(alphabeta, abmem);
+
+                    // maybe there has been data before this node was added...
+                    abmem->initialize();
                 }
                 currentBeta = abmem;
             }
@@ -522,6 +531,9 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
             }
             SetParent(currentBeta, agendaNode);
             net.addProduction(agendaNode);
+
+            // initialize (process existing data)
+            agendaNode->initialize();
 
         } catch (NodeBuilderException& e) {
             // rethrow with more information

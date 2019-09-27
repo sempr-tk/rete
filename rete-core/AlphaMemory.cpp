@@ -1,4 +1,5 @@
 #include "AlphaMemory.hpp"
+#include "AlphaNode.hpp"
 #include "BetaComparator.hpp"
 #include "Util.hpp"
 
@@ -59,7 +60,8 @@ void AlphaMemory::propagate(WME::Ptr wme, PropagationFlag flag)
 {
     for (auto child : children_)
     {
-        child->rightActivate(wme, flag);
+        auto c = child.lock();
+        if (c) c->rightActivate(wme, flag);
     }
 }
 
@@ -71,10 +73,23 @@ void AlphaMemory::addChild(BetaNode::Ptr beta)
     std::sort(children_.begin(), children_.end(), BetaComparator());
 }
 
+void AlphaMemory::removeChild(BetaNode::WPtr child)
+{
+    children_.erase(
+        std::find_if(children_.begin(), children_.end(), util::EqualWeak<BetaNode>(child)),
+        children_.end()
+    );
+}
+
+
 void AlphaMemory::getChildren(std::vector<BetaNode::Ptr>& children)
 {
     children.reserve(children_.size());
-    for (auto c : children_) children.push_back(c);
+    for (auto c : children_)
+    {
+        auto child = c.lock();
+        if (child) children.push_back(child);
+    }
 }
 
 
@@ -104,13 +119,19 @@ std::string AlphaMemory::getDOTAttr() const
 }
 
 
-void AlphaMemory::tearDown()
+void AlphaMemory::initialize()
 {
-    for (auto child : children_)
+    if (parent_)
     {
-        child->tearDown();
+        // remove all children -- only this memory node shall get the activations.
+        std::vector<AlphaNode::WPtr> backup;
+        backup.swap(parent_->children_);
+
+        parent_->initialize();
+
+        // reset children
+        backup.swap(parent_->children_);
     }
-    children_.clear();
 }
 
 } /* rete */

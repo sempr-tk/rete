@@ -11,6 +11,13 @@ namespace rete {
     This is introduced to simplify and customize the representation in dot-files (graphviz).
 */
 class Node {
+    /**
+        Initialize this node after adding it to the network. This is used to
+        get hold of WMEs that have been added previously and need to be
+        processed by this node, too.
+    */
+    virtual void initialize() = 0;
+    
 public:
     using Ptr = std::shared_ptr<Node>;
     /**
@@ -23,11 +30,6 @@ public:
         Default impl returns the pointer address.
     */
     virtual std::string getDOTId() const;
-
-    /**
-    Recursively breaks all connections in the network.
-    */
-    virtual void tearDown() = 0;
 
     virtual ~Node();
 };

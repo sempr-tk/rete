@@ -10,8 +10,11 @@
 #include "WME.hpp"
 #include "BetaNode.hpp"
 #include "WMEComparator.hpp"
+#include "connect.hpp"
 
 namespace rete {
+
+    class AlphaNode;
 
 /**
     The AlphaMemory is just another node that has no other purpose than to store the WMEs that
@@ -22,10 +25,22 @@ namespace rete {
 */
 class AlphaMemory : public Node {
     std::set<WME::Ptr, WMEComparator> wmes_;
-    // std::unordered_set<WME::Ptr, std::hash<WME::Ptr>, WMEComparator> wmes_;
-    std::vector<BetaNode::Ptr> children_;
+    std::vector<BetaNode::WPtr> children_;
+    std::shared_ptr<AlphaNode> parent_;
 
     std::string getDOTAttr() const override;
+
+    /**
+        Adds a BetaNode to the list of children, which will get right-activated when this
+        AlphaMemory is updated.
+    */
+    void addChild(BetaNode::Ptr);
+
+    /**
+        Removes a child node.
+    */
+    void removeChild(BetaNode::WPtr);
+
 
 protected:
     void propagate(WME::Ptr, PropagationFlag);
@@ -35,14 +50,21 @@ public:
     using Container = decltype(wmes_);
     using Iterator = Container::iterator;
     using Ptr = std::shared_ptr<AlphaMemory>;
+    using WPtr = std::weak_ptr<AlphaMemory>;
+
+    /**
+        Sets the parent node of an AlphaMemory. The parent keeps a weak_ptr to its child,
+        the child a shared_ptr to its parent.
+    */
+    friend void rete::SetParent(std::shared_ptr<AlphaNode> parent, AlphaMemory::Ptr child);
+
+    // defined in BetaNode, but friend to allow modification of alpha memory children.
+    friend void rete::SetParents(BetaMemory::Ptr, AlphaMemoryPtr, BetaNodePtr);
+
+
     size_t size() const;
     void activate(WME::Ptr, PropagationFlag);
 
-    /**
-        Adds a BetaNode to the list of children, which will get right-activated when this
-        AlphaMemory is updated.
-    */
-    void addChild(BetaNode::Ptr);
 
     /**
         Get the list of children
@@ -52,7 +74,16 @@ public:
     Iterator begin();
     Iterator end();
 
-    void tearDown() override;
+
+    /**
+        Calls initialize() on the parent alpha node, which will search its
+        parent for WMEs to process, or disconnect all siblings from its parent
+        and call initialize() on it, recursively.
+
+        Basically: Search upwards for the smallest set of WMEs relevant for this
+        node, and process them only in the direct chain towards this node.
+    */
+    void initialize() override;
 };
 
 } /* rete */

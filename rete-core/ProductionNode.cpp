@@ -1,4 +1,5 @@
 #include "ProductionNode.hpp"
+#include "BetaMemory.hpp"
 
 #include <iostream>
 rete::ProductionNode::ProductionNode(Production::Ptr p)
@@ -6,6 +7,16 @@ rete::ProductionNode::ProductionNode(Production::Ptr p)
 {
 }
 
+void rete::ProductionNode::initialize()
+{
+    if (parent_)
+    {
+        for (auto entry : *parent_)
+        {
+            activate(entry, PropagationFlag::ASSERT);
+        }
+    }
+}
 
 void rete::ProductionNode::setName(const std::string& name)
 {
@@ -20,10 +31,4 @@ std::string rete::ProductionNode::getName() const
 std::string rete::ProductionNode::getDOTAttr() const
 {
     return "[label=\"ProductionNode \'" + getName() + "\'\\n" + production_->getName() + "\"]";
-}
-
-void rete::ProductionNode::tearDown()
-{
-    // the production node has no children, just a list of productions -- but they are not part
-    // of the network. So just ignore them.
 }

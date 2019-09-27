@@ -9,7 +9,8 @@ AlphaBetaAdapter::AlphaBetaAdapter()
 
 void AlphaBetaAdapter::rightActivate(WME::Ptr wme, PropagationFlag flag)
 {
-    bmem_->leftActivate(nullptr, wme, flag);
+    auto b = bmem_.lock();
+    if (b) b->leftActivate(nullptr, wme, flag);
 }
 
 void AlphaBetaAdapter::leftActivate(Token::Ptr, PropagationFlag)

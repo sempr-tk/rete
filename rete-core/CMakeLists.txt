@@ -9,6 +9,7 @@ set(CORE_SRC
     BetaMemory.cpp
     BetaNode.cpp
     Builtin.cpp
+    connect.cpp
     JoinNode.cpp
     Network.cpp
     Node.cpp

@@ -23,10 +23,13 @@ void Builtin::rightActivate(WME::Ptr, PropagationFlag)
 
 void Builtin::leftActivate(Token::Ptr token, PropagationFlag flag)
 {
+    auto bmem = bmem_.lock();
+    if (!bmem) throw std::exception(); // no memory to forward anything to. Should not be possible.
+
     if (flag == PropagationFlag::RETRACT)
     {
         // shortcut: just tell the BetaMemory to remove all these tokens.
-        bmem_->leftActivate(token, nullptr, PropagationFlag::RETRACT);
+        bmem->leftActivate(token, nullptr, PropagationFlag::RETRACT);
     }
     else if (flag == PropagationFlag::ASSERT)
     {
@@ -38,7 +41,7 @@ void Builtin::leftActivate(Token::Ptr token, PropagationFlag flag)
         {
             // mark the WME as a computed one --> does not need evidence to hold inside a token.
             computed->isComputed_ = true;
-            bmem_->leftActivate(token, computed, flag);
+            bmem->leftActivate(token, computed, flag);
         }
     }
     else if (flag == PropagationFlag::UPDATE)
@@ -52,11 +55,11 @@ void Builtin::leftActivate(Token::Ptr token, PropagationFlag flag)
         if (computed)
         {
             computed->isComputed_ = true;
-            bmem_->leftActivate(token, computed, PropagationFlag::UPDATE);
+            bmem->leftActivate(token, computed, PropagationFlag::UPDATE);
         }
         else
         {
-            bmem_->leftActivate(token, nullptr, PropagationFlag::RETRACT);
+            bmem->leftActivate(token, nullptr, PropagationFlag::RETRACT);
         }
     }
 }

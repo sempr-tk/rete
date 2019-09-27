@@ -18,8 +18,6 @@
 #include <stdexcept>
 
 namespace rete {
-namespace peg = pegmatite;
-
 
 void error_reporter(const peg::InputRange& input, const std::string& error)
 {
@@ -200,7 +198,7 @@ AlphaNode::Ptr implementAlphaNode(AlphaNode::Ptr alpha, AlphaNode::Ptr parent)
     else
     {
         std::cout << "Adding AlphaNode " << alpha->getDOTId() << " beneath " << parent->getDOTId()  << std::endl;
-        parent->addChild(alpha);
+        SetParent(parent, alpha);
     }
 
     return alpha;
@@ -211,12 +209,13 @@ AlphaNode::Ptr implementAlphaNode(AlphaNode::Ptr alpha, AlphaNode::Ptr parent)
     Try to find an equivalent node at the parent. If not found add the given node. Returns the node
     which is connected to the parent after this operation.
 */
-BetaNode::Ptr implementBetaNode(BetaNode::Ptr node, BetaNode::Ptr parentBeta, AlphaNode::Ptr parentAlpha)
+BetaMemory::Ptr implementBetaNode(BetaNode::Ptr node, BetaMemory::Ptr parentBeta, AlphaMemory::Ptr parentAlpha)
 {
     BetaNode::Ptr beta = node;
+    BetaMemory::Ptr betamem = nullptr;
 
     std::vector<BetaNode::Ptr> candidates;
-    parentBeta->getBetaMemory()->getChildren(candidates);
+    parentBeta->getChildren(candidates);
     auto it = std::find_if(candidates.begin(), candidates.end(),
         [beta] (BetaNode::Ptr other) -> bool
         {
@@ -225,20 +224,22 @@ BetaNode::Ptr implementBetaNode(BetaNode::Ptr node, BetaNode::Ptr parentBeta, Al
     );
 
     // reuse or connect new, if the same join was found in the beta parent that connects to the wanted alpha
-    AlphaMemory::Ptr pamem = (parentAlpha ? parentAlpha->getAlphaMemory() : nullptr);
-
-    if (it != candidates.end() && (*it)->getParentAlpha() == pamem)
+    if (it != candidates.end() && (*it)->getParentAlpha() == parentAlpha)
     {
         std::cout << "Reusing BetaNode " << (*it)->getDOTId() << std::endl;
         beta = *it;
+        betamem = beta->getBetaMemory();
     }
     else
     {
         std::cout << "Adding BetaNode " << beta->getDOTId() << " beneath " << parentBeta->getDOTId() << " and " << (parentAlpha ? parentAlpha->getDOTId() : " 0x0") << std::endl;
-        BetaNode::connect(beta, parentBeta->getBetaMemory(),
-                 (parentAlpha ? parentAlpha->getAlphaMemory() : nullptr));
+
+        SetParents(parentBeta, parentAlpha, beta);
+        // add a beta memory for the added node
+        betamem.reset(new BetaMemory());
+        SetParent(beta, betamem);
     }
-    return beta;
+    return betamem;
 }
 
 
@@ -260,10 +261,28 @@ AlphaBetaAdapter::Ptr getAlphaBeta(AlphaMemory::Ptr amem)
     );
 
     if (it != amemChildren.end()) adapter = std::dynamic_pointer_cast<AlphaBetaAdapter>(*it);
-    else BetaNode::connect(adapter, nullptr, amem);
+    else SetParents(nullptr, amem, adapter);
 
     return adapter;
 }
+
+
+/*
+    To construct the rule in the network, we do the following:
+        1. Create the first condition in the alpha network
+        2. Create an AlphaBetaAdapter, track the latest beta-memory
+        3. While there are still conditions left:
+            3.1 Create the next condition
+            3.2 Create a join node between the latest beta memory and the new condition
+            3.3 Update latest beta memory to be the one of the join node
+            3.4 Update the set of known variables (with additions from 3.1)
+        4. Add the consequences through ProductionNodes to the latest beta memory
+
+    In order to correctly create join nodes we need to keep track of the occurences of variable
+    names. Therefore we keep a set with variable names, the condition index (to be used in the
+    tokens in the partial matches in the rete) and the field (since the WMEs addressed by the
+    condition index are triples with subject, predicate, object).
+*/
 
 
 /**
@@ -271,8 +290,8 @@ AlphaBetaAdapter::Ptr getAlphaBeta(AlphaMemory::Ptr amem)
 */
 void RuleParser::construct(ast::Rule& rule, Network& net) const
 {
-    // keep track of the last implemented beta node
-    BetaNode::Ptr currentBeta = nullptr;
+    // keep track of the last implemented beta memory
+    BetaMemory::Ptr currentBeta = nullptr;
 
     // remember already bound variables
     std::map<std::string, Accessor::Ptr> bindings;
@@ -337,7 +356,13 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
             {
                 currentAlpha = implementAlphaNode(alpha, currentAlpha);
             }
-            currentAlpha->initAlphaMemory(); // no-op if already initialized.
+
+            auto amem = currentAlpha->getAlphaMemory();
+            if (!amem)
+            {
+                amem.reset(new AlphaMemory());
+                SetParent(currentAlpha, amem);
+            }
 
             // - if there has been a beta node before, create a join
             // - else create an AlphaBetaAdapter
@@ -373,7 +398,7 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
                 }
 
                 // add the join.
-                currentBeta = implementBetaNode(join, currentBeta, currentAlpha);
+                currentBeta = implementBetaNode(join, currentBeta, amem);
             }
             else
             {
@@ -386,7 +411,13 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
                 BetaNode::Ptr alphabeta = getAlphaBeta(currentAlpha->getAlphaMemory());
                 std::cout << "Adding AlphaBetaNode " << alphabeta << " beneath <nullptr> and " << currentAlpha << std::endl;
 
-                currentBeta = alphabeta;
+                BetaMemory::Ptr abmem = alphabeta->getBetaMemory();
+                if (!abmem)
+                {
+                    abmem.reset(new BetaMemory());
+                    SetParent(alphabeta, abmem);
+                }
+                currentBeta = abmem;
             }
         }
         else if (builder.builderType() == NodeBuilder::BUILTIN)
@@ -415,7 +446,7 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
         //       But be aware: If the condition is negated with "noValue", new variables are
         //       actually placeholders and cannot be bound -- there is "noValue" to bind them to.
         //       The NodeBuilder will create accessors nevertheless, which would lead to segfaults
-        //       and undefined behavious, as we would e.g. try to cast an EmptyWME to a Triple.
+        //       and undefined behaviour, as we would e.g. try to cast an EmptyWME to a Triple.
         if (!condition->isNoValue())
         {
             for (auto& arg : args)
@@ -489,8 +520,9 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
                 // use the verbose description of the effect if the rule has no name
                 production->setName(production->toString());
             }
+            SetParent(currentBeta, agendaNode);
+            net.addProduction(agendaNode);
 
-            currentBeta->getBetaMemory()->addProduction(agendaNode);
         } catch (NodeBuilderException& e) {
             // rethrow with more information
             e.setRule(rule.str_);
@@ -499,37 +531,6 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
         }
         effectNo++;
     }
-
-    // /**
-    //     To construct the rule in the network, we do the following:
-    //         1. Create the first condition in the alpha network
-    //         2. Create an AlphaBetaAdapter, track the latest beta-memory
-    //         3. While there are still conditions left:
-    //             3.1 Create the next condition
-    //             3.2 Create a join node between the latest beta memory and the new condition
-    //             3.3 Update latest beta memory to be the one of the join node
-    //             3.4 Update the set of known variables (with additions from 3.1)
-    //         4. Add the consequences through ProductionNodes to the latest beta memory
-    //
-    //     In order to correctly create join nodes we need to keep track of the occurences of variable
-    //     names. Therefore we keep a set with variable names, the condition index (to be used in the
-    //     tokens in the partial matches in the rete) and the field (since the WMEs addressed by the
-    //     condition index are triples with subject, predicate, object).
-    // */
-
-    //
-    // // 4. add the consequences to the end of the condition-chain (the betaMemory we kept track of)
-
-    //     // create the InferTriple production
-    //     InferTriple::Ptr infer(new InferTriple(s, p, o));
-    //     AgendaNode::Ptr inferNode(new AgendaNode(infer, net.getAgenda()));
-    //     if (rule.name_)
-    //         inferNode->setName(*rule.name_);
-    //     else
-    //         inferNode->setName("");
-    //
-    //     betaMemory->addProduction(inferNode);
-    // }
 }
 
 

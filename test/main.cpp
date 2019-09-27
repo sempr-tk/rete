@@ -26,23 +26,29 @@ int main()
     // (?x foo ?y) (?y foo ?z)
 
     auto foo = std::make_shared<TripleAlpha>(Triple::PREDICATE, "foo");
-    net.getRoot()->addChild(foo);
-    foo->initAlphaMemory();
+    SetParent(net.getRoot(), foo);
+    auto foomem = std::make_shared<AlphaMemory>();
+    SetParent(foo, foomem);
 
     auto adapter = std::make_shared<AlphaBetaAdapter>();
-    BetaNode::connect(adapter, nullptr, foo->getAlphaMemory());
+    SetParents(nullptr, foomem, adapter);
+    auto adaptermem = std::make_shared<BetaMemory>();
+    SetParent(adapter, adaptermem);
 
     // auto join = std::make_shared<TripleJoin>(0, Triple::OBJECT, Triple::SUBJECT);
     GenericJoin::Ptr join(new GenericJoin());
+
     // setup generic join criteria:
     auto accessor1 = std::make_shared<TripleAccessor>(Triple::OBJECT);
     accessor1->index() = 0;
     auto accessor2 = std::make_shared<TripleAccessor>(Triple::SUBJECT);
 
     join->addCheck(accessor1, accessor2);
+    SetParents(adaptermem, foomem, join);
 
-
-    BetaNode::connect(join, adapter->getBetaMemory(), foo->getAlphaMemory());
+    auto joinmem = std::make_shared<BetaMemory>();
+    SetParent(join, joinmem);
+    // keeping the joinmem-ptr keeps the whole network alive.
 
     // put in some data
     auto t1 = std::make_shared<Triple>("A", "foo", "B");

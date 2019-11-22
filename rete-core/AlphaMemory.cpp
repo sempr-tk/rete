@@ -43,10 +43,37 @@ void AlphaMemory::activate(WME::Ptr wme, PropagationFlag flag)
             NOTE: This also means that join nodes must re-evaluate all combinations with the
             UPDATEd token/wme and *explicitely* propagate RETRACTs.
         */
-        if (wmes_.find(wme) != wmes_.end())
+        auto it = wmes_.find(wme);
+        if (it != wmes_.end())
         {
             // has been a match before --> UPDATE
-            propagate(wme, PropagationFlag::UPDATE);
+            // NOTE: We do *not* propagate "wme" here, but "*it", because the
+            // given "wme" might be a different instance that evaluates to the
+            // same *value* (see WMEComparator!), but holds the exact same
+            // mutable component that was added previously in another WME.
+            // This might sound a bit complicated, so let me explain the exact
+            // situation here:
+            // Assume you have a WME that is a Tuple<A*, std::string>, where
+            // the value A that is pointed at is mutable. You at some point
+            // added such a Tuple<A*, std::string> as a WME to the rete network
+            // and now get informed from an external source that the pointed at
+            // "A" has changed. But you do not have the original
+            // Tuple<A*, std::string>::Ptr you added at first anymore!
+            // So you create a new Tuple<A*, std::string> and use this instead:
+            // Since it point to the exact same A and has the same std::string,
+            // it is equal by value to the old Tuple<...> and thus the above
+            // wmes_.find(wme) returns the old Tuple<...>::Ptr!
+            //
+            // It is already the case that the part of mutable wmes that is
+            // considered in the by-value-comparison must be constant, or else
+            // it will mess up our std::set<WME::Ptr>. So the "by-value" can be
+            // rather interpreted as "the data that is identified by this".
+            //
+            // But it is not completely irrelevant whether we use *it or wme,
+            // because the tokens in the beta memories are partly evaluated by
+            // ptr. And the WME that is pointed at is actually a different one,
+            // though it has the same content as the one added before.
+            propagate(*it, PropagationFlag::UPDATE);
         }
         else
         {

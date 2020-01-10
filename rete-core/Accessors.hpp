@@ -187,6 +187,25 @@ class SpecificTypeAccessor : public Accessor,
                              public ValueAccessor<Type, SpecificTypeAccessor<Type>> {
 protected:
     SpecificTypeAccessor() { registerType<SpecificTypeAccessor>(); }
+
+    bool canCompareValues(const Accessor& other) const override
+    {
+        return other.canAs<SpecificTypeAccessor>();
+    }
+
+    bool valuesEqual(Accessor& other, Token::Ptr token, WME::Ptr wme) override
+    {
+        auto optr = other.as<SpecificTypeAccessor>();
+        Type myValue, otherValue;
+
+        if (index_ == -1) this->getValue(wme, myValue);
+        else              this->getValue(token, myValue);
+
+        if (optr->index_ == -1) optr->getValue(wme, otherValue);
+        else                    optr->getValue(token, otherValue);
+
+        return myValue == otherValue;
+    }
 };
 
 

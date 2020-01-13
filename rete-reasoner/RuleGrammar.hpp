@@ -111,7 +111,7 @@ public:
         Generic conditions and effects
     */
     // alpha conditions
-    Rule alphaConditionName = rtrace("alphaConditionName", term(+alphanum));
+    Rule alphaConditionName = rtrace("alphaConditionName", term(+(alphanum | "<>"_S)));
     Rule genericAlphaCondition = rtrace("genericAlphaCondition",
                                     -noValue >> alphaConditionName >> "(" >> *argument >> ")");
 

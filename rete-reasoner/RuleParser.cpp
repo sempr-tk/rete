@@ -151,7 +151,7 @@ bool RuleParser::parseRules(const std::string& rulestring_pre, Network& network)
 
             for (auto& effect : rule->effects_)
             {
-                std::cout << "  Effect:" << std::endl;
+                std::cout << "  Effect: " << effect->type() << std::endl;
                 for (auto& arg : effect->args_)
                 {
                     arg->substitutePrefixes(prefixes);

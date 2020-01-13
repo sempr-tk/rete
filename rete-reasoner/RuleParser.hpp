@@ -52,7 +52,7 @@ class RuleParser : peg::ASTParserDelegate {
     peg::BindAST<ast::GenericAlphaCondition> alphacon = RuleGrammar::get().genericAlphaCondition;
 
     peg::BindAST<peg::ASTString> effname = RuleGrammar::get().effectName;
-    peg::BindAST<ast::Builtin> geneffect = RuleGrammar::get().genericEffect;
+    peg::BindAST<ast::GenericEffect> geneffect = RuleGrammar::get().genericEffect;
     // effects
     peg::BindAST<ast::InferTriple> inferTriple = RuleGrammar::get().inferTriple;
 

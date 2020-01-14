@@ -26,9 +26,13 @@ int main()
     //        C1                     C2
     // (?a rdfs:subClassOf ?b) (?b rdfs:subClassOf ?c)
 
+    // type check
+    auto typeCheck = std::make_shared<TripleTypeAlpha>();
+    SetParent(reasoner.net().getRoot(), typeCheck);
+
     // predicate check
     auto foo = std::make_shared<TripleAlpha>(Triple::PREDICATE, "rdfs:subClassOf");
-    SetParent(reasoner.net().getRoot(), foo);
+    SetParent(typeCheck, foo);
     auto foomem = std::make_shared<AlphaMemory>();
     SetParent(foo, foomem);
 

@@ -2,4 +2,5 @@
 #include "Triple.hpp"
 #include "TripleAccessor.hpp"
 #include "TripleAlpha.hpp"
+#include "TripleTypeAlpha.hpp"
 #include "TripleConsistency.hpp"

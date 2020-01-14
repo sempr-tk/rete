@@ -15,18 +15,21 @@ int main()
     // setup network
     /*
         Example:
-            (?x self ?y)
+            (?x self ?x)
             (?x color red)
             (?y color red)
     */
     auto root = net.getRoot();
+    TripleTypeAlpha::Ptr typeCheck(new TripleTypeAlpha());
+    SetParent(root, typeCheck);
+
     TripleAlpha::Ptr a1(new TripleAlpha(Triple::PREDICATE, "self"));
-    SetParent(root, a1);
+    SetParent(typeCheck, a1);
     TripleConsistency::Ptr a2(new TripleConsistency(Triple::SUBJECT, Triple::OBJECT));
     SetParent(a1, a2);
 
     TripleAlpha::Ptr b1(new TripleAlpha(Triple::PREDICATE, "color"));
-    SetParent(root, b1);
+    SetParent(typeCheck, b1);
     TripleAlpha::Ptr b2(new TripleAlpha(Triple::OBJECT, "red"));
     SetParent(b1, b2);
 

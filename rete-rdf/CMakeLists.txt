@@ -3,6 +3,7 @@ set(RDF_SRC
     Triple.cpp
     TripleAccessor.cpp
     TripleAlpha.cpp
+    TripleTypeAlpha.cpp
     TripleConsistency.cpp
 )
 

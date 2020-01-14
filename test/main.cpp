@@ -25,8 +25,10 @@ int main()
     // setup network
     // (?x foo ?y) (?y foo ?z)
 
+    auto typeCheck = std::make_shared<TripleTypeAlpha>();
+    SetParent(net.getRoot(), typeCheck);
     auto foo = std::make_shared<TripleAlpha>(Triple::PREDICATE, "foo");
-    SetParent(net.getRoot(), foo);
+    SetParent(typeCheck, foo);
     auto foomem = std::make_shared<AlphaMemory>();
     SetParent(foo, foomem);
 

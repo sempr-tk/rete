@@ -1,4 +1,5 @@
 #include "TripleConditionBuilder.hpp"
+#include "../rete-rdf/TripleTypeAlpha.hpp"
 #include "Exceptions.hpp"
 #include <iostream>
 
@@ -18,12 +19,17 @@ void TripleConditionBuilder::buildAlpha(ArgumentList& args, std::vector<AlphaNod
     }
 
     // should never happen, since the parser knows that triples need three arguments
-    if (args.size() != 3) throw NodeBuilderException("Wrong number of arguments"); 
+    if (args.size() != 3) throw NodeBuilderException("Wrong number of arguments");
 
     // alpha nodes/conditions never get a bound variable.
     assert(args[0].getAccessor().get() == nullptr);
     assert(args[1].getAccessor().get() == nullptr);
     assert(args[2].getAccessor().get() == nullptr);
+
+    // first: a type check. Is the wme even a triple?
+    TripleTypeAlpha::Ptr typeCheckNode(new TripleTypeAlpha());
+    nodes.push_back(typeCheckNode);
+
 
     // static checks for non variable parts of the triple.
     if (args[0].isConst())

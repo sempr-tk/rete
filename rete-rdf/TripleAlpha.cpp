@@ -18,18 +18,20 @@ void TripleAlpha::activate(WME::Ptr wme, PropagationFlag flag)
     }
     else if (flag == PropagationFlag::ASSERT)
     {
-        if (Triple::Ptr triple = std::dynamic_pointer_cast<Triple>(wme))
-        {
-            if (triple->getField(field_) == value_) propagate(wme, flag);
-        }
+        // static cast: assume there has been a TripleTypeAlpha-node that
+        // already checked the type!
+        auto triple = std::static_pointer_cast<Triple>(wme);
+
+        if (triple->getField(field_) == value_) propagate(wme, flag);
     }
     else if (flag == PropagationFlag::UPDATE)
     {
-        if (Triple::Ptr triple = std::dynamic_pointer_cast<Triple>(wme))
-        {
-            if (triple->getField(field_) == value_) propagate(wme, PropagationFlag::UPDATE);
-            else propagate(wme, PropagationFlag::RETRACT);
-        }
+        // static cast: assume there has been a TripleTypeAlpha-node that
+        // already checked the type!
+        auto triple = std::static_pointer_cast<Triple>(wme);
+
+        if (triple->getField(field_) == value_) propagate(wme, PropagationFlag::UPDATE);
+        else propagate(wme, PropagationFlag::RETRACT);
     }
 }
 

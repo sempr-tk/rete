@@ -30,9 +30,13 @@ int main()
     /* ------------------ */
     /* ----- STEP 2 ----- */
     /* ------------------ */
+    // type check
+    auto typeCheck = std::make_shared<TripleTypeAlpha>();
+    SetParent(net.getRoot(), typeCheck);
+
     // predicate check
     auto foo = std::make_shared<TripleAlpha>(Triple::PREDICATE, "rdfs:subClassOf");
-    SetParent(net.getRoot(), foo);
+    SetParent(typeCheck, foo);
 
     /* ------------------ */
     /* ----- STEP 3 ----- */

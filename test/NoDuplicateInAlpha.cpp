@@ -20,8 +20,10 @@ int main()
     */
 
     auto root = net.getRoot();
-    TripleAlpha::Ptr a1(new TripleAlpha(Triple::PREDICATE, "self")); SetParent(root, a1);
-    TripleAlpha::Ptr b1(new TripleAlpha(Triple::PREDICATE, "color")); SetParent(root, b1);
+    TripleTypeAlpha::Ptr typeCheck(new TripleTypeAlpha()); SetParent(root, typeCheck);
+
+    TripleAlpha::Ptr a1(new TripleAlpha(Triple::PREDICATE, "self")); SetParent(typeCheck, a1);
+    TripleAlpha::Ptr b1(new TripleAlpha(Triple::PREDICATE, "color")); SetParent(typeCheck, b1);
 
     auto a1mem = std::make_shared<AlphaMemory>();
     auto b1mem = std::make_shared<AlphaMemory>();

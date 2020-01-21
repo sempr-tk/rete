@@ -4,6 +4,7 @@
 #include "Util.hpp"
 
 #include <algorithm>
+#include <iostream>
 
 namespace rete {
 
@@ -153,11 +154,12 @@ void BetaMemory::leftActivate(Token::Ptr t, WME::Ptr wme, PropagationFlag flag)
                     // nothing more to do, only this one instance.
                     return;
                 }
-
-                // couldn't find it, so its new --> handle it as an ASSERT.
-                leftActivate(t, wme, PropagationFlag::ASSERT);
-                return;
             }
+            // checked all tokens, but couldnt find it
+            std::cout << "BetaMemory UPDATE couldnt find wme: " << wme.get() << " t: " << t.get() << std::endl;
+            // couldn't find it, so its new --> handle it as an ASSERT.
+            leftActivate(t, wme, PropagationFlag::ASSERT);
+            return;
         }
     }
 }

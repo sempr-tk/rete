@@ -24,9 +24,14 @@ void AlphaMemory::activate(WME::Ptr wme, PropagationFlag flag)
         auto it = wmes_.find(wme);
         if (it != wmes_.end())
         {
+            WME::Ptr w = *it;
             wmes_.erase(it);
-            // only propagate if actually removed
-            propagate(wme, flag);
+            // only propagate if actually removed, and only propagate exactly
+            // what was removed, not the probably equivalent but different instance
+            // since some checks later on (BetaMemory e.g.) just compare
+            // pointer. The AlphaMemory is the layer that sorts out the
+            // duplicates.
+            propagate(w, flag);
         }
     }
     else if (flag == PropagationFlag::UPDATE)

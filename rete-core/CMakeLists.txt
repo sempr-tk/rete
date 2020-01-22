@@ -14,6 +14,7 @@ set(CORE_SRC
     JoinNode.cpp
     Network.cpp
     Node.cpp
+    NoValue.cpp
     Production.cpp
     ProductionNode.cpp
     Token.cpp

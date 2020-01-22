@@ -22,6 +22,10 @@ namespace rete {
     typedef std::shared_ptr<ProductionNode> ProductionNodePtr;
     typedef std::weak_ptr<ProductionNode> ProductionNodeWPtr;
 
+    class BetaBetaNode;
+    typedef std::shared_ptr<BetaBetaNode> BetaBetaNodePtr;
+    typedef std::weak_ptr<BetaBetaNode> BetaBetaNodeWPtr;
+
 /**
     The BetaMemory stores the results of a BetaNode and allows the connection to other BetaNodes.
 */
@@ -62,6 +66,7 @@ public:
 
     friend void rete::SetParents(BetaMemory::Ptr, AlphaMemoryPtr, BetaNodePtr);
     friend void rete::SetParent(BetaMemory::Ptr , ProductionNodePtr);
+    friend void rete::SetParents(BetaMemory::Ptr, BetaMemory::Ptr, BetaBetaNodePtr);
 
     /**
         Initializes this BetaMemory by calling initialize() on its parent BetaNode.

@@ -24,6 +24,7 @@ namespace rete {
     class AlphaNode;
     class AlphaMemory;
     class BetaNode;
+    class BetaBetaNode;
     class BetaMemory;
     class ProductionNode;
 
@@ -41,6 +42,8 @@ namespace rete {
     // connect a ProductionNode to a BetaMemory
     void SetParent(std::shared_ptr<BetaMemory> parent, std::shared_ptr<ProductionNode> child);
 
+    // connect BetaBetaNodes
+    void SetParents(std::shared_ptr<BetaMemory> left, std::shared_ptr<BetaMemory> right, std::shared_ptr<BetaBetaNode> child);
 
 
 } /* rete */

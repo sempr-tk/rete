@@ -233,6 +233,15 @@ void JoinNode::leftActivate(Token::Ptr token, PropagationFlag flag)
     {
         // shortcut: just tell the BetaMemory to remove all these tokens.
         bmem->leftActivate(token, nullptr, PropagationFlag::RETRACT);
+
+        // But maybe the token was never propagated to the beta memory, but held
+        // back to check later. In this case we have to remove it from the list
+        // of held-back-tokens, since it would otherwise suddenly be propagated
+        // when the reason for holding it back vanishes, although the token
+        // has long been retracted itself.
+        // As you might have guessed from the length of this comment:
+        //      I've just had this exact problem.
+        heldBackTokens_.erase(token);
         return;
     }
 

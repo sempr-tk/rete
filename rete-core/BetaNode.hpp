@@ -61,8 +61,13 @@ public:
 
     /**
         Get access to the associated beta memory node. Returns nullptr of none is set.
+
+        NOTE: virtual because I want to override it in the BetaBetaRightActivator
+              to correctly forward it to the wrapped BetaBetaNodes BetaMemory.
+              (Issue: segfault in toDot() due to assumption that every beta node
+              has a beta memory)
     */
-    BetaMemory::Ptr getBetaMemory() const;
+    virtual BetaMemory::Ptr getBetaMemory() const;
 
     /**
         Get the parent alpha memory

@@ -65,6 +65,7 @@ std::string BetaBetaRightActivator::getDOTAttr() const { return node_->getDOTAtt
 void BetaBetaRightActivator::initialize() { node_->initialize(); }
 void BetaBetaRightActivator::rightActivate(WME::Ptr wme, PropagationFlag flag) { node_->rightActivate(wme, flag); }
 bool BetaBetaRightActivator::operator == (const BetaNode& other) const { return *node_ == other; }
+BetaMemory::Ptr BetaBetaRightActivator::getBetaMemory() const { return node_->getBetaMemory(); }
 
 // only special feature: map leftActivate to rightActivate
 void BetaBetaRightActivator::leftActivate(Token::Ptr token, PropagationFlag flag)

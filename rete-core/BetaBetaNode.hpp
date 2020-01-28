@@ -100,6 +100,7 @@ public:
     void initialize() override;
     void rightActivate(WME::Ptr wme, PropagationFlag flag) override;
     bool operator == (const BetaNode& other) const override;
+    BetaMemory::Ptr getBetaMemory() const override;
 
     // ---
     // this is where the magic happens

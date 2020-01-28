@@ -24,7 +24,7 @@ int main()
     /**
     */
     bool ok = p.parseRules(
-        "[rule1: (?a <type> <foo>), noValue (?a <color> <red>) -> (?a <not-known-to-be> <red>)]",
+        "[rule1: (?a <type> <foo>), noValue { (?a <color> <red>) } -> (?a <not-known-to-be> <red>)]",
         reasoner.net()
     );
 

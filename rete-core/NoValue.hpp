@@ -42,7 +42,7 @@ class NoValue : public BetaBetaNode {
         Used to compute where in the right tokens to check for the left tokens
         presence.
     */
-    size_t leftTokenSize_, rightTokenSize_;
+    size_t tokenSizeDiff_;
 
     // map from the longer token to the shorter (right to left)
     Token::Ptr getCorresponding(Token::Ptr);
@@ -52,10 +52,10 @@ public:
 
     /**
         Constructs a new noValue-Node.
-        \param left the size of the tokens in the left parent beta memory
-        \param right the size of the tokens in the right parent beta memory
+        \param diff the size difference between the tokens. How many steps to go
+                    back from the right token to get to the left token.
     */
-    NoValue(size_t left, size_t right);
+    NoValue(size_t diff);
 
     std::string getDOTAttr() const override;
 

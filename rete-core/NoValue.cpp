@@ -3,21 +3,19 @@
 
 namespace rete {
 
-NoValue::NoValue(size_t left, size_t right)
-    : leftTokenSize_(left), rightTokenSize_(right)
+NoValue::NoValue(size_t diff)
+    : tokenSizeDiff_(diff)
 {
-    if (left > right) throw std::exception();
 }
 
 std::string NoValue::getDOTAttr() const
 {
-    return "[label=\"NoValue\"]";
+    return "[label=\"NoValue[diff: " + std::to_string(tokenSizeDiff_) + "]\"]";
 }
 
 Token::Ptr NoValue::getCorresponding(Token::Ptr token)
 {
-    size_t diff = rightTokenSize_ - leftTokenSize_;
-    for (size_t i = 0; i < diff; i++)
+    for (size_t i = 0; i < tokenSizeDiff_; i++)
     {
         if (!token->parent) throw std::exception();
         token = token->parent;
@@ -53,6 +51,7 @@ void NoValue::leftActivate(Token::Ptr token, PropagationFlag flag)
             if (flag == PropagationFlag::ASSERT)
             {
                 // nothing to do. just dont propagate the assert.
+                return;
             }
             else if (flag == PropagationFlag::UPDATE)
             {

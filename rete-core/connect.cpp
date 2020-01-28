@@ -91,8 +91,9 @@ void SetParents(BetaMemory::Ptr left, BetaMemory::Ptr right, BetaBetaNode::Ptr c
     child->parentLeft_ = left;
     child->parentRight_ = right;
 
+
     if (right) SetParents(right, nullptr, child->getRightActivator());
-    if (left) SetParents(left, nullptr, child);
+    if (left) SetParents(left, nullptr, std::static_pointer_cast<BetaNode>(child));
 }
 
 

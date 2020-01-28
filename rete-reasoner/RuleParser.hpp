@@ -51,6 +51,8 @@ class RuleParser : peg::ASTParserDelegate {
     peg::BindAST<peg::ASTString> alphaConName = RuleGrammar::get().alphaConditionName;
     peg::BindAST<ast::GenericAlphaCondition> alphacon = RuleGrammar::get().genericAlphaCondition;
 
+    peg::BindAST<ast::NoValueGroup> noValueGroup = RuleGrammar::get().noValueGroup;
+
     peg::BindAST<peg::ASTString> effname = RuleGrammar::get().effectName;
     peg::BindAST<ast::GenericEffect> geneffect = RuleGrammar::get().genericEffect;
     // effects
@@ -72,7 +74,8 @@ class RuleParser : peg::ASTParserDelegate {
     std::map<std::string, std::unique_ptr<NodeBuilder>> effectBuilders_;
 
     void construct(ast::Rule&, Network&) const;
-
+    BetaMemory::Ptr constructPrimitive(Network&, ast::Rule&, ast::Precondition&, BetaMemory::Ptr, std::map<std::string, Accessor::Ptr>&) const;
+    BetaMemory::Ptr constructNoValueGroup(Network&, ast::Rule&, ast::NoValueGroup&, BetaMemory::Ptr, std::map<std::string, Accessor::Ptr>&) const;
 
 public:
     RuleParser();

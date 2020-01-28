@@ -90,7 +90,7 @@ public:
     Modifier to negate joins (forward only when there is no match)
     */
     Rule noValue = rtrace("noValue", "noValue "_E | "no " | "novalue ");
-    Rule triple = rtrace("triple", -noValue >> '('_E >> subject >> predicate >> object >> ')');
+    Rule triple = rtrace("triple", '('_E >> subject >> predicate >> object >> ')');
 
     /*
         Here comes the more general stuff: Basically, rules are created from preconditions and
@@ -111,22 +111,31 @@ public:
         Generic conditions and effects
     */
     // alpha conditions
-    Rule alphaConditionName = rtrace("alphaConditionName", term(+(alphanum | "<>"_S)));
+    Rule alphaConditionName = rtrace("alphaConditionName", !noValue >> term(+(alphanum | "<>"_S)));
     Rule genericAlphaCondition = rtrace("genericAlphaCondition",
-                                    -noValue >> alphaConditionName >> "(" >> *argument >> ")");
+                                         alphaConditionName >> "(" >> *argument >> ")");
 
     // builtins
     // TODO: distinguish between alpha conditions and builtins?
     //       Not important for the parser to work, only to fail fast during parsing instead of construction. alpha- and builtin-builders reside in the same pool of node builders.
-    Rule builtinName = rtrace("builtinName", term(+alphanum) >> -(":"_E >> term(+alphanum)));
+    Rule builtinName = rtrace("builtinName", !noValue >> term(+alphanum) >> -(":"_E >> term(+alphanum)));
     Rule builtin = rtrace("builtin", builtinName >> "(" >> *argument >> ")");
 
     // effects
     Rule effectName = rtrace("effectName", term(+alphanum));
     Rule genericEffect = rtrace("genericEffect", effectName >> "(" >> *argument >> ")");
 
+    /**
+        With the new noValue syntax we allow complex noValue-groups and nesting
+        them. To do this, a precondition can now also be a noValueGroup, which
+        itself is composed of preconditions.
+    */
+    Rule precondition = rtrace("precondition", triple | builtin | genericAlphaCondition | noValueGroup);
+    Rule noValueGroup = rtrace("noValueGroup",
+            noValue >> "{" >> precondition >> *(',' >> precondition) >> "}"
+    );
 
-    Rule precondition = rtrace("precondition", triple | builtin | genericAlphaCondition);
+
     Rule effect = rtrace("effect", inferTriple | genericEffect);
 
     // [name: (precondition1), (precondition2) --> (effect1), (effect2)]

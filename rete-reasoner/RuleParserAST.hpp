@@ -99,13 +99,42 @@ namespace rete {
             }
         };
 
+        /**
+            Base class for preconditions, without any ast members.
+            This is done to provide an interface that allows to check if a
+            precondition is either a primitive precondition, with a name and a
+            list of arguments, or a noValueGroup with a list of primitives
+            (which all may be noValueGroups or primitives, too).
+        */
+        class PreconditionBase : public peg::ASTContainer {
+        public:
+            std::string str_;
 
-        class Precondition : public peg::ASTContainer {
-            bool noValue_;
+            virtual ~PreconditionBase() {}
+            virtual bool isNoValueGroup() const = 0;
+            virtual bool isPrimitive() const = 0;
+
+            /**
+                Calls substitutePrefixes on every argument of this condition
+            */
+            virtual void substituteArgumentPrefixes(const std::map<std::string, std::string>&)
+            {
+            }
+
+            bool construct(const peg::InputRange& r, peg::ASTStack& st, const peg::ErrorReporter& err) override
+            {
+                str_ = r.str();
+                return peg::ASTContainer::construct(r, st, err);
+            }
+        };
+
+        class Precondition : public PreconditionBase {
         public:
             friend std::ostream& operator << (std::ostream&, Precondition&);
 
-            std::string str_;
+
+            bool isNoValueGroup() const override { return false; }
+            bool isPrimitive() const override { return true; }
 
             /**
                 An optional name. Triples don't have one (no name -> implicitly triple), but
@@ -119,6 +148,14 @@ namespace rete {
             */
             peg::ASTList<Argument> args_;
 
+            void substituteArgumentPrefixes(const std::map<std::string, std::string>& pairs) override
+            {
+                for (auto& arg : args_)
+                {
+                    arg->substitutePrefixes(pairs);
+                }
+            }
+
             /**
                 A name for the type of precondition, used to decide how to parse it into a node
             */
@@ -127,37 +164,7 @@ namespace rete {
                 if (name_) return *name_;
                 return "Triple";
             }
-
-            bool isNoValue() { return noValue_; }
-
-            bool construct(const peg::InputRange& r, peg::ASTStack& st, const peg::ErrorReporter& err)
-            {
-                str_ = r.str();
-                noValue_ = false;
-
-                auto str = r.str();
-                std::cout << "constructing precondition from string: " << str << std::endl;
-
-                // check for optional prefix
-                const std::string negations[] = {"noValue ", "no ", "novalue " };
-
-                for (auto& negation : negations)
-                {
-                    if (str.size() > negation.size())
-                    {
-                        auto it = std::mismatch(std::begin(negation), std::end(negation), std::begin(str));
-                        if (it.first == std::end(negation))
-                        {
-                            std::cout << "precondition is negated!" << std::endl;
-                            noValue_ = true;
-                            break;
-                        }
-                    }
-                }
-
-                return peg::ASTContainer::construct(r, st, err);
-            }
-        };
+       };
 
 
         class Triple : public Precondition {
@@ -171,6 +178,23 @@ namespace rete {
         };
 
         class GenericAlphaCondition : public Precondition {
+        };
+
+
+        class NoValueGroup : public PreconditionBase {
+        public:
+            peg::ASTList<PreconditionBase> conditions_;
+
+            bool isPrimitive() const override { return false; }
+            bool isNoValueGroup() const override { return true; }
+
+            void substituteArgumentPrefixes(const std::map<std::string, std::string>& pairs) override
+            {
+                for (auto& condition : conditions_)
+                {
+                    condition->substituteArgumentPrefixes(pairs);
+                }
+            }
         };
 
 
@@ -221,7 +245,7 @@ namespace rete {
             std::string str_;
 
             peg::ASTPtr<peg::ASTString, true> name_;
-            peg::ASTList<Precondition> conditions_;
+            peg::ASTList<PreconditionBase> conditions_;
             peg::ASTList<Effect> effects_;
 
             bool construct(const peg::InputRange& r, peg::ASTStack& st, const peg::ErrorReporter& err)

@@ -8,11 +8,13 @@ set(CORE_SRC
     BetaComparator.cpp
     BetaMemory.cpp
     BetaNode.cpp
+    BetaBetaNode.cpp
     Builtin.cpp
     connect.cpp
     JoinNode.cpp
     Network.cpp
     Node.cpp
+    NoValue.cpp
     Production.cpp
     ProductionNode.cpp
     Token.cpp

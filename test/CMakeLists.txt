@@ -37,6 +37,10 @@ add_executable(NoValue NoValue.cpp)
 target_link_libraries(NoValue rete-core rete-rdf rete-reasoner)
 add_test(NAME NoValue COMMAND NoValue)
 
+add_executable(NoValueComplex NoValueComplex.cpp)
+target_link_libraries(NoValueComplex rete-core rete-rdf rete-reasoner)
+add_test(NAME NoValueComplex COMMAND NoValueComplex)
+
 add_executable(ParserExceptions ParserExceptions.cpp)
 target_link_libraries(ParserExceptions rete-core rete-rdf rete-reasoner)
 add_test(NAME ParserExceptions COMMAND ParserExceptions)

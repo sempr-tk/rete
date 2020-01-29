@@ -84,6 +84,14 @@ std::vector<ProductionNode::Ptr> Network::getProductions() const
 }
 
 
+struct BetaNodePtrCompareByDotID {
+    bool operator () (const BetaNode::Ptr& left, const BetaNode::Ptr& right) const
+    {
+        return left->getDOTId() < right->getDOTId();
+    }
+};
+
+
 std::string Network::toDot() const
 {
     std::string dot = "digraph graphname { \n" \
@@ -137,7 +145,7 @@ std::string Network::toDot() const
     }
 
     // second phase: beta network
-    std::set<BetaNode::Ptr> visitedBNodes;
+    std::set<BetaNode::Ptr, BetaNodePtrCompareByDotID> visitedBNodes;
     std::vector<BetaNode::Ptr> toVisitBNodes;
 
     for (auto amem : amems)

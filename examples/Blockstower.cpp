@@ -39,7 +39,7 @@ int main()
 
 
     p.parseRules(
-    "[AtTheBottom: (?b <type> <block>), noValue (?b <on> ?c) -> (?b <level> 0)]"
+    "[AtTheBottom: (?b <type> <block>), noValue { (?b <on> ?c) } -> (?b <level> 0)]"
     "[OnAnother:   (?a <on> ?b), (?b <level> ?lb), sum(?la ?lb 1) -> (?a <level> ?la)]",
         reasoner.net()
     );

@@ -4,6 +4,7 @@
 #include "AlphaMemory.hpp"
 #include "BetaNode.hpp"
 #include "BetaMemory.hpp"
+#include "BetaBetaNode.hpp"
 #include "ProductionNode.hpp"
 
 namespace rete {
@@ -83,6 +84,19 @@ void SetParent(BetaMemoryPtr parent, ProductionNode::Ptr child)
     if (parent) parent->addProduction(child);
     child->initialize();
 }
+
+// parents of BetaBetaNode
+void SetParents(BetaMemory::Ptr left, BetaMemory::Ptr right, BetaBetaNode::Ptr child)
+{
+    child->parentLeft_ = left;
+    child->parentRight_ = right;
+
+
+    if (right) SetParents(right, nullptr, child->getRightActivator());
+    if (left) SetParents(left, nullptr, std::static_pointer_cast<BetaNode>(child));
+}
+
+
 
 
 } /* rete */

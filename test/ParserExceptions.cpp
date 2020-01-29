@@ -46,7 +46,7 @@ int main()
     // noValue at first condition
     try {
         p.parseRules(
-            "[rule3: noValue (?a <foo> ?b) -> (?b <foo> ?a)]\n",
+            "[rule3: noValue { (?a <foo> ?b) } -> (?b <foo> ?a)]\n",
             reasoner.net()
             );
         return 3; // no exception? --> error!

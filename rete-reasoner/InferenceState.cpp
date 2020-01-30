@@ -56,8 +56,6 @@ std::vector<WME::Ptr> InferenceState::getWMEs() const
 
 void InferenceState::traverseExplanation(WME::Ptr toExplain, ExplanationVisitor& visitor) const
 {
-    explained_.clear();
-
     /*
         In order to allow using WME::Ptrs that are different from the BackedWMEs in the
         inference state, get the actual ptr to a semantically equivalent WME first and use that.

@@ -1,7 +1,17 @@
 #include "InferredEvidence.hpp"
 
+#include <string>
+#include <sstream>
 
 namespace rete {
+
+std::string ptostr(const void* ptr)
+{
+    std::stringstream stream;
+    stream << ptr;
+    return stream.str();
+}
+
 
 InferredEvidence::InferredEvidence(const Token::Ptr& token, const Production::Ptr& production)
     : Evidence(InferredEvidence::TypeId), token_(token), production_(production)
@@ -34,7 +44,7 @@ bool InferredEvidence::operator<(const Evidence& other) const
 
 std::string InferredEvidence::toString() const
 {
-    return "Inferred by " + production_->getName() + " from " + token_->toString();
+    return "[" + ptostr(this) + "] Inferred by [" + ptostr(production_.get()) + "] " + production_->getName() + " from [" + ptostr(token_.get()) + "] " + token_->toString();
 }
 
 Token::Ptr InferredEvidence::token() const

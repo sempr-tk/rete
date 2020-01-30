@@ -21,17 +21,12 @@ bool BackedWME::isBacked() const
 
 void BackedWME::addEvidence(Evidence::Ptr e) const
 {
-    evidences_.push_back(e);
+    evidences_.insert(e);
 }
 
 void BackedWME::removeEvidence(Evidence::Ptr e) const
 {
-    auto it = std::remove_if(evidences_.begin(), evidences_.end(),
-        [e](Evidence::Ptr o) -> bool {
-            return *o == *e;
-        }
-    );
-    evidences_.erase(it, evidences_.end());
+    evidences_.erase(e);
 }
 
 

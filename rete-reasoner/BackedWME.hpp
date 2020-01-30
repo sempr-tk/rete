@@ -1,10 +1,11 @@
 #ifndef RETE_BACKEDWME_HPP_
 #define RETE_BACKEDWME_HPP_
 
-#include <vector>
+#include <set>
 
 #include "../rete-core/WME.hpp"
 #include "Evidence.hpp"
+#include "EvidenceComparator.hpp"
 
 namespace rete {
 
@@ -17,7 +18,7 @@ class BackedWME {
     /**
         BackedWME is used in a set, where it is stored as const. But for the set only the WME matters, not the evidence
     */
-    mutable std::vector<Evidence::Ptr> evidences_;
+    mutable std::set<Evidence::Ptr, EvidenceComparator> evidences_;
 public:
     BackedWME(WME::Ptr);
 

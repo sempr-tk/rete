@@ -75,9 +75,9 @@ void Reasoner::performInferenceStep()
     if (flag == rete::ASSERT)
     {
         // allow inferred WMEs
+        auto ev = std::make_shared<InferredEvidence>(token, production);
         for (auto wme : inferred)
         {
-            auto ev = std::make_shared<InferredEvidence>(token, production);
             addEvidence(wme, ev);
         }
     }

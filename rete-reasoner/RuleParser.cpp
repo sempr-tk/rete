@@ -310,8 +310,9 @@ BetaMemory::Ptr RuleParser::constructPrimitive(
     auto bIt = conditionBuilders_.find(condition.type());
     if (bIt == conditionBuilders_.end())
     {
-        std::cerr << "no builder for type " << condition.type() << std::endl;
-        throw NoBuilderException(rule.str_, condition.str_, condition.type());
+        std::vector<std::string> knownTypes;
+        for (auto& builder : conditionBuilders_) knownTypes.push_back(builder.first);
+        throw NoBuilderException(rule.str_, condition.str_, condition.type(), knownTypes);
     }
     auto& builder = *bIt->second;
     // create an argument list. The ast::Arguments are consumed.
@@ -604,7 +605,8 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
         auto it = effectBuilders_.find(effect->type());
         if (it == effectBuilders_.end())
         {
-            std::cout << "no effect-builder for type " << effect->type() << std::endl;
+            std::vector<std::string> knownTypes;
+            for (auto& builder : effectBuilders_) knownTypes.push_back(builder.first);
             throw NoBuilderException(rule.str_, effect->str_, effect->type());
         }
 

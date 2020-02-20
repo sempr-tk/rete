@@ -2,6 +2,8 @@
 #define RETE_REASONER_EXCEPTIONS_HPP_
 
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 /**
     This file declares different exceptions that may occur when working with the reasoner.
@@ -26,6 +28,7 @@ public:
     problems in a uniform manner.
 */
 class RuleConstructionException : public ParserException {
+protected:
     std::string rule_;
     std::string part_;
     std::string detail_;
@@ -57,6 +60,17 @@ public:
     NoBuilderException(const std::string& rule, const std::string& part, const std::string& type)
         : RuleConstructionException(rule, part, "No builder for node type: " + type)
     {
+    }
+
+    NoBuilderException(const std::string& rule, const std::string& part, const std::string& type, const std::vector<std::string>& knownTypes)
+        : RuleConstructionException(rule, part, "")
+    {
+        detail_ = "No builder for node type: " + type + "\n"
+                  "Available types are: \n";
+        for (auto type : knownTypes)
+        {
+            detail_ += "    " + type + "\n";
+        }
     }
 };
 

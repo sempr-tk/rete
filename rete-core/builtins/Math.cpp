@@ -51,6 +51,7 @@ bool MathBuiltin::operator == (const BetaNode& other) const
     auto o = dynamic_cast<const MathBuiltin*>(&other);
     if (!o) return false;
     if (o->operands_.size() != this->operands_.size()) return false;
+    if (o->name() != this->name()) return false;
 
     for (auto& otherOp : o->operands_)
     {

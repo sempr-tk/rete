@@ -15,6 +15,8 @@ class Builtin : public BetaNode {
     void rightActivate(WME::Ptr, PropagationFlag) override;
     void leftActivate(Token::Ptr, PropagationFlag) override;
     std::string name_;
+
+    std::string getDOTAttr() const override;
 public:
     using Ptr = std::shared_ptr<Builtin>;
     Builtin(const std::string& name);

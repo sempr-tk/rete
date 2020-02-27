@@ -1,4 +1,5 @@
 #include "Builtin.hpp"
+#include "Util.hpp"
 
 namespace rete {
 
@@ -9,6 +10,11 @@ Builtin::Builtin(const std::string& name)
 
 Builtin::~Builtin()
 {
+}
+
+std::string Builtin::getDOTAttr() const
+{
+    return "[label=\"" + util::dotEscape(this->name()) + "\"]";
 }
 
 std::string Builtin::name() const

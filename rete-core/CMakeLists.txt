@@ -18,6 +18,7 @@ set(CORE_SRC
     Production.cpp
     ProductionNode.cpp
     Token.cpp
+    TrueNode.cpp
     Util.cpp
     WME.cpp
     WMEComparator.cpp

@@ -19,6 +19,7 @@ set(REASONER_SRC
     NodeBuilder.cpp
     TripleConditionBuilder.cpp
     TripleEffectBuilder.cpp
+    TrueNodeBuilder.cpp
     UtilBuiltinBuilder.cpp
 
     # ebnf parsing

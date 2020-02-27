@@ -18,6 +18,7 @@ class WME {
     bool isComputed_;
     friend class Builtin; // the Builtin base class sets the isComputed_ value
     friend class JoinNode; // negative joins add empty tuples that need to be marked as computed
+    friend class TrueNode; // the TrueNode propagates a single EmptyWME that is not asserted but shall always hold
 public:
     using Ptr = std::shared_ptr<WME>;
     WME();

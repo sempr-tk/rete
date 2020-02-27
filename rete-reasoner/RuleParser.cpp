@@ -9,6 +9,8 @@
 #include "TripleEffectBuilder.hpp"
 #include "MathBuiltinBuilder.hpp"
 #include "UtilBuiltinBuilder.hpp"
+#include "TrueNodeBuilder.hpp"
+
 #include "Exceptions.hpp"
 
 #include <map>
@@ -47,6 +49,7 @@ RuleParser::RuleParser()
     registerNodeBuilder<builtin::CompareNodeBuilder<builtin::Compare::GE>>();
     registerNodeBuilder<builtin::CompareNodeBuilder<builtin::Compare::GT>>();
     registerNodeBuilder<builtin::PrintNodeBuilder>();
+    registerNodeBuilder<TrueNodeBuilder>();
 }
 
 void RuleParser::registerNodeBuilder(std::unique_ptr<NodeBuilder> builder)

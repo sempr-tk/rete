@@ -33,9 +33,10 @@ add_library(rete-core SHARED ${CORE_SRC} ${BUILTIN_SRC})
 install(
     DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DESTINATION include
+    COMPONENT core
     FILES_MATCHING PATTERN *.hpp
 )
 install(
     TARGETS rete-core
-    LIBRARY DESTINATION lib
+    LIBRARY DESTINATION lib COMPONENT core
 )

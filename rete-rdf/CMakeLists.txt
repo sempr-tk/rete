@@ -14,9 +14,10 @@ target_link_libraries(rete-rdf rete-core)
 install(
     DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DESTINATION include
+    COMPONENT rdf
     FILES_MATCHING PATTERN *.hpp
 )
 install(
     TARGETS rete-rdf
-    LIBRARY DESTINATION lib
+    LIBRARY DESTINATION lib COMPONENT rdf
 )

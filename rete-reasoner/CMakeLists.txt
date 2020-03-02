@@ -34,9 +34,10 @@ target_link_libraries(rete-reasoner rete-core rete-rdf ${Pegmatite_LIBRARIES})
 install(
     DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DESTINATION include
+    COMPONENT reasoner
     FILES_MATCHING PATTERN *.hpp
 )
 install(
     TARGETS rete-reasoner
-    LIBRARY DESTINATION lib
+    LIBRARY DESTINATION lib COMPONENT reasoner
 )

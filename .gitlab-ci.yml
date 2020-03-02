@@ -3,25 +3,42 @@ image: buildpack-deps:xenial
 before_script:
     - apt-get update -qq
     - apt-get install -y -qq git g++ cmake
+# also: setup the private key to access niniemann/debian-pkgs
+# this allows us to install pegmatite from the lates debian package
+    - which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )
+    - eval $(ssh-agent -s)
+    - echo "$DEPLOY_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan git.ni.dfki.de >> ~/.ssh/known_hosts
+    - git config --global user.email "gitlab-ci@git.ni.dfki.de"
+    - git config --global user.name "gitlab-CI/CD"
+      # get and install pegmatite
+    - git clone git@git.ni.dfki.de:nniemann/debian-pkgs.git /tmp/debian-pkgs
+    - echo "deb [trusted=yes] file:/tmp/debian-pkgs ./" >> /etc/apt/sources.list
+    - apt-get update
+    - apt-get install libpegmatite
+
 
 stages:
-    - deps
+#    - deps # no longer needed, installed in before_script
     - build
     - test
+    - deploy
 
-deps:
-    stage: deps
-    script:
-    - mkdir deps_install
-    - git clone https://github.com/niniemann/Pegmatite.git
-    - cd Pegmatite
-    - mkdir build && cd build
-    - cmake .. -DCMAKE_INSTALL_PREFIX=../../deps_install
-    - make -j8 install
-    artifacts:
-        paths:
-        - deps_install
-        expire_in: 1 hour
+#deps:
+#    stage: deps
+#    script:
+#    - mkdir deps_install
+#    - git clone https://github.com/niniemann/Pegmatite.git
+#    - cd Pegmatite
+#    - mkdir build && cd build
+#    - cmake .. -DCMAKE_INSTALL_PREFIX=../../deps_install
+#    - make -j8 install
+#    artifacts:
+#        paths:
+#        - deps_install
+#        expire_in: 1 hour
 
 
 
@@ -33,6 +50,7 @@ build:
     - mkdir build && cd build
     - cmake ..
     - make -j8
+    - make package
     artifacts:
         paths:
         - build/
@@ -45,3 +63,15 @@ test:
     - cd build
     - make test
 
+
+deploy-deb:
+    stage: deploy
+    only:
+        - tags
+    script:
+        - cp build/rete*.deb /tmp/debian-pkgs/
+        - cd /tmp/debian-pkgs
+        - ./update-pkg-list
+        - git add --all
+        - git commit -m "auto deployment of rete $CI_COMMIT_REF_NAME"
+        - git push

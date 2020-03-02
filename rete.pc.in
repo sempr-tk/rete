@@ -1,10 +1,10 @@
-prefix=@CMAKE_INSTALL_PREFIX@
+prefix=@RETE_INSTALL_PREFIX@
 libdir=${prefix}/lib
 includedir=${prefix}/include
 
 Name: rete
 Description: Rete network structure and rule reasoner
-Version: 0.1.0
+Version: @PROJECT_VERSION@
 Requires: pegmatite
 Libs: -L${libdir} -lrete-core -lrete-rdf -lrete-reasoner
 Cflags: -I${includedir}

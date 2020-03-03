@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(rete VERSION 0.2.0)
+project(rete VERSION 0.2.1)
 add_definitions(-std=c++11 -Wall -Wextra -pedantic -Wnon-virtual-dtor)
 
 option(DEBUG_PARSING "enable debug output while parsing rules" false)
@@ -55,6 +55,8 @@ set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Nils Niemann <nils.niemann@dfki.de>")
 set(CPACK_COMPONENTS_ALL "core;rdf;reasoner;pkgconfig-deb") # excludes the rete-dev.pc
 set(CPACK_DEB_COMPONENT_INSTALL ON)
 set(CPACK_COMPONENTS_ALL_IN_ONE_PACKAGE ON)
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libpegmatite (>= 0.1)")
 
 # always last:
 include(CPack)

@@ -62,15 +62,25 @@ test-xenial:
     stage: test
     image: buildpack-deps:xenial
     script:
-    - cd build_xenial
-    - make test
+        # get and install pegmatite
+        - echo "deb [trusted=yes] file:/tmp/debian-pkgs/xenial ./" >> /etc/apt/sources.list
+        - apt-get update
+        - apt-get install libpegmatite
+        # test
+        - cd build_xenial
+        - make test
 
 test-bionic:
     stage: test
     image: buildpack-deps:bionic
     script:
-    - cd build_bionic
-    - make test
+        # get and install pegmatite
+        - echo "deb [trusted=yes] file:/tmp/debian-pkgs/bionic ./" >> /etc/apt/sources.list
+        - apt-get update
+        - apt-get install libpegmatite
+        # test
+        - cd build_bionic
+        - make test
 
 
 deploy-deb:

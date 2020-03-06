@@ -1,4 +1,5 @@
-image: buildpack-deps:xenial
+default:
+    image: buildpack-deps:xenial
 
 before_script:
     - apt-get update -qq
@@ -13,54 +14,62 @@ before_script:
     - ssh-keyscan git.ni.dfki.de >> ~/.ssh/known_hosts
     - git config --global user.email "gitlab-ci@git.ni.dfki.de"
     - git config --global user.name "gitlab-CI/CD"
-      # get and install pegmatite
     - git clone git@git.ni.dfki.de:nniemann/debian-pkgs.git /tmp/debian-pkgs
-    - echo "deb [trusted=yes] file:/tmp/debian-pkgs ./" >> /etc/apt/sources.list
-    - apt-get update
-    - apt-get install libpegmatite
-
 
 stages:
-#    - deps # no longer needed, installed in before_script
     - build
     - test
     - deploy
 
-#deps:
-#    stage: deps
-#    script:
-#    - mkdir deps_install
-#    - git clone https://github.com/niniemann/Pegmatite.git
-#    - cd Pegmatite
-#    - mkdir build && cd build
-#    - cmake .. -DCMAKE_INSTALL_PREFIX=../../deps_install
-#    - make -j8 install
-#    artifacts:
-#        paths:
-#        - deps_install
-#        expire_in: 1 hour
 
-
-
-build:
+build-xenial:
     stage: build
+    image: buildpack-deps:xenial
     script:
-    - export PATH=${PATH}:$(pwd)/deps_install
-    - export PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:$(pwd)/deps_install/lib/pkgconfig
-    - mkdir build && cd build
-    - cmake ..
-    - make -j8
-    - make package
+        # get and install pegmatite
+        - echo "deb [trusted=yes] file:/tmp/debian-pkgs/xenial ./" >> /etc/apt/sources.list
+        - apt-get update
+        - apt-get install libpegmatite
+        # build project
+        - mkdir build_xenial && cd build_xenial
+        - cmake ..
+        - make -j8
+        - make package
     artifacts:
         paths:
-        - build/
+           - build_xenial
         expire_in: 1 hour
 
-test:
-    stage: test
+build-bionic:
+    stage: build
+    image: buildpack-deps:bionic
     script:
-    - export PATH=${PATH}:$(pwd)/deps_install
-    - cd build
+        # get and install pegmatite
+        - echo "deb [trusted=yes] file:/tmp/debian-pkgs/bionic ./" >> /etc/apt/sources.list
+        - apt-get update
+        - apt-get install libpegmatite
+        # build project
+        - mkdir build_bionic && cd build_bionic
+        - cmake ..
+        - make -j8
+        - make package
+    artifacts:
+        paths:
+           - build_bionic
+        expire_in: 1 hour
+
+test-xenial:
+    stage: test
+    image: buildpack-deps:xenial
+    script:
+    - cd build_xenial
+    - make test
+
+test-bionic:
+    stage: test
+    image: buildpack-deps:bionic
+    script:
+    - cd build_bionic
     - make test
 
 
@@ -69,7 +78,8 @@ deploy-deb:
     only:
         - tags
     script:
-        - cp build/rete*.deb /tmp/debian-pkgs/
+        - cp build_xenial/rete*.deb /tmp/debian-pkgs/xenial/
+        - cp build_bionic/rete*.deb /tmp/debian-pkgs/bionic/
         - cd /tmp/debian-pkgs
         - ./update-pkg-list
         - git add --all

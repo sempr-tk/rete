@@ -67,8 +67,19 @@ void Agenda::add(AgendaItem item)
         // if there has been a RETRACT for this token-production pair that has not yet been executed, assume that the effects of a previous ASSERT still hold and no RETRACT has to be executed by the production. So, silently remove it from the agenda without adding the ASSERT.
         // NOTE: This changed recently: I removed "removeEquivalent", as it leads to incorrect evidence handling in the reasoner, who only looks at Token-identities (ptr address), not their content (which would be expensive). Hence, not retracting mtach (A) and not adding match (B) is not a good idea, even if their content is the same. There might be better solutions, e.g. some efficient way to treat tokens as defined by the values in their wmes, but this is something to be implemented later, if there is a need for it. And the time. Right now I mainly see the bug that needs be fixed, which is more important than the performance optimization.
         //  -- Also, the same (identical) token should never be asserted twice, so I could leave out this check, but leave it here to be sure to not have created some weird behaviour.
+        //
+        // Future me wants to add something for clarification:
+        // Although what you see here is an "remove(token, production, RETRACT, name)",
+        // we do **NOT** remove an agendaitem that was previously scheduled to
+        // be retracted! The relevant factor here is the following: When a token is
+        // scheduled for retraction, the Token::Ptr is removed from the memory nodes
+        // etc, and will NEVER be seen again there. When the *same* (equivalant, not identical)
+        // match occurs again, a new, equivalent token is created -- same content, but
+        // different Token::Ptr! And this is the one we got here in the ASSERT case.
+        // So, if a match is retracted and asserted again, both will remain on the agenda.
+        // This is what the tradeof mentioned above is about -- loosing performance
+        // optimization to fix a bug.
         removed = remove(AgendaItem{token, production, rete::RETRACT, name});
-
         if (removed) throw std::runtime_error("Agenda-Error: How could this happen? Tried to add ASSERT to the agenda for a match that is to be RETRACTED!");
 
         // just add the ASSERT

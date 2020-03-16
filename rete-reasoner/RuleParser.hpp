@@ -86,10 +86,10 @@ public:
         Throws if a builder for the same node identifier is already registered.
     */
     void registerNodeBuilder(std::unique_ptr<NodeBuilder> builder);
-    template <class T, typename = typename std::enable_if<std::is_base_of<NodeBuilder, T>::value, void>::type>
-    void registerNodeBuilder()
+    template <class T, class... Args>
+    void registerNodeBuilder(Args&&... args)
     {
-        registerNodeBuilder(std::unique_ptr<T>(new T()));
+        registerNodeBuilder(std::unique_ptr<T>(new T(std::forward<Args>(args)...)));
     }
 
 

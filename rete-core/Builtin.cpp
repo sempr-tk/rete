@@ -22,6 +22,11 @@ std::string Builtin::name() const
     return name_;
 }
 
+void Builtin::setComputed(WME::Ptr wme, bool flag) const
+{
+    wme->isComputed_ = flag;
+}
+
 void Builtin::rightActivate(WME::Ptr, PropagationFlag)
 {
     throw std::exception(); // Builtins are not to be connected with AlphaMemories! They aren't joins, but only computations on sub-matches!

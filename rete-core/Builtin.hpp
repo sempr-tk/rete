@@ -17,6 +17,14 @@ class Builtin : public BetaNode {
     std::string name_;
 
     std::string getDOTAttr() const override;
+
+protected:
+    /**
+        Allows derived builtins to also set the isComputed flag. Necessary if
+        it does *not* implement the process(Token) method, but rather overrides
+        the leftActivate itself.
+    */
+    void setComputed(WME::Ptr, bool) const;
 public:
     using Ptr = std::shared_ptr<Builtin>;
     Builtin(const std::string& name);

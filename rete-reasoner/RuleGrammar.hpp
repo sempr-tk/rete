@@ -122,7 +122,7 @@ public:
     Rule builtin = rtrace("builtin", builtinName >> "(" >> *argument >> ")");
 
     // effects
-    Rule effectName = rtrace("effectName", term(+alphanum));
+    Rule effectName = rtrace("effectName", term(+(alphanum | "<>"_S)));
     Rule genericEffect = rtrace("genericEffect", effectName >> "(" >> *argument >> ")");
 
     /**

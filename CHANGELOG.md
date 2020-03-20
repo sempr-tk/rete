@@ -1,0 +1,38 @@
+# Changelog
+
+## [0.2.4] - 2020-03-20
+
+- Changed rule grammar to allow "<>" in rule effects
+- Added changelog
+
+## [0.2.3] - 2020-03-16
+
+- Allow builtins to set the isComputed flag of WMEs. With this, builtins may
+  override the leftActivate(...) method instead of process(...) for more
+  flexibility
+
+## [0.2.2] - 2020-03-12
+
+- Added perfect argument forwarding to RuleParser::registerNodeBuilder.
+  No need to explicitely create unique pointers to builders that have no default
+  constructor anymore
+
+## [0.2.1] - 2020-03-03
+
+- Added dependencies to the created debian package
+
+## [0.2.0] - 2020-03-02
+
+- Note: v0.1.0 was kept for a very long time during heavy development.
+  Some features added between the first v0.1.0 and 0.2.0 are:
+  - Accessors, GenericJoin
+  - Builtins
+  - noValue
+  - Mutable WMEs (UPDATE flag)
+  - Runtime modifications of the network
+  - Complex noValue constructs
+- v0.2.0 explicitely adds creation of debian packages
+
+## [0.1.0] - 2018-09-10 (creation of pkgconfig file)
+
+- Initial, unreleased version

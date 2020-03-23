@@ -29,6 +29,7 @@ set(REASONER_SRC
 include_directories(${PROJECT_SOURCE_DIR})
 
 add_library(rete-reasoner SHARED ${REASONER_SRC})
+set_target_properties(rete-reasoner PROPERTIES VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR})
 target_link_libraries(rete-reasoner rete-core rete-rdf ${Pegmatite_LIBRARIES})
 
 install(

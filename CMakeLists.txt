@@ -55,7 +55,9 @@ set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Nils Niemann <nils.niemann@dfki.de>")
 set(CPACK_COMPONENTS_ALL "core;rdf;reasoner;pkgconfig-deb") # excludes the rete-dev.pc
 set(CPACK_DEB_COMPONENT_INSTALL ON)
 set(CPACK_COMPONENTS_ALL_IN_ONE_PACKAGE ON)
-set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON) # use dpkg-shlibdeps to find dependencies
+set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS ON) # create shlibs control file automatically. Makes shlibdeps find this library as a dependency of others!
+set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS_POLICY ">=")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "libpegmatite (>= 0.1)")
 
 # always last:

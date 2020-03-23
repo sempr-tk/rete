@@ -30,6 +30,8 @@ set(BUILTIN_SRC
 )
 
 add_library(rete-core SHARED ${CORE_SRC} ${BUILTIN_SRC})
+set_target_properties(rete-core PROPERTIES VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR})
+
 install(
     DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DESTINATION include

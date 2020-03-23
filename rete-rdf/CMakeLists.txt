@@ -10,6 +10,8 @@ set(RDF_SRC
 include_directories(${PROJECT_SOURCE_DIR})
 
 add_library(rete-rdf SHARED ${RDF_SRC})
+set_target_properties(rete-rdf PROPERTIES VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR})
+
 target_link_libraries(rete-rdf rete-core)
 install(
     DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

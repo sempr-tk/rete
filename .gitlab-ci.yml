@@ -34,6 +34,7 @@ build-xenial:
         - mkdir build_xenial && cd build_xenial
         - cmake ..
         - make -j8
+        - export LD_LIBRARY_PATH=$(pwd)/rete-core:$(pwd)/rete-rdf:$(pwd)/rete-reasoner:$LD_LIBRARY_PATH # should fix a problem with cpack not finding rete-core as dep for rete-rdf etc.
         - make package
     artifacts:
         paths:

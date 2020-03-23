@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.5] - 2020-03-23
+
+- Added VERSION (and implicitely SOVERSION) to the generated libraries. This
+  allows dpkg-shlibdeps in other projects to properly find this library as an
+  dependency. Note that VERSION/SOVERSION is set to MAJOR.MINOR as I will not
+  make any promises for a stable ABI between even minor versions.
+
 ## [0.2.4] - 2020-03-20
 
 - Changed rule grammar to allow "<>" in rule effects

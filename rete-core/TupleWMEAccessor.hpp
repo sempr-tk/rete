@@ -27,6 +27,8 @@ public:
         value = std::get<I>(twme->value_);
     }
 
+    using SpecificTypeAccessor<T>::getValue;
+
     TupleWMEAccessor* clone() const override { return new TupleWMEAccessor(*this); }
 
 };

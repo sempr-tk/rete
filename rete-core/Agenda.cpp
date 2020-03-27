@@ -44,8 +44,6 @@ bool AgendaItemComparator::operator() (const AgendaItem& a, const AgendaItem& b)
 
 void Agenda::add(AgendaItem item)
 {
-    queue_.insert(item);
-
     auto token = std::get<0>(item);
     auto production = std::get<1>(item);
     auto flag = std::get<2>(item);

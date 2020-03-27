@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.6] - 2020-03-27
+
+- Fixed a bug in the AgendaItem-scheduling that prevented optimizations like
+  "no UPDATE if there is an unprocessed ASSERT" to take effect. As updates are
+  also scheduled before asserts, this could result in processing an update of
+  a WME before its actual assertion.
+
 ## [0.2.5] - 2020-03-23
 
 - Added VERSION (and implicitely SOVERSION) to the generated libraries. This

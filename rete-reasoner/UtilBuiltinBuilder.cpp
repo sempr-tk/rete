@@ -38,5 +38,41 @@ Builtin::Ptr PrintNodeBuilder::buildBuiltin(ArgumentList& args) const
     return builtin;
 }
 
+
+PrintEffectNodeBuilder::PrintEffectNodeBuilder()
+    : NodeBuilder("print", BuilderType::EFFECT)
+{
+}
+
+
+Production::Ptr PrintEffectNodeBuilder::buildEffect(ArgumentList& args) const
+{
+    auto print = std::make_shared<PrintEffect>();
+
+    for (auto& arg : args)
+    {
+        if (arg.isVariable())
+        {
+            auto acc = arg.getAccessor();
+            if (!acc) throw NodeBuilderException("unbound variable in print effect");
+            if (!acc->canAs<StringAccessor>())
+            {
+                throw NodeBuilderException(
+                        arg.getVariableName() +
+                        " cannot be converted to String");
+            }
+
+            std::unique_ptr<StringAccessor> clone(dynamic_cast<StringAccessor*>(acc->clone()));
+            print->add(std::move(clone));
+        }
+        else
+        {
+            print->add(std::string(arg.getAST()));
+        }
+    }
+
+    return print;
+}
+
 } /* builtin */
 } /* rete */

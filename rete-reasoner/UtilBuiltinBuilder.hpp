@@ -89,6 +89,13 @@ public:
 
 };
 
+
+class PrintEffectNodeBuilder : public NodeBuilder {
+public:
+    PrintEffectNodeBuilder();
+    Production::Ptr buildEffect(ArgumentList& args) const override;
+};
+
 } /* builtin */
 } /* rete */
 

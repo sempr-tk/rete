@@ -49,6 +49,7 @@ RuleParser::RuleParser()
     registerNodeBuilder<builtin::CompareNodeBuilder<builtin::Compare::GE>>();
     registerNodeBuilder<builtin::CompareNodeBuilder<builtin::Compare::GT>>();
     registerNodeBuilder<builtin::PrintNodeBuilder>();
+    registerNodeBuilder<builtin::PrintEffectNodeBuilder>();
     registerNodeBuilder<TrueNodeBuilder>();
 }
 

@@ -155,5 +155,42 @@ void Print::add(const std::string& str)
     (*values_.rbegin())->index() = 0;
 }
 
+// -------------------------
+// PrintEffect
+// -------------------------
+PrintEffect::PrintEffect()
+    : Production(0, "print")
+{
+}
+
+void PrintEffect::add(std::unique_ptr<StringAccessor> accessor)
+{
+    values_.push_back(std::move(accessor));
+}
+
+void PrintEffect::add(const std::string& str)
+{
+    values_.push_back(std::unique_ptr<ConstantStringAccessor>(new ConstantStringAccessor(str)));
+    (*values_.rbegin())->index() = 0;
+}
+
+void PrintEffect::execute(Token::Ptr token, PropagationFlag flag, std::vector<WME::Ptr>&)
+{
+    switch (flag) {
+        case PropagationFlag::ASSERT:
+            std::cout << "ASSERT: "; break;
+        case PropagationFlag::RETRACT:
+            std::cout << "RETRACT: "; break;
+        case PropagationFlag::UPDATE:
+            std::cout << "UPDATE: "; break;
+    }
+
+    for (auto& val : values_)
+    {
+        std::cout << val->getString(token) << ", ";
+    }
+    std::cout << "\b\b  \b\b" << std::endl;
+}
+
 } /* builtin */
 } /* rete */

@@ -2,6 +2,7 @@
 #define RETE_BUILTIN_UTIL_HPP_
 
 #include "../Builtin.hpp"
+#include "../Production.hpp"
 #include "../Accessors.hpp"
 
 namespace rete {
@@ -45,6 +46,21 @@ public:
     WME::Ptr process(Token::Ptr) override;
     bool operator == (const BetaNode& other) const override;
     std::string getDOTAttr() const override;
+};
+
+/**
+    Similar to "Print", but as a rule effect that also adds a
+    ADD/REMOVE/UPDATE prefix given on what actually happened.
+*/
+class PrintEffect : public Production {
+    std::vector<std::unique_ptr<StringAccessor>> values_;
+public:
+    using Ptr = std::shared_ptr<PrintEffect>;
+    PrintEffect();
+    void add(std::unique_ptr<StringAccessor>);
+    void add(const std::string&);
+
+    void execute(Token::Ptr, PropagationFlag, std::vector<WME::Ptr>&) override;
 };
 
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.7] - 2020-04-24
+
+- Added "print" as a rule effect
+
 ## [0.2.6] - 2020-03-27
 
 - Fixed a bug in the AgendaItem-scheduling that prevented optimizations like

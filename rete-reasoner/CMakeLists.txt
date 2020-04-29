@@ -12,6 +12,7 @@ set(REASONER_SRC
     ExplanationToDotVisitor.cpp
     InferenceState.cpp
     InferredEvidence.cpp
+    ParsedRule.cpp
     Reasoner.cpp
     RuleGrammar.cpp
     RuleParser.cpp

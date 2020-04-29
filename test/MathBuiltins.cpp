@@ -22,7 +22,7 @@ int main()
     Reasoner reasoner;
 
     // TODO: InferTriple only accepts string so for. Need to implement a more versatile ValueAccessor.
-    bool ok = p.parseRules(
+    auto rules = p.parseRules(
 R"delimiter(
 
 [computation:
@@ -35,9 +35,6 @@ R"delimiter(
 )delimiter",
         reasoner.net()
     );
-
-    if (!ok) return 1;
-
 
     int asserted = 0;
     int retracted = 0;

@@ -178,7 +178,7 @@ int main()
 
     /**
     */
-    bool ok = p.parseRules(
+    auto rules = p.parseRules(
         // "[rule0: (?a ?b ?c) -> (<foo> <bar> <baz>)]\n"
         "[rule1: MutableWME(?value) -> (<foo> <mutable> ?value)]\n"
         "[rule2: (<foo> <mutable> <value_A>) -> (<test_1> <result> <success>)]\n"
@@ -187,7 +187,6 @@ int main()
         "[rule5: MutableWME(?value), (<foo> <bar> <baz>) -> (<join> <left> ?value)]",
         reasoner.net()
     );
-    if (!ok) return 1;
 
     // add one mutable wme
     auto wme1 = std::make_shared<MutableWME>();

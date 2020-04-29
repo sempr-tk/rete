@@ -24,12 +24,10 @@ int main()
         Check if the true() condition works as expeted, i.e. always holds,
         and triggers rules exactly once.
     */
-    bool ok = p.parseRules(
+    auto rules = p.parseRules(
         "[rule1: true() -> (<a> <b> <c>)]\n",
         reasoner.net()
     );
-
-    if (!ok) return 1;
 
     reasoner.performInference();
     auto wmes = reasoner.getCurrentState().getWMEs();
@@ -42,7 +40,7 @@ int main()
 
 
     // add another rule depending on true and (<a> <b> <c>)
-    p.parseRules(
+    auto moreRules = p.parseRules(
         "[rule2: (<a> <b> <c>), true() -> (<d> <e> <f>)]",
         reasoner.net()
     );

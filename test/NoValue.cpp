@@ -23,13 +23,10 @@ int main()
 
     /**
     */
-    bool ok = p.parseRules(
+    auto rules = p.parseRules(
         "[rule1: (?a <type> <foo>), noValue { (?a <color> <red>) } -> (?a <not-known-to-be> <red>)]",
         reasoner.net()
     );
-
-    if (!ok) return 1;
-
 
     int asserted = 0;
     int retracted = 0;

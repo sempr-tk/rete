@@ -24,7 +24,7 @@ int main()
     Reasoner reasoner;
     RuleParser parser;
 
-    parser.parseRules(
+    auto rules = parser.parseRules(
         "[subclassTransitive: (?a <subClassOf> ?b), (?b <subClassOf> ?c) -> (?a <subClassOf> ?c)]"
         "[subClassType:       (?a <subClassOf> ?b), (?x <type> ?a) -> (?x <type> ?b)]",
         reasoner.net()

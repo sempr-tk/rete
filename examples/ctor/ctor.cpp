@@ -36,7 +36,7 @@ int main(int argc, char** args)
             std::stringstream buffer;
             buffer << in.rdbuf();
 
-            p.parseRules(buffer.str(), reasoner.net());
+            auto rules = p.parseRules(buffer.str(), reasoner.net());
 
             save(reasoner.net(), std::string(args[i]) + ".dot");
         }

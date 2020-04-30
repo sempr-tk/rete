@@ -65,24 +65,6 @@ Agenda::Ptr Network::getAgenda()
     return agenda_;
 }
 
-void Network::addProduction(ProductionNode::Ptr p)
-{
-    productions_.push_back(p);
-}
-
-void Network::removeProduction(ProductionNode::Ptr p)
-{
-    productions_.erase(std::remove(productions_.begin(), productions_.end(), p), productions_.end());
-
-    // disconnects the production, and calls RETRACT for all previously asserted matches
-    SetParent(nullptr, p);
-}
-
-std::vector<ProductionNode::Ptr> Network::getProductions() const
-{
-    return productions_;
-}
-
 
 struct BetaNodePtrCompareByDotID {
     bool operator () (const BetaNode::Ptr& left, const BetaNode::Ptr& right) const

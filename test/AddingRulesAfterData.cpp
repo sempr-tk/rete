@@ -65,7 +65,7 @@ int main()
 
 
     // and a rule
-    parser.parseRules(
+    auto rule1 = parser.parseRules(
         "[rule1: (?a <foo> ?b) -> (<result> <of> <rule1>)]",
         reasoner.net()
     );
@@ -83,7 +83,7 @@ int main()
     // check 2:
     t = std::make_shared<Triple>("<a>", "<bar>", "<b>");
     reasoner.addEvidence(t, evidence);
-    parser.parseRules(
+    auto rule2 = parser.parseRules(
         "[rule2: (?a <foo> ?b), (?a <bar> ?b) -> (<result> <of> <rule2>)]",
         reasoner.net()
     );
@@ -98,7 +98,7 @@ int main()
     // check 3:
     t = std::make_shared<Triple>("<a>", "<baz>", "<b>");
     reasoner.addEvidence(t, evidence);
-    parser.parseRules(
+    auto rule3 = parser.parseRules(
         "[rule3: (?a <foo> ?b), (?a ?p ?b) -> (<rule3> <result> ?p)]",
         reasoner.net()
     );

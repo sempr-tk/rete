@@ -54,7 +54,7 @@ int main()
     Reasoner reasoner;
 
 
-    p.parseRules(
+    auto rules = p.parseRules(
 "[OnARedBlock: (?b1 <on> ?b2), (?b2 <color> <red>) -> (?b1 <on-red-block> ?b2)]\n"
 "[LeftOfANotRedBlock:"
     "(?b1 <left-of> ?b2), noValue { (?b2 <color> <red>) } -> (?b1 <left-of-not-red-block> ?b2)]\n"

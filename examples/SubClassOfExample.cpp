@@ -76,8 +76,8 @@ int main()
     auto inferNode = std::make_shared<AgendaNode>(infer, net.getAgenda());
     SetParent(joinmem, inferNode);
 
-    // to keep the network alive beyond the scope of the inferNode pointer
-    reasoner.net().addProduction(inferNode);
+    // make sure to not lose the inferNode pointer, as that would lead to the
+    // deconstruction of everything we connected before.
 
     // put in some data
     auto t1 = std::make_shared<Triple>("A", "rdfs:subClassOf", "B");

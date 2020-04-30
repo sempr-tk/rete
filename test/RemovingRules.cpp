@@ -56,12 +56,12 @@ int main()
     );
 
     // add some rules
-    parser.parseRules(
-    "[rule1: (?a <foo> ?b) -> (<result> <of> <rule1>)]"
-    "[rule2a: (?a <bar> ?b) -> (<result> <of> <rule2a>)]"
-    "[rule2b: (?a <of> <rule2a>) -> (?a <of> <rule2b>)]"
-    ,
-    reasoner.net()
+    auto rules = parser.parseRules(
+        "[rule1: (?a <foo> ?b) -> (<result> <of> <rule1>)]"
+        "[rule2a: (?a <bar> ?b) -> (<result> <of> <rule2a>)]"
+        "[rule2b: (?a <of> <rule2a>) -> (?a <of> <rule2b>)]"
+        ,
+        reasoner.net()
     );
 
 
@@ -88,13 +88,14 @@ int main()
 
 
     // ---- remove rule 1. This should remove <result> <of> <rule1>
-    for (auto production : reasoner.net().getProductions())
-    {
-        if (production->getName() == "rule1")
-        {
-            reasoner.net().removeProduction(production);
-        }
-    }
+    auto newEnd = std::remove_if(rules.begin(), rules.end(),
+            [](rete::ParsedRule::Ptr& r) -> bool
+            {
+                std::cout << "rule name: " << r->name() << " == rule1 ? " << (r->name() == "rule1") << std::endl;
+                return r->name() == "rule1";
+            }
+    );
+    rules.erase(newEnd, rules.end());
 
     // check if the result was retracted.
     reasoner.performInference(); // woops, inference first. Agenda, remember?
@@ -107,13 +108,14 @@ int main()
     }
 
     // ---- remove rule 2a. This should remove <result> <of> <rule2a> and of <rule2b>.
-    for (auto production : reasoner.net().getProductions())
-    {
-        if (production->getName() == "rule2a")
-        {
-            reasoner.net().removeProduction(production);
-        }
-    }
+    newEnd = std::remove_if(rules.begin(), rules.end(),
+            [](rete::ParsedRule::Ptr& r) -> bool
+            {
+                return r->name() == "rule2a";
+            }
+    );
+    rules.erase(newEnd, rules.end());
+
     reasoner.performInference();
     save(reasoner.net(), "RemovingRules_3.dot");
 

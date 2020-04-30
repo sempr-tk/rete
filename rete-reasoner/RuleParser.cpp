@@ -75,7 +75,7 @@ void RuleParser::registerNodeBuilder(std::unique_ptr<NodeBuilder> builder)
 }
 
 
-bool RuleParser::parseRules(const std::string& rulestring_pre, Network& network)
+std::vector<ParsedRule::Ptr> RuleParser::parseRules(const std::string& rulestring_pre, Network& network)
 {
     // preprocessing: remove comment-lines.
     std::stringstream ss(rulestring_pre);
@@ -117,58 +117,57 @@ bool RuleParser::parseRules(const std::string& rulestring_pre, Network& network)
 
     this->parse(input, g.rules, g.ws, reporter, root);
 
-    if (root)
+    if (!root) throw rete::ParserException();
+
+
+    /*
+        Build a map of used URI-prefixes.
+    */
+    std::cout << "successfully parsed the rules." << std::endl;
+    // std::cout << input.getString() << std::endl;
+    std::cout << "Prefixes: " << root->prefixes_.size() << std::endl;
+    std::map<std::string, std::string> prefixes;
+    for (auto& pre : root->prefixes_)
     {
-        /*
-            Build a map of used URI-prefixes.
-        */
-        std::cout << "successfully parsed the rules." << std::endl;
-        // std::cout << input.getString() << std::endl;
-        std::cout << "Prefixes: " << root->prefixes_.size() << std::endl;
-        std::map<std::string, std::string> prefixes;
-        for (auto& pre : root->prefixes_)
-        {
-            std::cout << pre->name_ << " --> " << pre->uri_ << std::endl;
-            const std::string& uri = pre->uri_;
-            prefixes[pre->name_ + ":"] = uri.substr(1, uri.size() - 2); // trim <>
-        }
-
-        /*
-            Preprocess: Substitute prefixes in the arguments of conditions and effects
-        */
-        for (auto& rule : root->rules_)
-        {
-            std::cout << "Rule: ";
-            if (rule->name_) std::cout << *rule->name_;
-            std::cout << std::endl;
-            for (auto& condition : rule->conditions_)
-            {
-                condition->substituteArgumentPrefixes(prefixes);
-            }
-
-            for (auto& effect : rule->effects_)
-            {
-                std::cout << "  Effect: " << effect->type() << std::endl;
-                for (auto& arg : effect->args_)
-                {
-                    arg->substitutePrefixes(prefixes);
-                    std::cout << "    " << *arg << std::endl;
-                }
-            }
-        }
-
-        /**
-            Construct the network
-        */
-        for (auto& rule : root->rules_)
-        {
-            construct(*rule, network);
-        }
-
-        return true;
+        std::cout << pre->name_ << " --> " << pre->uri_ << std::endl;
+        const std::string& uri = pre->uri_;
+        prefixes[pre->name_ + ":"] = uri.substr(1, uri.size() - 2); // trim <>
     }
 
-    return false;
+    /*
+        Preprocess: Substitute prefixes in the arguments of conditions and effects
+    */
+    for (auto& rule : root->rules_)
+    {
+        std::cout << "Rule: ";
+        if (rule->name_) std::cout << *rule->name_;
+        std::cout << std::endl;
+        for (auto& condition : rule->conditions_)
+        {
+            condition->substituteArgumentPrefixes(prefixes);
+        }
+
+        for (auto& effect : rule->effects_)
+        {
+            std::cout << "  Effect: " << effect->type() << std::endl;
+            for (auto& arg : effect->args_)
+            {
+                arg->substitutePrefixes(prefixes);
+                std::cout << "    " << *arg << std::endl;
+            }
+        }
+    }
+
+    /**
+      Construct the network
+    */
+    std::vector<ParsedRule::Ptr> rules;
+    for (auto& rule : root->rules_)
+    {
+        auto pr = construct(*rule, network);
+        rules.push_back(pr);
+    }
+    return rules;
 }
 
 
@@ -559,8 +558,11 @@ BetaMemory::Ptr RuleParser::constructNoValueGroup(
 /**
     Implement the rule in the given network.
 */
-void RuleParser::construct(ast::Rule& rule, Network& net) const
+ParsedRule::Ptr RuleParser::construct(ast::Rule& rule, Network& net) const
 {
+    ParsedRule::Ptr ruleInfo = ParsedRule::Ptr(new ParsedRule());
+    ruleInfo->ruleString_ = rule.str_;
+
     // keep track of the last implemented beta memory
     BetaMemory::Ptr currentBeta = nullptr;
 
@@ -635,6 +637,7 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
 
             if (rule.name_)
             {
+                ruleInfo->name_ = *rule.name_;
                 agendaNode->setName(*rule.name_);
                 production->setName(*rule.name_ + "[" + std::to_string(effectNo) + "]" );
             }
@@ -645,7 +648,8 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
                 production->setName(production->toString());
             }
             SetParent(currentBeta, agendaNode);
-            net.addProduction(agendaNode);
+            // net.addProduction(agendaNode);
+            ruleInfo->effectNodes_.push_back(agendaNode);
 
         } catch (NodeBuilderException& e) {
             // rethrow with more information
@@ -655,6 +659,8 @@ void RuleParser::construct(ast::Rule& rule, Network& net) const
         }
         effectNo++;
     }
+
+    return ruleInfo;
 }
 
 

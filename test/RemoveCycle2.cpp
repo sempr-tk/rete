@@ -35,7 +35,7 @@ int main()
     RuleParser p;
     Reasoner reasoner;
 
-    p.parseRules(
+    auto rules = p.parseRules(
         "[(<A> <B> <C>) -> (<A> <equivalent> <B>)]"
         "[(?a <equivalent> ?b) -> (?b <equivalent> ?a)]",
         reasoner.net()

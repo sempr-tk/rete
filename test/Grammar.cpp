@@ -21,22 +21,17 @@ int main()
     RuleParser p;
     Reasoner reasoner;
 
-    bool ok;
     // test quoted strings
-    ok = p.parseRules(
+    auto rules = p.parseRules(
         "[rule1: (<a> <b> <c>) -> (<a> <b> \"Hello, world!\")]\n",
         reasoner.net()
     );
 
-    if (!ok) return 1;
-    
     // test underscores in prefixed URIs
-    ok = p.parseRules(
+    auto moreRules = p.parseRules(
         "[rule1: (<a> <b> foo:Something_1) -> (<a> <b> <c>)]\n",
         reasoner.net()
     );
-
-    if (!ok) return 2;
 
     return 0;
 }

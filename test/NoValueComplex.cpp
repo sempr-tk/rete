@@ -24,12 +24,10 @@ int main()
     /**
         Complex but not nested
     */
-    bool ok = p.parseRules(
+    auto rules = p.parseRules(
         "[rule1: (?p <type> <parkinglot>), noValue { (?c <parksOn> ?p), (?c <color> <red>) } -> (<thereis> <nothing-red-on> ?p)]",
         reasoner.net()
     );
-
-    if (!ok) return 1;
 
 
     int asserted = 0;
@@ -75,11 +73,7 @@ int main()
     if (asserted != 6 || retracted != 2) return 4;
 
     // reset reasoner
-    auto productions = reasoner.net().getProductions();
-    for (auto p : productions)
-    {
-        reasoner.net().removeProduction(p);
-    }
+    rules.clear();
 
     reasoner.performInference();
 
@@ -95,12 +89,10 @@ int main()
         Complex, nested
         Trigger if there are no cars on the lot that are not red (-> all red)
     */
-    ok = p.parseRules(
+    rules = p.parseRules(
         "[rule2: (?p <type> <parkinglot>), noValue { (?c <parksOn> ?p), noValue { (?c <color> <red>) } } -> (<thereis> <no-not-red-on> ?p)]",
         reasoner.net()
     );
-
-    if (!ok) return 5;
 
     reasoner.performInference(); // should infer nothing.
     save(reasoner.net(), "novalue_complex_nested_0.dot");

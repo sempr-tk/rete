@@ -24,7 +24,7 @@ int main()
         Bad rule design! The first two conditions in the second rule are swapped, so a different
         joint node will be created, the sub-network duplicated.
     */
-    p.parseRules(
+    auto rules = p.parseRules(
         "[(?a <foo> ?b), (?b <bar> ?c), (?c <baz> ?d) -> (?a <foobaz> ?d)]"
         "[(?b <bar> ?c), (?a <foo> ?b), (?c <zab> ?d) -> (?a <foozab> ?d)]",
         reasoner.net()
@@ -41,7 +41,7 @@ int main()
         Good rule design: The first two conditions match in the two rules, so this subnetwork is
         reused.
     */
-    p2.parseRules(
+    rules = p2.parseRules(
         "[(?a <foo> ?b), (?b <bar> ?c), (?c <baz> ?d) -> (?a <foobaz> ?d)]"
         "[(?a <foo> ?b), (?b <bar> ?c), (?c <zab> ?d) -> (?a <foozab> ?d)]",
         reasoner2.net()

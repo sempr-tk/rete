@@ -41,7 +41,7 @@ int main()
 
     // if one likes a color, and something is of that color, one likes that thing; and
     // if one likes someone, and that someone likes something, one likes that thing, too.
-    p.parseRules(
+    auto rules = p.parseRules(
     "[likeColoredThings: (?a <type> <color>), (?b <likes> ?a), (?c <are> ?a) -> (?b <likes> ?c)]"
     "[transitiveLikes: (?a <likes> ?b), (?b <likes> ?c) -> (?a <likes> ?c)]",
         reasoner.net()

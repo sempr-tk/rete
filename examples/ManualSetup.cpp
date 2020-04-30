@@ -90,7 +90,9 @@ int main()
     /* ----- STEP 6 ----- */
     /* ------------------ */
     // save the production node to keep the network alive!
-    net.addProduction(inferNode);
+    // -- this has been changed, there is no longer a container to store these
+    //    in at the network. You'll need to save it yourself.
+
     // now we may forget the inferNode-pointer.
 
     /* ------------------ */

@@ -31,7 +31,7 @@ int main()
     Reasoner reasoner;
     RuleParser parser;
 
-    parser.parseRules(
+    auto rules = parser.parseRules(
         "[rule1: (?a <foo> ?b), (?b <foo> ?c) ->                (<just> <a> <dummy>)]"
         "[rule2: (?a <foo> ?b), (?b <foo> ?c), (?c <foo> ?d) -> (<just> <a> <dummy>)]"
         "[rule3:                (?b <foo> ?c), (?c <bar> ?d) -> (<just> <a> <dummy>)]"
@@ -45,21 +45,18 @@ int main()
     // convenience method to remove rules
     auto deconstruct = [&](const std::string& name)
     {
-        auto ps = reasoner.net().getProductions();
-        for (auto p : ps)
-        {
-            if (p->getName() == name)
-            {
-                reasoner.net().removeProduction(p);
-                return;
-            }
-        }
+        auto it = std::remove_if(rules.begin(), rules.end(),
+                [name](rete::ParsedRule::Ptr& rule) -> bool
+                {
+                    return rule->name() == name;
+                });
+        rules.erase(it, rules.end());
     };
 
 
-    for (auto p : reasoner.net().getProductions())
+    for (auto r : rules)
     {
-        std::cout << p->getName() << std::endl;
+        std::cout << r->name() << std::endl;
     }
 
     deconstruct("rule2");

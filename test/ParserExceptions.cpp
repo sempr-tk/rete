@@ -25,19 +25,24 @@ int main()
     RuleParser p;
     Reasoner reasoner;
 
-    // don't throw on a simple syntax error for now
-    bool ok = p.parseRules(
-        "[rule1: (?a <foo ?b) -> (?b <foo> ?a)]\n",
-        reasoner.net()
-    );
-    if (ok) return 1; // shouldn't be "ok"
+    std::vector<rete::ParsedRule::Ptr> rules;
+
+    try {
+        rules = p.parseRules(
+            "[rule1: (?a <foo ?b) -> (?b <foo> ?a)]\n",
+            reasoner.net()
+        );
+        return 1; // no exception? --> error!
+    } catch (ParserException& e) {
+        std::cout << e.what() << std::endl;
+    }
 
     // unknown alpha condition
     try {
-        p.parseRules(
+        rules = p.parseRules(
             "[rule2: foo(?a) -> (?b <foo> ?a)]\n",
             reasoner.net()
-            );
+        );
         return 2; // no exception? --> error!
     } catch (ParserException& e) {
         std::cout << e.what() << std::endl;
@@ -45,10 +50,10 @@ int main()
 
     // noValue at first condition
     try {
-        p.parseRules(
+        rules = p.parseRules(
             "[rule3: noValue { (?a <foo> ?b) } -> (?b <foo> ?a)]\n",
             reasoner.net()
-            );
+        );
         return 3; // no exception? --> error!
     } catch (ParserException& e) {
         std::cout << e.what() << std::endl;
@@ -56,10 +61,10 @@ int main()
 
     // unbound variable in effect
     try {
-        p.parseRules(
+        rules = p.parseRules(
             "[rule4: (?a <foo> ?b) -> (?b <foo> ?d)]\n",
             reasoner.net()
-            );
+        );
         return 4; // no exception? --> error!
     } catch (ParserException& e) {
         std::cout << e.what() << std::endl;
@@ -68,10 +73,10 @@ int main()
     // builtin leaves variable unbound
     // (actually, the nodebuilder checks this itself and throws an exception)
     try {
-        p.parseRules(
+        rules = p.parseRules(
             "[rule5: (?a <foo> ?b), sum(?sum ?b ?c) -> (?b <foo> ?a)]\n",
             reasoner.net()
-            );
+        );
         return 5; // no exception? --> error!
     } catch (ParserException& e) {
         std::cout << e.what() << std::endl;
@@ -79,10 +84,10 @@ int main()
 
     // not a number constant in math builtin
     try {
-        p.parseRules(
+        rules = p.parseRules(
             "[rule6: (?a <foo> ?b), sum(?sum 1 \"abc\") -> (?b <foo> ?a)]\n",
             reasoner.net()
-            );
+        );
         return 5; // no exception? --> error!
     } catch (ParserException& e) {
         std::cout << e.what() << std::endl;

@@ -39,7 +39,7 @@ int main()
     RuleParser p;
     Reasoner reasoner;
 
-    p.parseRules(
+    auto rules = p.parseRules(
         "[init: (<A> <B> <C>) -> (<a> <foo> <b>), (<a> <bar> <b>)]"
         "[circle1: (<a> <foo> <b>) -> (<a> <bar> <b>)]"
         "[circle2: (<a> <bar> <b>) -> (<a> <foo> <b>)]"

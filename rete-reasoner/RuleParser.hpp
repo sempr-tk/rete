@@ -7,6 +7,7 @@
 #include "RuleGrammar.hpp"
 #include "RuleParserAST.hpp"
 #include "NodeBuilder.hpp"
+#include "ParsedRule.hpp"
 
 #define USE_RTTI
 #include <pegmatite/pegmatite.hh>
@@ -73,7 +74,13 @@ class RuleParser : peg::ASTParserDelegate {
     std::map<std::string, std::unique_ptr<NodeBuilder>> conditionBuilders_;
     std::map<std::string, std::unique_ptr<NodeBuilder>> effectBuilders_;
 
-    void construct(ast::Rule&, Network&) const;
+    /**
+        Constructs a rule from its ast representation in the network, and
+        returns a struct containing information about the rule, including the
+        effect nodes that hold the corresponding part of the network alive.
+    */
+    ParsedRule::Ptr construct(ast::Rule&, Network&) const;
+
     BetaMemory::Ptr constructPrimitive(Network&, ast::Rule&, ast::Precondition&, BetaMemory::Ptr, std::map<std::string, Accessor::Ptr>&) const;
     BetaMemory::Ptr constructNoValueGroup(Network&, ast::Rule&, ast::NoValueGroup&, BetaMemory::Ptr, std::map<std::string, Accessor::Ptr>&) const;
 
@@ -98,9 +105,10 @@ public:
         network.
         \arg rules the string defining the rules
         \arg network the rete network to integrate the rules into
-        \return true if parsing and construction of the rules was successfull
+        \return the list of parsed rules. If these run out of scope the network
+                will be deconstructed automatically!
     */
-    bool parseRules(const std::string& rules, Network& network);
+    std::vector<ParsedRule::Ptr> parseRules(const std::string& rules, Network& network) __attribute__((warn_unused_result));
 
     const RuleGrammar& g = RuleGrammar::get();
 };

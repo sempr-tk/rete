@@ -37,7 +37,7 @@ int main()
     RuleParser p;
     Reasoner reasoner;
 
-    p.parseRules(
+    auto rules = p.parseRules(
         "[rule1: (<A> <B> <C>) -> (<A> <equivalent> <B>)]"
         "[rule2: (?a <equivalent> ?b) -> (?b <equivalent> ?a)]"
         "[rule3: (<B> <equivalent> <A>) -> (<X> <Y> <Z>)]"

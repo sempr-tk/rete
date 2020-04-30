@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.0] - 2020-04-30
+
+- Removed vector to store ProductionNodes in from the rete::Network class
+- RuleParser now returns vector of ParsedRules, which contain the
+  ProductionNodes and additional information.
+  NOTE: This is a breaking change! If you ignore the return value of
+        rete::RuleParser::parseRules the constructed ProductionNodes run out
+        of scope and the rules will be immediately deconstructed again.
+
 ## [0.2.7] - 2020-04-24
 
 - Added "print" as a rule effect

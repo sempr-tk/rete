@@ -52,6 +52,7 @@ class BetaMemory : public Node {
     void addProduction(ProductionNodePtr);
     void removeProduction(ProductionNodeWPtr);
 
+    inline void accept(NodeVisitor& visitor) override { visitor.visit(this); }
 public:
     using Container = std::vector<Token::Ptr>;
     using Iterator = Container::iterator;

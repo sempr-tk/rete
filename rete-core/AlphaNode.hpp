@@ -50,6 +50,7 @@ private:
     */
     void initialize() override;
 
+    inline void accept(NodeVisitor& visitor) override { visitor.visit(this); }
 public:
     /**
         Connects an AlphaNode to its parent and vice versa. Implemented as a static function since

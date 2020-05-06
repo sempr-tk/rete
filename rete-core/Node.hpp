@@ -4,6 +4,8 @@
 #include <string>
 #include <memory>
 
+#include "NodeVisitor.hpp"
+
 namespace rete {
 
 /**
@@ -17,7 +19,7 @@ class Node {
         processed by this node, too.
     */
     virtual void initialize() = 0;
-    
+
 public:
     using Ptr = std::shared_ptr<Node>;
     /**
@@ -30,6 +32,13 @@ public:
         Default impl returns the pointer address.
     */
     virtual std::string getDOTId() const;
+
+    /**
+        Accept a visitor
+    */
+    virtual void accept(NodeVisitor&) = 0;
+
+
 
     virtual ~Node();
 };

@@ -24,6 +24,7 @@ protected:
     Production::Ptr production_;
     std::string getDOTAttr() const override;
     std::string name_;
+    inline void accept(NodeVisitor& visitor) override { visitor.visit(this); }
 public:
     using Ptr = std::shared_ptr<ProductionNode>;
     using WPtr = std::weak_ptr<ProductionNode>;

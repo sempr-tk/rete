@@ -41,7 +41,7 @@ class AlphaMemory : public Node {
     */
     void removeChild(BetaNode::WPtr);
 
-
+    inline void accept(NodeVisitor& visitor) override { visitor.visit(this); }
 protected:
     void propagate(WME::Ptr, PropagationFlag);
 

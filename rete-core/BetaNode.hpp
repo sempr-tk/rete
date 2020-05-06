@@ -31,7 +31,7 @@ class BetaNode : public Node {
         it only iterates over the left parent.
     */
     void initialize() override;
-
+    inline void accept(NodeVisitor& visitor) override { visitor.visit(this); }
 protected:
     AlphaMemoryPtr parentAlpha_;
     BetaMemory::Ptr parentBeta_;

@@ -47,7 +47,7 @@ class BetaBetaNode : public BetaNode {
         memory on its own for every of these calls.
     */
     void initialize() override;
-
+    inline void accept(NodeVisitor& visitor) override { visitor.visit(this); }
 protected:
     // left and right BetaMemory-parent.
     // parentAlpha_ and parentBeta_ from BetaNode are left unused.

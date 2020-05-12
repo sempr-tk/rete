@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(rete VERSION 0.3.0)
+project(rete VERSION 0.4.0)
 add_definitions(-std=c++11 -Wall -Wextra -pedantic -Wnon-virtual-dtor -Werror=unused-result)
 
 option(DEBUG_PARSING "enable debug output while parsing rules" false)

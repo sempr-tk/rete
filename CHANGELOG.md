@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.0] - 2020-05-12
+
+- Added a visitor interface for nodes (NodeVisitor)
+- Added a toString() method to nodes as an alternative to the getDOTAttr,
+  to return a string representation without the DOT formatting stuff.
+  NOTE: getDOTAttr and getDOTId should be removed, and creating a DOT
+        representation be moved into a special visitor. Maybe later.
+
 ## [0.3.0] - 2020-04-30
 
 - Removed vector to store ProductionNodes in from the rete::Network class

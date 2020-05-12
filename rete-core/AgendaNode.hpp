@@ -31,6 +31,7 @@ public:
     */
     void activate(Token::Ptr, PropagationFlag) override;
 
+    std::string toString() const override;
 
 };
 

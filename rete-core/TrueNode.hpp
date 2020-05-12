@@ -43,6 +43,8 @@ public:
         is equal.
     */
     bool operator == (const AlphaNode& other) const override;
+
+    std::string toString() const override;
 };
 
 }

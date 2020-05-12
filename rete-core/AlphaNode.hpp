@@ -88,6 +88,9 @@ public:
     */
     virtual bool operator == (const AlphaNode& other) const = 0;
 
+
+    std::string toString() const override;
+
 protected:
     /**
         Calls activate(wme) on all registered child nodes.

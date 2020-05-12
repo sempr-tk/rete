@@ -84,6 +84,8 @@ public:
         node, and process them only in the direct chain towards this node.
     */
     void initialize() override;
+
+    std::string toString() const override;
 };
 
 } /* rete */

@@ -13,6 +13,11 @@ std::string NoValue::getDOTAttr() const
     return "[label=\"NoValue[diff: " + std::to_string(tokenSizeDiff_) + "]\"]";
 }
 
+std::string NoValue::toString() const
+{
+    return "NoValue[diff: " + std::to_string(tokenSizeDiff_) + "]";
+}
+
 Token::Ptr NoValue::getCorresponding(Token::Ptr token)
 {
     for (size_t i = 0; i < tokenSizeDiff_; i++)

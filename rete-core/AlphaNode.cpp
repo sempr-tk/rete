@@ -41,6 +41,13 @@ void AlphaNode::initialize()
     }
 }
 
+
+std::string AlphaNode::toString() const
+{
+    return "AlphaNode";
+}
+
+
 void AlphaNode::addChild(AlphaNode::Ptr node)
 {
     children_.push_back(node);

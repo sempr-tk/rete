@@ -25,6 +25,11 @@ std::string AlphaBetaAdapter::getDOTAttr() const
     return "[label=\"AB-Adapter\"]";
 }
 
+std::string AlphaBetaAdapter::toString() const
+{
+    return "AB-Adapter";
+}
+
 bool AlphaBetaAdapter::operator== (const BetaNode& o) const
 {
     auto other = dynamic_cast<const AlphaBetaAdapter*>(&o);

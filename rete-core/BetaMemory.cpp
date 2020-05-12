@@ -9,6 +9,11 @@
 namespace rete {
 
 
+std::string BetaMemory::toString() const
+{
+    return "BetaMemory[" + std::to_string(size()) + "]";
+}
+
 void BetaMemory::initialize()
 {
     if (parent_) parent_->initialize();

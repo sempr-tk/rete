@@ -36,6 +36,19 @@ class GenericJoin : public JoinNode {
         return s +"\"]\n";
     }
 
+    std::string toString() const override
+    {
+        std::string s = "GenericJoin";
+        if (isNegative()) s = "negative " + s;
+
+        for (auto check : checks_)
+        {
+            s = s + "\n" + check.first->toString() + " == " + check.second->toString();
+        }
+
+        return s;
+    }
+
     typedef std::pair<Accessor::Ptr, Accessor::Ptr> AccessorPair;
     std::vector<AccessorPair> checks_;
 public:

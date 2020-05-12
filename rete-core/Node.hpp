@@ -34,6 +34,12 @@ public:
     virtual std::string getDOTId() const;
 
     /**
+        Returns a short string representation of the node.
+        An alternative to getDOTAttr, without the dot-format stuff.
+    */
+    virtual std::string toString() const = 0;
+
+    /**
         Accept a visitor
     */
     virtual void accept(NodeVisitor&) = 0;

@@ -8,6 +8,11 @@
 
 namespace rete {
 
+std::string AlphaMemory::toString() const
+{
+    return "AlphaMemory[" + std::to_string(size()) + "]";
+}
+
 void AlphaMemory::activate(WME::Ptr wme, PropagationFlag flag)
 {
     if (flag == PropagationFlag::ASSERT)

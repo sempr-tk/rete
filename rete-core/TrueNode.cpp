@@ -18,6 +18,11 @@ std::string TrueNode::getDOTAttr() const
     return "[label=\"true\"]";
 }
 
+std::string TrueNode::toString() const
+{
+    return "true";
+}
+
 void TrueNode::activate(WME::Ptr, PropagationFlag)
 {
     // Nothing to do. We don't care about any other WMEs aside from our own

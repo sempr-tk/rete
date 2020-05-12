@@ -58,6 +58,7 @@ public:
     NoValue(size_t diff);
 
     std::string getDOTAttr() const override;
+    std::string toString() const override;
 
     /**
         ASSERT/UPDATE:

@@ -28,6 +28,8 @@ public:
     void leftActivate(Token::Ptr, PropagationFlag) override;
 
     bool operator == (const BetaNode& other) const override;
+
+    std::string toString() const override;
 };
 
 } /* rete */

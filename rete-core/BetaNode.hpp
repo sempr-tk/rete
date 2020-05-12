@@ -85,6 +85,9 @@ public:
         constructing the network, before connecting the node in question.
     */
     virtual bool operator == (const BetaNode& other) const = 0;
+
+
+    std::string toString() const override;
 };
 
 } /* rete */

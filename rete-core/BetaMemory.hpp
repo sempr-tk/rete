@@ -100,6 +100,8 @@ public:
 
     Iterator begin();
     Iterator end();
+
+    std::string toString() const override;
 };
 
 } /* rete */

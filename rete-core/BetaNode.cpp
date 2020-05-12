@@ -46,4 +46,10 @@ std::string BetaNode::getDOTAttr() const
     return "[label=BetaNode]";
 }
 
+std::string BetaNode::toString() const
+{
+    return "BetaNode";
+}
+
+
 } /* rete */

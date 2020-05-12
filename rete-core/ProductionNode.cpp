@@ -32,3 +32,8 @@ std::string rete::ProductionNode::getDOTAttr() const
 {
     return "[label=\"ProductionNode \'" + getName() + "\'\\n" + production_->getName() + "\"]";
 }
+
+std::string rete::ProductionNode::toString() const
+{
+    return "ProductionNode \'" + getName() + "\'\n" + production_->getName();
+}

@@ -12,6 +12,11 @@ Builtin::~Builtin()
 {
 }
 
+std::string Builtin::toString() const
+{
+    return name();
+}
+
 std::string Builtin::getDOTAttr() const
 {
     return "[label=\"" + util::dotEscape(this->name()) + "\"]";

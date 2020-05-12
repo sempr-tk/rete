@@ -13,6 +13,10 @@ std::string AgendaNode::getDOTAttr() const
     return "[label=\"AgendaNode \'" + getName() + "\'\\n" + production_->toString() + "\"]";
 }
 
+std::string AgendaNode::toString() const
+{
+    return "AgendaNode \'" + getName() + "\'\n" + production_->toString();
+}
 
 void AgendaNode::activate(Token::Ptr token, PropagationFlag flag)
 {

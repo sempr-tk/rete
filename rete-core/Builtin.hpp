@@ -40,6 +40,7 @@ public:
     */
     virtual WME::Ptr process(Token::Ptr) = 0;
 
+    std::string toString() const override;
 };
 
 } /* rete */

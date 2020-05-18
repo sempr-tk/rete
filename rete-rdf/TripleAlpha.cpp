@@ -8,7 +8,6 @@ TripleAlpha::TripleAlpha(Triple::Field f, const std::string& v)
 {
 }
 
-
 void TripleAlpha::activate(WME::Ptr wme, PropagationFlag flag)
 {
     if (flag == PropagationFlag::RETRACT)
@@ -54,6 +53,11 @@ std::string TripleAlpha::getDOTAttr() const
             util::dotEscape(value_) + ")\"]";
 }
 
+std::string TripleAlpha::toString() const
+{
+    std::string field = Triple::fieldName(field_);
+    return "TripleCheck\n (" + field + " == " + value_ + ")";
+}
 
 
 } /* rete */

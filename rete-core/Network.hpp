@@ -28,6 +28,7 @@ class Network {
         void activate(WME::Ptr, PropagationFlag) override;
         bool operator == (const AlphaNode& other) const override;
         std::string getDOTAttr() const override;
+        std::string toString() const override;
     };
 
     /**

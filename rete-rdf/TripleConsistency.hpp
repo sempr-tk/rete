@@ -20,6 +20,8 @@ public:
     TripleConsistency(Triple::Field, Triple::Field);
     void activate(WME::Ptr, PropagationFlag) override;
     bool operator == (const AlphaNode& other) const override;
+
+    std::string toString() const override;
 };
 
 } /* rete */

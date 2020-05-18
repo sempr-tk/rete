@@ -42,6 +42,11 @@ std::string Network::DummyAlpha::getDOTAttr() const
     return "[label=Root]";
 }
 
+std::string Network::DummyAlpha::toString() const
+{
+    return "Root";
+}
+
 
 Network::Network()
     : root_(new Network::DummyAlpha()), holdAlive_(new AlphaMemory()), agenda_(new Agenda())

@@ -43,4 +43,10 @@ std::string TripleConsistency::getDOTAttr() const
     return "[label=\"TripleCheck\\n(" + Triple::fieldName(field1_) + " == " + Triple::fieldName(field2_) + ")\"]";
 }
 
+std::string TripleConsistency::toString() const
+{
+    return "TripleCheck\n(" + Triple::fieldName(field1_) + " == " +
+                              Triple::fieldName(field2_) + ")";
+}
+
 } /* rete */

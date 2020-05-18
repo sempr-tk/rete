@@ -35,4 +35,10 @@ std::string TripleTypeAlpha::getDOTAttr() const
     return "[label=\"Triple\"]";
 }
 
+
+std::string TripleTypeAlpha::toString() const
+{
+    return "Triple";
+}
+
 }

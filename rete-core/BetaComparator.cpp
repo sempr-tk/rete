@@ -11,6 +11,8 @@ bool BetaComparator::operator() (const BetaNode::WPtr& aw, const BetaNode::WPtr&
     auto a = aw.lock();
     auto b = bw.lock();
 
+    if (!a || !b) return false;
+
     // question: is "a" a descendent of "b"?
     std::vector<BetaNode::Ptr> toVisit;
     toVisit.push_back(b);

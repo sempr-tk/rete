@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1] - 2020-05-20
+
+- Fixed a segfault that would occur after removing and adding rules again,
+  due to the BetaComparator trying to access expired weak pointers.
+- Added a bit of cleanup-code: Nodes now remove themselves from their parents
+  children-lists upon destruction.
+
 ## [0.4.0] - 2020-05-12
 
 - Added a visitor interface for nodes (NodeVisitor)

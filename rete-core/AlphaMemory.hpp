@@ -36,11 +36,6 @@ class AlphaMemory : public Node {
     */
     void addChild(BetaNode::Ptr);
 
-    /**
-        Removes a child node.
-    */
-    void removeChild(BetaNode::WPtr);
-
     inline void accept(NodeVisitor& visitor) override { visitor.visit(this); }
 protected:
     void propagate(WME::Ptr, PropagationFlag);
@@ -74,6 +69,12 @@ public:
     Iterator begin();
     Iterator end();
 
+    /**
+        Removes a child node from the list of children.
+        Does not unset this as the parent of the child.
+    */
+    void removeChild(BetaNode::WPtr);
+    void removeChild(BetaNode*);
 
     /**
         Calls initialize() on the parent alpha node, which will search its

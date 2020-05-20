@@ -118,6 +118,20 @@ void AlphaMemory::removeChild(BetaNode::WPtr child)
     );
 }
 
+void AlphaMemory::removeChild(BetaNode* child)
+{
+    children_.erase(
+        std::remove_if(children_.begin(), children_.end(),
+            [child](BetaNode::WPtr other)
+            {
+                auto o = other.lock();
+                return !o || (o.get() == child); // also removes expired nodes
+            }
+        ),
+        children_.end()
+    );
+}
+
 
 void AlphaMemory::getChildren(std::vector<BetaNode::Ptr>& children)
 {

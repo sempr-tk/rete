@@ -58,6 +58,8 @@ public:
     using WPtr = std::weak_ptr<BetaBetaNode>;
 
     BetaBetaNode();
+    ~BetaBetaNode();
+
     BetaNode::Ptr getRightActivator() const;
 
     /// Connects a BetaBetaNode to its parents

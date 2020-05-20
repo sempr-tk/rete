@@ -37,6 +37,7 @@ private:
         weak_ptr.
     */
     void removeChild(AlphaNode::WPtr);
+    void removeChild(AlphaNode*);
 
     /**
         Initialize this node. This will look at its parent: If the parent has an alpha-memory,
@@ -52,6 +53,11 @@ private:
 
     inline void accept(NodeVisitor& visitor) override { visitor.visit(this); }
 public:
+    /**
+        Destructor, removes this node from its parent
+    */
+    ~AlphaNode();
+
     /**
         Connects an AlphaNode to its parent and vice versa. Implemented as a static function since
         we need shared/weak ptr for both sides.

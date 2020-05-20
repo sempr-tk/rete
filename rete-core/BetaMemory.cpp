@@ -211,6 +211,20 @@ void BetaMemory::removeChild(BetaNode::WPtr child)
     );
 }
 
+void BetaMemory::removeChild(BetaNode* child)
+{
+    children_.erase(
+        std::remove_if(children_.begin(), children_.end(),
+            [child](BetaNode::WPtr other)
+            {
+                auto o = other.lock();
+                return !o || (o.get() == child); // also removes expired nodes
+            }
+        ),
+        children_.end()
+    );
+}
+
 void BetaMemory::getChildren(std::vector<BetaNode::Ptr>& children)
 {
     children.reserve(children_.size());
@@ -230,6 +244,20 @@ void BetaMemory::removeProduction(ProductionNode::WPtr p)
 {
     productions_.erase(
         std::remove_if(productions_.begin(), productions_.end(), util::EqualWeak<ProductionNode>(p)),
+        productions_.end()
+    );
+}
+
+void BetaMemory::removeProduction(ProductionNode* p)
+{
+    productions_.erase(
+        std::remove_if(productions_.begin(), productions_.end(),
+            [p](ProductionNode::WPtr other)
+            {
+                auto o = other.lock();
+                return !o || (o.get() == p); // also removes expired ones
+            }
+        ),
         productions_.end()
     );
 }

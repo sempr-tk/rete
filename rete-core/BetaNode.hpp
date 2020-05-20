@@ -41,6 +41,7 @@ public:
     using Ptr = std::shared_ptr<BetaNode>;
     using WPtr = std::weak_ptr<BetaNode>;
     BetaNode();
+    ~BetaNode();
 
     /**
         Connects a BetaNode with the given memories. Lets the BetaNode remember the memories for

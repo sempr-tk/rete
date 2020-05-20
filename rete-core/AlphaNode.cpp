@@ -6,6 +6,11 @@
 
 namespace rete {
 
+AlphaNode::~AlphaNode()
+{
+    if (parent_) parent_->removeChild(this);
+}
+
 void AlphaNode::initialize()
 {
     if (this->parent_)
@@ -61,6 +66,19 @@ void AlphaNode::removeChild(AlphaNode::WPtr node)
     );
 }
 
+void AlphaNode::removeChild(AlphaNode* node)
+{
+    children_.erase(
+        std::remove_if(children_.begin(), children_.end(),
+            [node](AlphaNode::WPtr other)
+            {
+                auto o = other.lock();
+                return !o || (o.get() == node); // also deletes expired pointers
+            }),
+        children_.end()
+    );
+}
+
 
 void AlphaNode::getChildren(std::vector<AlphaNode::Ptr>& children)
 {
@@ -75,7 +93,7 @@ void AlphaNode::getChildren(std::vector<AlphaNode::Ptr>& children)
 
 void AlphaNode::propagate(WME::Ptr wme, PropagationFlag flag)
 {
-    for (auto child :children_)
+    for (auto child : children_)
     {
         auto c = child.lock();
         if (c) c->activate(wme, flag);

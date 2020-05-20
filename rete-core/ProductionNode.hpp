@@ -29,6 +29,7 @@ public:
     using Ptr = std::shared_ptr<ProductionNode>;
     using WPtr = std::weak_ptr<ProductionNode>;
     ProductionNode(Production::Ptr);
+    ~ProductionNode();
 
     /**
         Initializes the ProductionNode by iterating over the parents contents and calling

@@ -41,7 +41,6 @@ class BetaMemory : public Node {
         Adds a child BetaNode that will be left-activated upon changes.
     */
     void addChild(BetaNodePtr);
-    void removeChild(BetaNodeWPtr);
 
     /**
         In principle, ProductionNodes are handled the same way as BetaNodes -- I just made the
@@ -50,7 +49,6 @@ class BetaMemory : public Node {
         negative nodes?
     */
     void addProduction(ProductionNodePtr);
-    void removeProduction(ProductionNodeWPtr);
 
     inline void accept(NodeVisitor& visitor) override { visitor.visit(this); }
 public:
@@ -76,6 +74,11 @@ public:
     */
     void initialize() override;
 
+
+    void removeChild(BetaNodeWPtr);
+    void removeChild(BetaNode*);
+    void removeProduction(ProductionNodeWPtr);
+    void removeProduction(ProductionNode*);
 
     /**
         Given a Token t_old and a WME w, adds a new Token t with

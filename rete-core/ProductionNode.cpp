@@ -7,6 +7,11 @@ rete::ProductionNode::ProductionNode(Production::Ptr p)
 {
 }
 
+rete::ProductionNode::~ProductionNode()
+{
+    if (parent_) parent_->removeProduction(this);
+}
+
 void rete::ProductionNode::initialize()
 {
     if (parent_)

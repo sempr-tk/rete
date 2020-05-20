@@ -23,6 +23,12 @@ BetaBetaNode::BetaBetaNode()
 {
 }
 
+BetaBetaNode::~BetaBetaNode()
+{
+    if (parentRight_) parentRight_->removeChild(rightActivator_);
+    if (parentLeft_) parentLeft_->removeChild(this);
+}
+
 bool BetaBetaNode::operator==(const BetaNode& other) const
 {
     auto optr = dynamic_cast<const BetaBetaNode*>(&other);

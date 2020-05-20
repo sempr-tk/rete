@@ -8,6 +8,12 @@ BetaNode::BetaNode()
 {
 }
 
+BetaNode::~BetaNode()
+{
+    if (parentAlpha_) parentAlpha_->removeChild(this);
+    if (parentBeta_) parentBeta_->removeChild(this);
+}
+
 void BetaNode::initialize()
 {
     if (parentBeta_)

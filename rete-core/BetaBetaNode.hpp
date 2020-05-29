@@ -91,6 +91,7 @@ public:
 */
 class BetaBetaRightActivator : public BetaNode {
     BetaBetaNode* node_; // where to delegate to
+    inline void accept(NodeVisitor& visitor) override { visitor.visit(node_); }
 public:
     BetaBetaRightActivator(BetaBetaNode* node);
 

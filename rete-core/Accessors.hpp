@@ -4,7 +4,11 @@
 #include <string>
 #include <memory>
 #include <set>
+#include <vector>
 #include <typeindex>
+#include <functional>
+#include <cassert>
+#include <algorithm>
 
 #include "WME.hpp"
 #include "Token.hpp"
@@ -12,140 +16,216 @@
 
 namespace rete {
 
-template <class Type, class Self> class ValueAccessor;
+/**
+    The InterpretationBase is the base class for the implementation of
+    different interpretations of a value accessor. It provides an interface
+    that allows you to compare if the values accessed by this InterpretationBase
+    and another InterpretationBase in a given Token/WME are equal.
+
+    NOTE: Be careful when using it. The valuesEqual method *assumes* that both
+    Interpretations are of the *same type*, even though only InterpretationBase&
+    is used here! This is mainly for the GenericJoin node which takes pairs
+    of InterpretationBase* to do the check on the data.
+*/
+class InterpretationBase {
+public:
+    virtual ~InterpretationBase() = default;
+
+    /**
+        Casts other to the same Interpretation<T> as this (statically!) and
+        checks if the values returned by this and other applied to the given
+        token/wme are equal.
+    */
+    virtual bool valuesEqual(const InterpretationBase& other,
+                             Token::Ptr token,
+                             WME::Ptr wme) const = 0;
+};
+
+
+// forward declaration of Interpretation<T>
+template <class T> class Interpretation;
 
 /**
-    The Accessor abstracts the access to concrete values in WMEs. A concrete implementation
-    could e.g. return the predicate of a rdf-triple, or one element of a std::tuple.
+    Objects of type AccessorBase are used to grant access to values inside of
+    WMEs. To support a very generic functionality inside the reasoner / pattern
+    matching it removes the dependency on the concrete WME type. A subclass of
+    AccessorBase implements functions to get exactly one part, one value of a
+    WME, e.g. the "age" member of a "Person" WME. If the member can be casted
+    or converted to different value types, e.g. the age can be interpreted as
+    an integer or a string, the AccessorBase-Subclass can register these
+    Interpretation<T>s at the AccessorBase. The users of AccessorBase* can then
+    ask it for these interpretations and use them to retrieve the data in a
+    format they like (and is supported by the accessor), without knowing the
+    type of WME they are accessing or the type of the Accessor they are using.
 
-    This base class also manages a list of concrete types it implements, and therefore allows to
-    call
-        accessor->canAs<Type>()
-    and
-        accessor->as<Type>()
-    to easily check for and use a concrete type.
-    TODO: This could/should be done for WMEs, too(?)
+    The AccessorBase contains a vector of {type_index, InterpretationBase*} --
+    mappings of specific types to the interpretation instances which allow us
+    to retrieve that type from a Token/WME. The vector is filled by subclasses
+    of AccessorBase.
 */
-class Accessor {
+class AccessorBase {
     /**
         Implementation dependent equality check for Accessors.
+        Necessary to check if two join nodes are equal.
     */
-    virtual bool equals(const Accessor& other) const = 0;
+    virtual bool equals(const AccessorBase& other) const = 0;
 
 protected:
-    std::set<std::type_index> types_;
     int index_;
 
-    template <class T>
-    void registerType()
-    {
-        types_.insert(typeid(T));
-    }
+    typedef std::pair<std::type_index, InterpretationBase*> TypeInterpretationPair;
+    /// A vector containing all possible interpretations of the accessed value
+    std::vector<TypeInterpretationPair> interpretations_;
 
 public:
-    using Ptr = std::shared_ptr<Accessor>;
+    using Ptr = std::shared_ptr<AccessorBase>;
 
     /**
-        Creates a new ValueAccessor. The index defines where in a given token to search. Index of
-        -1 (default) specifies that this ValueAccessor may only be used with a WME, not with a
-        token.
+        Creates a new Accessor. The index defines where in a given token to
+        search. Index of -1 (default) specifies that this Accessor may only be
+        used with a WME, not with a token.
     */
-    Accessor(int index = -1);
-    virtual ~Accessor();
+    AccessorBase(int index = -1);
 
-    int& index() { return index_; }
-    int const& index() const { return index_; }
+    // delete copy and move ctors for now, as this is a bit difficult with
+    // the function bindings in the interpretations
+    AccessorBase(const AccessorBase&) = delete;
+    AccessorBase(AccessorBase&&) = delete;
+    AccessorBase& operator = (const AccessorBase&) = delete;
+    AccessorBase& operator = (AccessorBase&&) = delete;
+
+    virtual ~AccessorBase();
+
+    int& index();
+    int const& index() const;
+
 
     /**
-        returns true if the Accessor can be cast to Type
+        Returns a pair of interpretations that return the same value type,
+        where the first is from 'this' and the second is from 'other'.
+        Returns a pair of nullptr if no common interpretation is found.
     */
-    template <class Type>
-    bool canAs() const
+    std::pair<InterpretationBase*, InterpretationBase*>
+        getCommonInterpretation(const AccessorBase& other) const;
+
+    /**
+        Returns all common interpretations of 'this' and 'other'.
+    */
+    std::vector<std::pair<InterpretationBase*, InterpretationBase*>>
+        getCommonInterpretations(const AccessorBase& other) const;
+
+    /**
+        Returns an Interpretation through which you can get a value of T from
+        a Token/WME, or a nullptr if no such interpretation exists for this
+        accessor. The returned pointer is owned by the accessor.
+    */
+    template <class T>
+    const Interpretation<T>* getInterpretation() const
     {
-        return types_.find(typeid(Type)) != types_.end();
+        auto it = std::find_if(
+                    interpretations_.begin(),
+                    interpretations_.end(),
+                    [](const TypeInterpretationPair& pair)
+                    {
+                        return pair.first == typeid(T);
+                    });
+
+        if (it == interpretations_.end())
+        {
+            return nullptr;
+        }
+        else
+        {
+            return static_cast<Interpretation<T>*>(it->second);
+        }
+    }
+
+
+    /**
+        Equality between accessors is given when they use the same token-index,
+        are of the same type and access the same part of a WME.
+        This operator only implements the token-index-check and calls the pure
+        virtual equals-method which provides the implementation dependent
+        checks.
+    */
+    bool operator == (const AccessorBase& other) const
+    {
+        if (this == &other)
+            return true;
+        else if (this->index_ == other.index_)
+            return this->equals(other);
+        else
+            return false;
     }
 
     /**
-        static_casts this to a pointer to Type
+        Accessors must be clonable! In a list of variable bindings we will need
+        to increment the index, but the nodes need access to the index they
+        were given. (Remember the reverse-counting index, where 0 is always the
+        newest/last element)
     */
-    template <class Type>
-    Type* as()
-    {
-        return static_cast<Type*>(this);
-    }
-
-    /**
-        Equality between accessors is given when they use the same token-index, are of the same type
-        and access the same part of a WME.
-        This operator only implements the token-index-check and calls the pure virtual equals-method
-        which provides the implementation dependent checks.
-    */
-    bool operator == (const Accessor& other) const
-    {
-        if (this == &other) return true;
-        if (this->index_ == other.index_) return this->equals(other);
-        return false;
-    }
-
-    /**
-        In order to do generic joins with any two Accessors, we need a way to compare them, or
-        rather, the values that they point to given a token and a wme. This is difficult through a
-        pointer to base, so instead we provide a virtual method that allows any Accessor to check
-        if some other one implements the same ValueAccessor-interface as itself, cast it and do
-        the check.
-    */
-    virtual bool canCompareValues(const Accessor& other) const = 0;
-    virtual bool valuesEqual(Accessor& other, Token::Ptr token, WME::Ptr wme) = 0;
-
-    /**
-        Accessors must be clonable! In a list of variable bindings we will need to increment the
-        index, but the nodes need access to the index they were given. (stupid reverse counting
-        index, where 0 is the last element...)
-    */
-    virtual Accessor* clone() const = 0;
+    virtual AccessorBase* clone() const = 0;
 
     /**
         For visualization purposes, every Accessor may implement a toString-method. This is used
         in nodes to show what variables they access. The base-implementation simply returns
         "Accessor(index)".
     */
-    virtual std::string toString() const
-    {
-        return "Accessor(" + std::to_string(index_) + ")";
-    }
+    virtual std::string toString() const;
 
 };
 
 
 /**
-    A helper class to create a unified interface for all types of values.
-    Simply adds a pure virtual getValue(WME::Ptr, Type&) method (which has to be overridden) and a
-    helper getValue(Token::Ptr, Type&).
+    An Interpretation provides an interface to retrieve a value of the
+    specified type T from a Token/WME.
+    It serves some kind of type-erasure: Instead of checking if a given
+    accessor is of some special type which provides a T (as in the old
+    Accessor-System), you only need to check if the AccessorBase has an
+    Interpretation<T> and use that. The Interpretation<T> is not independent
+    of the specific accessor, though: It only stores a std::function that is
+    bound to an implementation in a concrete accessor class.
 
-    Type: The value that can be accessed through accessors that implement this interface
-    Self: The type that inherits the ValueAccessor. CRTP to access the index_ value from Accessor.
+    NOTE: The valuesEqual method assumes that the 'other' interpretation is
+    of the *same type*!
 */
-template <class Type, class Self>
-class ValueAccessor {
+template <class T>
+class Interpretation : public InterpretationBase {
+    std::function<void(WME::Ptr, T&)> extractor_;
+    AccessorBase* parent_;
+
 public:
-    virtual ~ValueAccessor() {}
-
     /**
-        Returns the value extracted from the WME as <Type>.
-        Sadly this can't use the return type, or else you won't be able to implement multiple
-        ValueAccessor<T>s in one accessor (return type is not part of the function signature).
+        Assumes the given WME is of a very specific type known to the specific
+        Accessor that this interpretation is part of, and extracts the
+        referenced value as a T.
     */
-    virtual void getValue(WME::Ptr, Type& value) const = 0;
-
-    /**
-        Returns the value extracted from the WME in the token.
-    */
-    void getValue(Token::Ptr token, Type& value) const
+    void getValue(WME::Ptr wme, T& value) const
     {
-        if (static_cast<const Self*>(this)->index() < 0)
-            throw std::invalid_argument("ValueAccessor constructed for WMEs only applied to Token");
+        extractor_(wme, value);
+    }
 
-        int count = static_cast<const Self*>(this)->index();
+    /**
+        Assumes that the WME in the token at the index specified by the accessor
+        that this interpretation is part of is of the form required by
+            void getValue(WME::Ptr, T&) const;
+        and uses it to extract the value.
+        Throws
+            std::out_of_range
+        if the token has not enough elements to index it,
+        and a
+            std::invalid_argument
+        if the accessor is supposed to be used on single WMEs only (not tokens).
+    */
+    void getValue(Token::Ptr token, T& value) const
+    {
+        int count = parent_->index();
+        if (count < 0)
+        {
+            throw std::invalid_argument(
+                    "Accessor constructed for WMEs only applied to a Token");
+        }
+
         while (count > 0 && token)
         {
             token = token->parent;
@@ -153,184 +233,120 @@ public:
         }
 
         if (!token)
+        {
             throw std::out_of_range(
-                "ValueAccessor indexes entry no. " + std::to_string(static_cast<const Self*>(this)->index()) +
-                " but the Token has " + std::to_string(count+1) + " entries too few.");
+                    "Accessor indexes entry " + std::to_string(parent_->index())
+                    + " and the token is " + std::to_string(count+1)
+                    + " entries short on that.");
+        }
 
         this->getValue(token->wme, value);
     }
 
-};
 
-/**
-    An Interface for Accessors that provide a string representation of their value
-*/
-class StringAccessor : public Accessor, public ValueAccessor<std::string, StringAccessor> {
-protected:
-    StringAccessor();
-public:
-    bool canCompareValues(const Accessor& other) const override;
-    bool valuesEqual(Accessor& other, Token::Ptr token, WME::Ptr wme) override;
-
-    // convenience
-    std::string getString(WME::Ptr wme);
-    std::string getString(Token::Ptr token);
-};
-
-
-/**
-    An Interface for Accessors that just want to support one single type.
-    Used as a default-case for the TupleWMEAccessors.
-*/
-template <class Type>
-class SpecificTypeAccessor : public Accessor,
-                             public ValueAccessor<Type, SpecificTypeAccessor<Type>> {
-protected:
-    SpecificTypeAccessor() { registerType<SpecificTypeAccessor>(); }
-
-    bool canCompareValues(const Accessor& other) const override
-    {
-        return other.canAs<SpecificTypeAccessor>();
-    }
-
-    bool valuesEqual(Accessor& other, Token::Ptr token, WME::Ptr wme) override
-    {
-        auto optr = other.as<SpecificTypeAccessor>();
-        Type myValue, otherValue;
-
-        if (index_ == -1) this->getValue(wme, myValue);
-        else              this->getValue(token, myValue);
-
-        if (optr->index_ == -1) optr->getValue(wme, otherValue);
-        else                    optr->getValue(token, otherValue);
-
-        return myValue == otherValue;
-    }
-};
-
-
-/**
-    An Interface for Accessors that provide a number. Must also provide a string representation.
-*/
-class NumberAccessor : public StringAccessor,
-                       public ValueAccessor<int, NumberAccessor>,
-                       public ValueAccessor<long, NumberAccessor>,
-                       public ValueAccessor<float, NumberAccessor>,
-                       public ValueAccessor<double, NumberAccessor> {
-
-protected:
-    NumberAccessor();
-
-public:
-    virtual bool canGetInt() const = 0;
-    virtual bool canGetLong() const = 0;
-    virtual bool canGetFloat() const = 0;
-    virtual bool canGetDouble() const = 0;
-
-    using StringAccessor::getValue;
-    using ValueAccessor<int, NumberAccessor>::getValue;
-    using ValueAccessor<long, NumberAccessor>::getValue;
-    using ValueAccessor<float, NumberAccessor>::getValue;
-    using ValueAccessor<double, NumberAccessor>::getValue;
-
-    // convenience
-    int getInt(WME::Ptr wme) const { int tmp; getValue(wme, tmp); return tmp; }
-    long getLong(WME::Ptr wme) const { long tmp; getValue(wme, tmp); return tmp; }
-    float getFloat(WME::Ptr wme) const { float tmp; getValue(wme, tmp); return tmp; }
-    double getDouble(WME::Ptr wme) const { double tmp; getValue(wme, tmp); return tmp; }
-    int getInt(Token::Ptr token) const { int tmp; getValue(token, tmp); return tmp; }
-    long getLong(Token::Ptr token) const { long tmp; getValue(token, tmp); return tmp; }
-    float getFloat(Token::Ptr token) const { float tmp; getValue(token, tmp); return tmp; }
-    double getDouble(Token::Ptr token) const { double tmp; getValue(token, tmp); return tmp; }
-
-    bool canCompareValues(const Accessor& other) const override;
-    bool valuesEqual(Accessor& other, Token::Ptr token, WME::Ptr wme) override;
-};
-
-/**
-    A partial implementation of NumberAccessor, when the concrete type is already known.
-*/
-template <class T>
-class SpecificNumAccessor : public NumberAccessor {
     /**
-        Getter to be implemented by derived classes.
-        Used to provide all pure virtual methods from the NumberAccessor interface.
+        A safer way to get a value, supposed to be used by e.g. join nodes.
+        Uses
+            void getValue(WME::Ptr, T&) const
+        if the accessor this belongs to has index < 0 and thus is supposed to
+        be used on WMEs only, and
+            void getValue(Token::Ptr, T&) const
+        else.
     */
-    virtual T internalValue(WME::Ptr) const = 0;
-public:
-    void getValue(WME::Ptr wme, int& value) const override { value = internalValue(wme); }
-    void getValue(WME::Ptr wme, long& value) const override { value = internalValue(wme); }
-    void getValue(WME::Ptr wme, float& value) const override { value = internalValue(wme); }
-    void getValue(WME::Ptr wme, double& value) const override { value = internalValue(wme); }
-    void getValue(WME::Ptr wme, std::string& value) const override
+    void getValue(Token::Ptr token, WME::Ptr wme, T& value) const
     {
-        value = std::to_string(internalValue(wme));
+        if (parent_->index() < 0)
+            getValue(wme, value);
+        else
+            getValue(token, value);
     }
 
-    // checks for the concrete number type
-    bool canGetInt() const override { return util::safe_conversion<T, int>::value; }
-    bool canGetLong() const override { return util::safe_conversion<T, long>::value; }
-    bool canGetFloat() const override { return util::safe_conversion<T, float>::value; }
-    bool canGetDouble() const override { return util::safe_conversion<T, double>::value; }
+    /**
+        A new instance of Interpretation must reference its parent-Accessor in
+        order to get access to the index for the token to operate on, and also
+        get a function to use in order to extract the value of type T from a
+        WME.
+    */
+    Interpretation(AccessorBase* p, std::function<void(WME::Ptr, T&)> extr)
+        : parent_(p), extractor_(extr)
+    {
+    }
+
+
+
+    virtual bool valuesEqual(
+                    const InterpretationBase& other,
+                    Token::Ptr token,
+                    WME::Ptr wme) const override
+    {
+        // assume only those get compared who access the same type!
+        assert(typeid(this) == typeid(&other));
+
+        auto o = static_cast<const Interpretation*>(&other);
+
+        T otherVal, thisVal;
+        o->getValue(token, wme, otherVal);
+        this->getValue(token, wme, thisVal);
+
+        return otherVal == thisVal;
+    }
 };
 
+
+/// forward declaration of the templated Accessor class.
+template <class T, class I = void, class... Is> class Accessor;
+
+// recursion anchor - no more interpretations to add -> inherit AccessorBase.
+template <class T>
+class Accessor<T> : public AccessorBase {
+};
 
 
 /**
-    Accessors for constant values to simplify builtins.
+    This is a convenience class for the implementation of concrete accessors.
+    Given a list of interpretations <I, Is...> that shall be possible to be
+    retrieved from a WME type <T>, it adds pure virtual methods that need to be
+    implemented in the concrete accessor class and are automatically registered
+    with an Interpretation<I> in the AccessorBase.
+
+    So, if you e.g. want to implement an accessor that accesses a single
+    property in MyCoolWME and allows us to get it as a string or an int, you
+    would define a class:
+
+        class MyCoolWMEAccessor : public Accessor<MyCoolWME, string, int>
+
+    and implement the pure virtual methods:
+
+        void getValue(MyCoolWME*, string&) const;
+        void getValue(MyCoolWME*, int&) const;
 */
-template <class T>
-class ConstantNumberAccessor : public SpecificNumAccessor<T> {
-    T value_;
-    T internalValue(WME::Ptr) const override { return value_; }
+template <class T, class I, class... Is>
+class Accessor : public Accessor<T, Is...> {
+
+    void getValueInternal(WME::Ptr wme, I& value) const
+    {
+        auto specificWME = static_cast<T*>(wme);
+        getValue(specificWME, value);
+    }
+
 public:
-    ConstantNumberAccessor(const T& value) : value_(value) {}
-
-    bool equals(const Accessor& other) const override
+    Accessor()
     {
-        auto o = dynamic_cast<const ConstantNumberAccessor*>(&other);
-        if (!o) return false;
-        return value_ == o->value_;
+        this->template interpretations_.push_back(
+            {
+            typeid(I),
+            new Interpretation<I>(
+                    std::bind(&Accessor::getValueInternal, this,
+                              std::placeholders::_1,
+                              std::placeholders::_2))
+            });
     }
 
-    ConstantNumberAccessor* clone() const override
-    {
-        return new ConstantNumberAccessor(*this);
-    }
-
-    std::string toString() const override
-    {
-        return std::to_string(value_);
-    }
+    // force user to implement how to get data of type I from a WME of type T
+    virtual void getValue(std::shared_ptr<T>, I&) const = 0;
 };
 
-class ConstantStringAccessor : public StringAccessor {
-    std::string value_;
-public:
-    ConstantStringAccessor(const std::string& value) : value_(value) {}
-    void getValue(WME::Ptr, std::string& value) const override
-    {
-        value = value_;
-    }
 
-    bool equals(const Accessor& other) const override
-    {
-        auto o = dynamic_cast<const ConstantStringAccessor*>(&other);
-        if (!o) return false;
-        return value_ == o->value_;
-    }
-
-    ConstantStringAccessor* clone() const override
-    {
-        return new ConstantStringAccessor(*this);
-    }
-
-    std::string toString() const override
-    {
-        return value_;
-    }
-
-};
 
 }
 

@@ -1,85 +1,70 @@
+#include <algorithm>
 #include "Accessors.hpp"
 
 namespace rete {
 
-Accessor::Accessor(int index)
+AccessorBase::AccessorBase(int index)
     : index_(index)
 {
 }
 
-Accessor::~Accessor()
+AccessorBase::~AccessorBase()
 {
+    for (auto i : interpretations_)
+    {
+        delete i.second;
+    }
 }
 
-// --------------------------------------
-//  StringAccessor
-// --------------------------------------
-StringAccessor::StringAccessor()
+int& AccessorBase::index()
 {
-    registerType<StringAccessor>();
+    return index_;
 }
 
-bool StringAccessor::canCompareValues(const Accessor& other) const
+int const& AccessorBase::index() const
 {
-    return other.canAs<StringAccessor>();
+    return index_;
 }
 
-bool StringAccessor::valuesEqual(Accessor& other, Token::Ptr token, WME::Ptr wme)
+std::pair<InterpretationBase*, InterpretationBase*>
+    AccessorBase::getCommonInterpretation(const AccessorBase& other) const
 {
-    auto optr = other.as<StringAccessor>();
-    std::string myValue, otherValue;
-    if (index() == -1) this->getValue(wme, myValue);
-    else               this->getValue(token, myValue);
+    for (auto ti : interpretations_)
+    {
+        for (auto oi : other.interpretations_)
+        {
+            if (ti.first == oi.first)
+            {
+                return std::make_pair(ti.second, oi.second);
+            }
+        }
+    }
 
-    if (optr->index() == -1) optr->getValue(wme, otherValue);
-    else                     optr->getValue(token, otherValue);
-
-    return myValue == otherValue;
+    return std::make_pair(nullptr, nullptr);
 }
 
-std::string StringAccessor::getString(WME::Ptr wme)
+std::vector<std::pair<InterpretationBase*, InterpretationBase*>>
+    AccessorBase::getCommonInterpretations(const AccessorBase& other) const
 {
-    std::string tmp;
-    getValue(wme, tmp);
-    return tmp;
+    std::vector<std::pair<InterpretationBase*, InterpretationBase*>> common;
+
+    for (auto ti : interpretations_)
+    {
+        for (auto oi : other.interpretations_)
+        {
+            if (ti.first == oi.first)
+            {
+                common.push_back(std::make_pair(ti.second, oi.second));
+            }
+        }
+    }
+
+    return common;
 }
 
-std::string StringAccessor::getString(Token::Ptr token)
+std::string AccessorBase::toString() const
 {
-    std::string tmp;
-    getValue(token, tmp);
-    return tmp;
-}
-
-
-// --------------------------------------
-//  NumberAccessor
-// --------------------------------------
-NumberAccessor::NumberAccessor()
-{
-    registerType<NumberAccessor>();
-}
-
-bool NumberAccessor::canCompareValues(const Accessor& other) const
-{
-    return other.canAs<NumberAccessor>();
-}
-
-bool NumberAccessor::valuesEqual(Accessor& other, Token::Ptr token, WME::Ptr wme)
-{
-    auto optr = other.as<NumberAccessor>();
-
-    // TODO: equality check on doubles isn't cool. expand these checks to take datatype into account!
-    double myVal, otherVal;
-
-
-    if (index() == -1) this->getValue(wme, myVal);
-    else               this->getValue(token, myVal);
-
-    if (optr->index() == -1) optr->getValue(wme, otherVal);
-    else                     optr->getValue(token, otherVal);
-
-    return myVal == otherVal;
+    return "Accessor(" + std::to_string(index_) + ")";
 }
 
 } /* rete */

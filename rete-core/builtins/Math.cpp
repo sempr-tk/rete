@@ -19,15 +19,21 @@ void MathBuiltin::addOperand(float val)
     operands_.push_back({val});
 }
 
-void MathBuiltin::addOperand(std::unique_ptr<Accessor> var)
+void MathBuiltin::addOperand(std::unique_ptr<AccessorBase> var)
 {
     if (maxOperands_ == operands_.size())
-                                throw std::exception(); // to many operands given
-    if (!var)                   throw std::exception(); // nullptr?!
-    if (!var->canAs<NumberAccessor>()) throw std::exception(); // no conversion to float possible
-    // TODO: If NumberAccessor holds a double, conversion to float might be unwanted.
+        throw std::exception(); // to many operands given
 
-    operands_.push_back({std::move(var)});
+    if (!var)
+        throw std::exception(); // nullptr?!
+
+    auto interpretation = var->getInterpretation<float>();
+    if (!interpretation)
+        throw std::exception(); // no conversion to float possible
+
+    // TODO: How to handle other types of numbers? int, double, ...?
+
+    operands_.push_back(interpretation->makePersistent());
 }
 
 std::string MathBuiltin::getDOTAttr() const
@@ -36,8 +42,11 @@ std::string MathBuiltin::getDOTAttr() const
     size_t num = 0;
     for (auto& o : operands_)
     {
-        if (o.variable_) s += o.variable_->toString();
-        else s += std::to_string(o.constant_);
+        if (o.variable_)
+            s += o.variable_.accessor->toString();
+        else
+            s += std::to_string(o.constant_);
+
         num++;
         if (num < operands_.size()) s += ", ";
     }
@@ -75,7 +84,11 @@ WME::Ptr Sum::process(Token::Ptr token)
     for (auto& o : operands_)
     {
         if (o.variable_)
-            result += o.variable_->as<NumberAccessor>()->getFloat(token);
+        {
+            float tmp;
+            o.variable_.interpretation->getValue(token, tmp);
+            result += tmp;
+        }
         else
             result += o.constant_;
     }
@@ -96,7 +109,11 @@ WME::Ptr Mul::process(Token::Ptr token)
     for (auto& o : operands_)
     {
         if (o.variable_)
-            result *= o.variable_->as<NumberAccessor>()->getFloat(token);
+        {
+            float tmp;
+            o.variable_.interpretation->getValue(token, tmp);
+            result *= tmp;
+        }
         else
             result *= o.constant_;
     }
@@ -115,12 +132,14 @@ WME::Ptr Div::process(Token::Ptr token)
 {
     float numerator, denominator;
     if (operands_[0].variable_)
-            numerator = operands_[0].variable_->as<NumberAccessor>()->getFloat(token);
-    else    numerator = operands_[0].constant_;
+        operands_[0].variable_.interpretation->getValue(token, numerator);
+    else
+        numerator = operands_[0].constant_;
 
     if (operands_[1].variable_)
-            denominator = operands_[1].variable_->as<NumberAccessor>()->getFloat(token);
-    else    denominator = operands_[1].constant_;
+        operands_[1].variable_.interpretation->getValue(token, denominator);
+    else
+        denominator = operands_[1].constant_;
 
     if (denominator == 0.f) throw std::invalid_argument("division by zero!");
 

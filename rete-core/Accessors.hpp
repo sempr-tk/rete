@@ -45,6 +45,9 @@ public:
 // forward declaration of Interpretation<T>
 template <class T> class Interpretation;
 
+// ... and of PersistentInterpretation<T>
+template <class T> struct PersistentInterpretation;
+
 /**
     Objects of type AccessorBase are used to grant access to values inside of
     WMEs. To support a very generic functionality inside the reasoner / pattern
@@ -177,6 +180,68 @@ public:
 
 
 /**
+    The PersistentInterpretation is a utility struct: It wraps an
+    Interpretation<T> together with the accessor it is a part of and which keeps
+    the Interpretation<T> alive and valid.
+    (There are std::bind(...)s to the accessor stored i n the Interpretation!)
+*/
+template <class T>
+struct PersistentInterpretation {
+private:
+    AccessorBase* accessor_;
+    const Interpretation<T>* interpretation_;
+public:
+    AccessorBase* const& accessor = accessor_;
+    const Interpretation<T>* const& interpretation = interpretation_;
+
+
+    PersistentInterpretation(const PersistentInterpretation&) = delete;
+    PersistentInterpretation& operator = (const PersistentInterpretation&) = delete;
+
+    PersistentInterpretation()
+        : accessor_(nullptr), interpretation_(nullptr)
+    {
+    }
+
+    /**
+        Takes ownership of the given AccessorBase
+    */
+    PersistentInterpretation(AccessorBase* a)
+        : accessor_(a), interpretation_(a->getInterpretation<T>())
+    {
+    }
+
+    PersistentInterpretation(PersistentInterpretation&& other)
+    {
+        // just swap values. If this held actual data before, the dtor of other
+        // will take care of it.
+        std::swap(accessor_, other.accessor_);
+        std::swap(interpretation_, other.interpretation_);
+    }
+
+    PersistentInterpretation& operator = (PersistentInterpretation&& other)
+    {
+        std::swap(accessor_, other.accessor_);
+        std::swap(interpretation_, other.interpretation_);
+    }
+
+    /**
+        A PersistentInterpretation<T> is valid if both accessor and
+        interpretation are set.
+    */
+    operator bool() const
+    {
+        return accessor && interpretation;
+    }
+
+    ~PersistentInterpretation()
+    {
+        delete accessor;
+    }
+};
+
+
+/**
     An Interpretation provides an interface to retrieve a value of the
     specified type T from a Token/WME.
     It serves some kind of type-erasure: Instead of checking if a given
@@ -195,6 +260,37 @@ class Interpretation : public InterpretationBase {
     AccessorBase* parent_;
 
 public:
+
+    /**
+        A new instance of Interpretation must reference its parent-Accessor in
+        order to get access to the index for the token to operate on, and also
+        get a function to use in order to extract the value of type T from a
+        WME.
+    */
+    Interpretation(AccessorBase* p, std::function<void(WME::Ptr, T&)> extr)
+        : parent_(p), extractor_(extr)
+    {
+    }
+
+    Interpretation(const Interpretation&) = delete;
+    Interpretation& operator = (const Interpretation&) = delete;
+
+    /**
+        Accessor may have multiple interpretations, and nodes are usually
+        only interested in one of them, but throughout their whole lifetime.
+
+        This method provides an easy way to get a persistent copy of an
+        accessor and its selected interpretation. It calls clone() on the
+        accessor, grabs its Interpretation<T> and puts both in a
+        PersistentInterpretation<T> object, which is only movable and destroys
+        the contained pointers at the end of its lifetime.
+    */
+    PersistentInterpretation<T> makePersistent() const
+    {
+        auto a = parent_->clone();
+        return PersistentInterpretation<T>(a);
+    }
+
     /**
         Assumes the given WME is of a very specific type known to the specific
         Accessor that this interpretation is part of, and extracts the
@@ -261,18 +357,6 @@ public:
             getValue(token, value);
     }
 
-    /**
-        A new instance of Interpretation must reference its parent-Accessor in
-        order to get access to the index for the token to operate on, and also
-        get a function to use in order to extract the value of type T from a
-        WME.
-    */
-    Interpretation(AccessorBase* p, std::function<void(WME::Ptr, T&)> extr)
-        : parent_(p), extractor_(extr)
-    {
-    }
-
-
 
     virtual bool valuesEqual(
                     const InterpretationBase& other,
@@ -291,6 +375,8 @@ public:
         return otherVal == thisVal;
     }
 };
+
+
 
 
 /// forward declaration of the templated Accessor class.

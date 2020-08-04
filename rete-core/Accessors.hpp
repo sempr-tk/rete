@@ -411,7 +411,7 @@ class Accessor : public Accessor<T, Is...> {
 
     void getValueInternal(WME::Ptr wme, I& value) const
     {
-        auto specificWME = static_cast<T*>(wme);
+        auto specificWME = std::static_pointer_cast<T>(wme);
         getValue(specificWME, value);
     }
 
@@ -421,7 +421,7 @@ public:
         this->template interpretations_.push_back(
             {
             typeid(I),
-            new Interpretation<I>(
+            new Interpretation<I>(this,
                     std::bind(&Accessor::getValueInternal, this,
                               std::placeholders::_1,
                               std::placeholders::_2))
@@ -433,6 +433,39 @@ public:
 };
 
 
+/**
+    A utility to create accessors to constant values independent of actual WMEs.
+*/
+template <class I>
+class ConstantAccessor : public Accessor<WME, I> {
+    I value_;
+public:
+    ConstantAccessor(I v)
+        : value_(v)
+    {
+    }
+
+    void getValue(WME::Ptr, I& v) const override
+    {
+        v = value_;
+    }
+
+    ConstantAccessor* clone() const override
+    {
+        auto ptr = new ConstantAccessor(value_);
+        ptr->index_ = this->index_;
+        return ptr;
+    }
+
+    bool equals(const AccessorBase& other) const override
+    {
+        auto o = dynamic_cast<const ConstantAccessor*>(&other);
+        if (!o)
+            return false;
+        else
+            return o->value_ == this->value_;
+    }
+};
 
 }
 

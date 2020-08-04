@@ -256,8 +256,8 @@ public:
 */
 template <class T>
 class Interpretation : public InterpretationBase {
-    std::function<void(WME::Ptr, T&)> extractor_;
     AccessorBase* parent_;
+    std::function<void(WME::Ptr, T&)> extractor_;
 
 public:
 

@@ -14,13 +14,14 @@ InferTriple::ConstructHelper::ConstructHelper(const char* predefined)
 {
 }
 
-InferTriple::ConstructHelper::ConstructHelper(std::unique_ptr<Accessor> accessor)
+InferTriple::ConstructHelper::ConstructHelper(std::unique_ptr<AccessorBase> accessor)
     : isPredefined_(false), string_("")
 {
-    if (!accessor->canAs<StringAccessor>())
+    if (!accessor->getInterpretation<std::string>())
     {
         throw std::exception(); // see init(...) method
     }
+
     accessor_ = std::move(accessor);
 }
 
@@ -48,12 +49,18 @@ void InferTriple::ConstructHelper::init(const char* predefined)
     string_ = std::string(predefined);
 }
 
-void InferTriple::ConstructHelper::init(std::unique_ptr<Accessor> accessor)
+void InferTriple::ConstructHelper::init(std::unique_ptr<AccessorBase> accessor)
 {
-    if (!accessor->canAs<StringAccessor>())
+    if (!accessor->getInterpretation<std::string>())
     {
-        throw std::exception(); // InferTriple only works with strings
-        // TODO: Implement some kind of "NumberAccessor" that works with float, int, ... but also allows conversion to string.
+        throw std::exception();
+        // InferTriple currently only works with strings.
+        // TODO: Implement a custom type that just flags a string to be a
+        //       (valid) part of an RDF triple.
+        // TODO: Accept different interpretations and handle them differently:
+        //       - RDF-Parts can be taken literally
+        //       - numbers can be taken literally, I guess?
+        //       - strings need to be quoted
     }
 
     isPredefined_ = false;
@@ -63,8 +70,12 @@ void InferTriple::ConstructHelper::init(std::unique_ptr<Accessor> accessor)
 std::string InferTriple::ConstructHelper::constructFrom(Token::Ptr token) const
 {
     if (isPredefined_) return string_;
-    // NOTE: Assumption is that accessor_->canAs<StringAccessor>()! This is checked in the ctor and init() method.
-    return accessor_->as<StringAccessor>()->getString(token);
+    // NOTE: Assumption is that accessor_->getInterpretation<std::string>() is
+    // known to return a valid interpretation as it has been checked in the
+    // init method/ctor.
+    std::string str;
+    accessor_->getInterpretation<std::string>()->getValue(token, str);
+    return str;
 }
 
 std::string InferTriple::ConstructHelper::toString() const

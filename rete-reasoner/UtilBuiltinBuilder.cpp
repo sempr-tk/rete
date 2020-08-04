@@ -18,15 +18,23 @@ Builtin::Ptr PrintNodeBuilder::buildBuiltin(ArgumentList& args) const
         {
             auto acc = arg.getAccessor();
             if (!acc)
-                throw NodeBuilderException("unbound variable (" + arg.getVariableName() + ") in print");
-            if (!acc->canAs<StringAccessor>())
+            {
+                throw NodeBuilderException(
+                        "unbound variable (" + arg.getVariableName() +
+                        ") in print");
+            }
+            if (!acc->getInterpretation<std::string>())
+            {
                 throw NodeBuilderException(
                         arg.getVariableName() +
-                        "cannot be converted to String. The accessor " +
-                        acc->toString() + " does not implement 'StringAccessor'");
-
-            std::unique_ptr<StringAccessor> clone(dynamic_cast<StringAccessor*>(acc->clone()));
-            builtin->add(std::move(clone));
+                        "cannot be interpreted as std::string.");
+            }
+            else
+            {
+                builtin->add(
+                    acc->getInterpretation<std::string>()->makePersistent()
+                );
+            }
         }
         else
         {
@@ -54,16 +62,22 @@ Production::Ptr PrintEffectNodeBuilder::buildEffect(ArgumentList& args) const
         if (arg.isVariable())
         {
             auto acc = arg.getAccessor();
-            if (!acc) throw NodeBuilderException("unbound variable in print effect");
-            if (!acc->canAs<StringAccessor>())
+            if (!acc)
+            {
+                throw NodeBuilderException("unbound variable in print effect");
+            }
+            else if (!acc->getInterpretation<std::string>())
             {
                 throw NodeBuilderException(
                         arg.getVariableName() +
-                        " cannot be converted to String");
+                        " cannot be interpreted as std::string");
             }
-
-            std::unique_ptr<StringAccessor> clone(dynamic_cast<StringAccessor*>(acc->clone()));
-            print->add(std::move(clone));
+            else
+            {
+                print->add(
+                    acc->getInterpretation<std::string>()->makePersistent()
+                );
+            }
         }
         else
         {

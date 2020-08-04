@@ -48,18 +48,18 @@ public:
         if (args[1].isVariable() && !args[1].getAccessor())
             throw NodeBuilderException("right side of comparison (" + args[1].getVariableName() + ") is unbound");
 
-        std::unique_ptr<Accessor> left, right;
+        std::unique_ptr<AccessorBase> left, right;
 
         if (args[0].isVariable())
             left.reset(args[0].getAccessor()->clone());
         else if (args[0].getAST().isNumber())
         {
-            left.reset(new ConstantNumberAccessor<float>(args[0].getAST().toFloat()));
+            left.reset(new ConstantAccessor<float>(args[0].getAST().toFloat()));
             left->index() = 0;
         }
         else
         {
-            left.reset(new ConstantStringAccessor(args[0].getAST()));
+            left.reset(new ConstantAccessor<std::string>(args[0].getAST()));
             left->index() = 0;
         }
 
@@ -67,17 +67,45 @@ public:
             right.reset(args[1].getAccessor()->clone());
         else if (args[1].getAST().isNumber())
         {
-            right.reset(new ConstantNumberAccessor<float>(args[1].getAST().toFloat()));
+            right.reset(new ConstantAccessor<float>(args[1].getAST().toFloat()));
             right->index() = 0;
         }
         else
         {
-            right.reset(new ConstantStringAccessor(args[1].getAST()));
+            right.reset(new ConstantAccessor<std::string>(args[1].getAST()));
             right->index() = 0;
         }
 
-        Compare::Ptr builtin(new Compare(MODE, std::move(left), std::move(right)));
-        return builtin;
+
+        auto lNum = left->getInterpretation<float>();
+        auto rNum = right->getInterpretation<float>();
+        auto lStr = left->getInterpretation<std::string>();
+        auto rStr = right->getInterpretation<std::string>();
+
+        if (lNum && rNum)
+        {
+            auto builtin =
+                std::make_shared<Compare>(
+                        MODE,
+                        lNum->makePersistent(),
+                        rNum->makePersistent());
+            return builtin;
+        }
+        else if(lStr && rStr)
+        {
+            auto builtin =
+                std::make_shared<Compare>(
+                        MODE,
+                        lStr->makePersistent(),
+                        rStr->makePersistent());
+            return builtin;
+        }
+        else
+        {
+            throw rete::NodeBuilderException(
+                    "The arguments to compare do not share a float- or "
+                    "std::string-interpretation");
+        }
     }
 };
 

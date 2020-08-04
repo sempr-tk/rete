@@ -18,12 +18,17 @@ public:
     };
     static std::string ModeName(Mode m);
 private:
-    std::unique_ptr<Accessor> left_, right_;
+    PersistentInterpretation<float> leftNum_, rightNum_;
+    PersistentInterpretation<std::string> leftStr_, rightStr_;
+
     Mode mode_;
     bool compareNumbers_;
 public:
     using Ptr = std::shared_ptr<Compare>;
-    Compare(Mode mode, std::unique_ptr<Accessor> left, std::unique_ptr<Accessor> right);
+    Compare(Mode mode, PersistentInterpretation<float>&& left,
+                       PersistentInterpretation<float>&& right);
+    Compare(Mode mode, PersistentInterpretation<std::string>&& left,
+                       PersistentInterpretation<std::string>&& right);
 
     WME::Ptr process(Token::Ptr) override;
     bool operator == (const BetaNode& other) const override;
@@ -36,11 +41,11 @@ public:
     Print stuff to cout, comma separated, with newline at the end
 */
 class Print : public Builtin {
-    std::vector<std::unique_ptr<StringAccessor>> values_;
+    std::vector<PersistentInterpretation<std::string>> values_;
 public:
     using Ptr = std::shared_ptr<Print>;
     Print();
-    void add(std::unique_ptr<StringAccessor>);
+    void add(PersistentInterpretation<std::string>&&);
     void add(const std::string&);
 
     WME::Ptr process(Token::Ptr) override;
@@ -53,11 +58,11 @@ public:
     ADD/REMOVE/UPDATE prefix given on what actually happened.
 */
 class PrintEffect : public Production {
-    std::vector<std::unique_ptr<StringAccessor>> values_;
+    std::vector<PersistentInterpretation<std::string>> values_;
 public:
     using Ptr = std::shared_ptr<PrintEffect>;
     PrintEffect();
-    void add(std::unique_ptr<StringAccessor>);
+    void add(PersistentInterpretation<std::string>&&);
     void add(const std::string&);
 
     void execute(Token::Ptr, PropagationFlag, std::vector<WME::Ptr>&) override;

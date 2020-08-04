@@ -382,9 +382,47 @@ public:
 /// forward declaration of the templated Accessor class.
 template <class T, class I = void, class... Is> class Accessor;
 
+/*
 // recursion anchor - no more interpretations to add -> inherit AccessorBase.
 template <class T>
 class Accessor<T> : public AccessorBase {
+};
+*/
+
+/**
+    Recursion anchor - only one interpretation is left to add.
+
+    This adds some redundant code, and I'd prefer to have the recursion achor
+    at 0 interpretations left to add. But we need the using statement to import
+    the methods defined in the base classes, and in that case the Accessor<T>
+    has no such method, resulting in a compiler error.
+    So, anchor at 1, and only leave out the using directive.
+*/
+template <class T, class I>
+class Accessor<T, I> : public AccessorBase {
+
+    void getValueInternal(WME::Ptr wme, I& value) const
+    {
+        auto specificWME = std::static_pointer_cast<T>(wme);
+        getValue(specificWME, value);
+    }
+
+public:
+    Accessor()
+    {
+        this->interpretations_.insert(
+                this->interpretations_.begin(),
+                {
+                typeid(I),
+                new Interpretation<I>(this,
+                        std::bind(&Accessor::getValueInternal, this,
+                            std::placeholders::_1,
+                            std::placeholders::_2))
+                });
+    }
+
+    virtual void getValue(std::shared_ptr<T>, I&) const = 0;
+
 };
 
 
@@ -418,7 +456,8 @@ class Accessor : public Accessor<T, Is...> {
 public:
     Accessor()
     {
-        this->template interpretations_.push_back(
+        this->template interpretations_.insert(
+            this->template interpretations_.begin(),
             {
             typeid(I),
             new Interpretation<I>(this,
@@ -427,6 +466,10 @@ public:
                               std::placeholders::_2))
             });
     }
+
+    // pull getValue with different signatures from base classes to avoid
+    // "hidden overloaded virtual"
+    using Accessor<T, Is...>::getValue;
 
     // force user to implement how to get data of type I from a WME of type T
     virtual void getValue(std::shared_ptr<T>, I&) const = 0;

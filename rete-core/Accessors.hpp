@@ -212,6 +212,7 @@ public:
     }
 
     PersistentInterpretation(PersistentInterpretation&& other)
+        : accessor_(nullptr), interpretation_(nullptr)
     {
         // just swap values. If this held actual data before, the dtor of other
         // will take care of it.
@@ -364,7 +365,7 @@ public:
                     WME::Ptr wme) const override
     {
         // assume only those get compared who access the same type!
-        assert(typeid(this) == typeid(&other));
+        assert(typeid(*this) == typeid(other));
 
         auto o = static_cast<const Interpretation*>(&other);
 

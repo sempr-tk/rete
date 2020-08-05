@@ -25,7 +25,12 @@ public:
         value = std::get<I>(wme->value_);
     }
 
-    TupleWMEAccessor* clone() const override { return new TupleWMEAccessor(*this); } // TODO! shouldn't work due to deleted copy-ctor in AccessorBase
+    TupleWMEAccessor* clone() const override
+    {
+        auto acc = new TupleWMEAccessor();
+        acc->index() = this->index_;
+        return acc;
+    }
 };
 
 
@@ -59,25 +64,45 @@ public:
 template <size_t I, typename TWME>
 class TupleWMEAccessor<I, TWME, int> : public TNumWMEAccessor<I, TWME, int> {
 public:
-    TupleWMEAccessor* clone() const override { return new TupleWMEAccessor(*this); }
+    TupleWMEAccessor* clone() const override
+    {
+        auto acc = new TupleWMEAccessor();
+        acc->index() = this->index_;
+        return acc;
+    }
 };
 
 template <size_t I, typename TWME>
 class TupleWMEAccessor<I, TWME, long> : public TNumWMEAccessor<I, TWME, long> {
 public:
-    TupleWMEAccessor* clone() const override { return new TupleWMEAccessor(*this); }
+    TupleWMEAccessor* clone() const override
+    {
+        auto acc = new TupleWMEAccessor();
+        acc->index() = this->index_;
+        return acc;
+    }
 };
 
 template <size_t I, typename TWME>
 class TupleWMEAccessor<I, TWME, float> : public TNumWMEAccessor<I, TWME, float> {
 public:
-    TupleWMEAccessor* clone() const override { return new TupleWMEAccessor(*this); }
+    TupleWMEAccessor* clone() const override
+    {
+        auto acc = new TupleWMEAccessor();
+        acc->index() = this->index_;
+        return acc;
+    }
 };
 
 template <size_t I, typename TWME>
 class TupleWMEAccessor<I, TWME, double> : public TNumWMEAccessor<I, TWME, double> {
 public:
-    TupleWMEAccessor* clone() const override { return new TupleWMEAccessor(*this); }
+    TupleWMEAccessor* clone() const override
+    {
+        auto acc = new TupleWMEAccessor();
+        acc->index() = this->index_;
+        return acc;
+    }
 };
 
 } /* rete */

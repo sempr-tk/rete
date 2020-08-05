@@ -69,6 +69,10 @@ add_executable(TrueTest TrueTest.cpp)
 target_link_libraries(TrueTest rete-core rete-rdf rete-reasoner)
 add_test(NAME TrueTest COMMAND TrueTest)
 
+add_executable(StringsInTriples StringsInTriples.cpp)
+target_link_libraries(StringsInTriples rete-core rete-rdf rete-reasoner)
+add_test(NAME StringsInTriples COMMAND StringsInTriples)
+
 add_executable(test_rete main.cpp)
 target_link_libraries(test_rete rete-core rete-rdf rete-reasoner)
 add_test(NAME main COMMAND test_rete)

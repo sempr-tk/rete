@@ -2,6 +2,7 @@
 #define RETE_TRIPLEACCESSOR_HPP_
 
 #include "Triple.hpp"
+#include "TriplePart.hpp"
 #include "../rete-core/Accessors.hpp"
 
 namespace rete {
@@ -16,12 +17,13 @@ namespace rete {
     For now, it just assumes plain numbers without any extra annotations, quotations etc., and
     parses them with a stringstream.
 */
-class TripleAccessor : public Accessor<Triple, std::string, float> {
+class TripleAccessor : public Accessor<Triple, TriplePart, std::string, float> {
     Triple::Field field_;
 public:
     TripleAccessor(Triple::Field field);
     void getValue(Triple::Ptr, std::string& value) const override;
     void getValue(Triple::Ptr, float& value) const override;
+    void getValue(Triple::Ptr, TriplePart& value) const override;
 
     std::string toString() const override;
 

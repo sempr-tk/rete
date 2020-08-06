@@ -19,6 +19,23 @@ void save(Network& net, const std::string& filename)
     out.close();
 }
 
+bool containsTriple(Reasoner reasoner,
+                    const std::string& s, const std::string& p, const std::string& o)
+{
+    auto wmes = reasoner.getCurrentState().getWMEs();
+    for (auto wme : wmes)
+    {
+        auto triple = std::dynamic_pointer_cast<Triple>(wme);
+        if (triple &&
+            triple->subject == s &&
+            triple->predicate == p &&
+            triple->object == o)
+        {
+            return true;
+        }
+    }
+    return false;
+}
 
 /**
     These tests serve to check if string handling in triples is done properly.
@@ -108,6 +125,145 @@ bool string_in_wme_matches_constant_string()
     return reasoner.getCurrentState().numWMEs() == 2;
 }
 
+bool string_in_wme_matches_string_in_triple()
+{
+    RuleParser p;
+    p.registerNodeBuilder<MutableNodeBuilder>();
+    Reasoner reasoner;
+    auto rules = p.parseRules(
+        "[MutableWME(?str), (<a> <foo> ?str) -> (<test> <is> <successfull>)]",
+        reasoner.net()
+    );
+
+    auto wme = std::make_shared<MutableWME>();
+    wme->value_ = "foo";
+    auto triple = std::make_shared<Triple>("<a>", "<foo>", "\"foo\"");
+    auto ev = std::make_shared<AssertedEvidence>("asserted");
+
+    reasoner.addEvidence(wme, ev);
+    reasoner.addEvidence(triple, ev);
+    reasoner.performInference();
+
+    save(reasoner.net(), __func__ + std::string(".dot"));
+
+    return reasoner.getCurrentState().numWMEs() == 3;
+}
+
+
+bool part_in_triple_inferred_from_string_in_triple_stays_quoted_string()
+{
+    RuleParser p;
+    Reasoner reasoner;
+    auto rules = p.parseRules(
+        "[(<a> <foo> ?str) -> (<test> <foo> ?str)]",
+        reasoner.net()
+    );
+
+    auto triple = std::make_shared<Triple>("<a>", "<foo>", "\"bar\"");
+    auto ev = std::make_shared<AssertedEvidence>("asserted");
+
+    reasoner.addEvidence(triple, ev);
+    reasoner.performInference();
+
+    save(reasoner.net(), __func__ + std::string(".dot"));
+
+    return containsTriple(reasoner, "<test>", "<foo>", "\"bar\"");
+}
+
+bool part_in_triple_inferred_from_resource_in_triple_stays_resource()
+{
+    RuleParser p;
+    Reasoner reasoner;
+    auto rules = p.parseRules(
+        "[(<a> <foo> ?r) -> (<test> <foo> ?r)]",
+        reasoner.net()
+    );
+
+    auto triple = std::make_shared<Triple>("<a>", "<foo>", "<bar>");
+    auto ev = std::make_shared<AssertedEvidence>("asserted");
+
+    reasoner.addEvidence(triple, ev);
+    reasoner.performInference();
+
+    save(reasoner.net(), __func__ + std::string(".dot"));
+
+    return containsTriple(reasoner, "<test>", "<foo>", "<bar>");
+}
+
+bool part_in_triple_inferred_from_constant_string_is_quoted()
+{
+    RuleParser p;
+    Reasoner reasoner;
+    auto rules = p.parseRules(
+        "[true() -> (<test> <foo> \"bar\")]",
+        reasoner.net()
+    );
+
+    reasoner.performInference();
+
+    save(reasoner.net(), __func__ + std::string(".dot"));
+
+    return containsTriple(reasoner, "<test>", "<foo>", "\"bar\"");
+}
+
+bool part_in_triple_inferred_from_string_in_wme_is_quoted()
+{
+    RuleParser p;
+    p.registerNodeBuilder<MutableNodeBuilder>();
+    Reasoner reasoner;
+    auto rules = p.parseRules(
+        "[MutableWME(?str) -> (<test> <foo> ?str)]",
+        reasoner.net()
+    );
+
+    auto wme = std::make_shared<MutableWME>();
+    wme->value_ = "foo";
+    auto ev = std::make_shared<AssertedEvidence>("asserted");
+
+    reasoner.addEvidence(wme, ev);
+    reasoner.performInference();
+
+    save(reasoner.net(), __func__ + std::string(".dot"));
+
+    return containsTriple(reasoner, "<test>", "<foo>", "\"foo\"");
+}
+
+/**
+    This one could be a bit unintuitive, that's why I included it here:
+    Just because something looks like a reasource (e.g. <sempr:Something_1>),
+    it is not interpreted as one. The interpretations that are used are those
+    which are explicitely allowed by the accessors that implement them. And
+    since the MutableWME is not supposed to hold resources, its content is not
+    interpreted as such -- it only allows access to strings, so strings they
+    are! The other tests in which resources from triples need to stay resources
+    make use of the fact that the triple-accessor has an interpretation of its
+    contents as raw rdf-stuff. Even there, the actual content is not inspected!
+    Only the registered data types!
+*/
+bool part_in_triple_inferred_from_string_that_looks_like_a_resource_is_still_a_string_and_quoted()
+{
+    RuleParser p;
+    p.registerNodeBuilder<MutableNodeBuilder>();
+    Reasoner reasoner;
+    auto rules = p.parseRules(
+        "[MutableWME(?str) -> (<test> <foo> ?str)]",
+        reasoner.net()
+    );
+
+    auto wme = std::make_shared<MutableWME>();
+    wme->value_ = "<foo>";
+    auto ev = std::make_shared<AssertedEvidence>("asserted");
+
+    reasoner.addEvidence(wme, ev);
+    reasoner.performInference();
+
+    save(reasoner.net(), __func__ + std::string(".dot"));
+
+    return containsTriple(reasoner, "<test>", "<foo>", "\"<foo>\"");
+
+}
+
+
 // TODO: More reading / matching tests
 // TODO: Test to INFER triples from different sources
 
@@ -126,6 +282,12 @@ int main()
     TEST(string_in_triple_matches_constant_string);
     TEST(string_in_triple_matches_string_in_triple);
     TEST(string_in_wme_matches_constant_string);
+    TEST(string_in_wme_matches_string_in_triple);
+    TEST(part_in_triple_inferred_from_string_in_triple_stays_quoted_string);
+    TEST(part_in_triple_inferred_from_resource_in_triple_stays_resource);
+    TEST(part_in_triple_inferred_from_constant_string_is_quoted);
+    TEST(part_in_triple_inferred_from_string_in_wme_is_quoted);
+    TEST(part_in_triple_inferred_from_string_that_looks_like_a_resource_is_still_a_string_and_quoted);
 
     return failed;
 }

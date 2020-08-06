@@ -89,8 +89,10 @@ std::vector<ParsedRule::Ptr> RuleParser::parseRules(const std::string& rulestrin
         }
         rulestring += line + "\n";
     }
+#ifdef RETE_PARSER_VERBOSE
     std::cout << "parsing rules:" << std::endl;
     std::cout << rulestring << std::endl;
+#endif
     std::string ruleStringCopy(rulestring);
 
     std::unique_ptr<ast::Rules> root = nullptr;
@@ -123,13 +125,17 @@ std::vector<ParsedRule::Ptr> RuleParser::parseRules(const std::string& rulestrin
     /*
         Build a map of used URI-prefixes.
     */
+#ifdef RETE_PARSER_VERBOSE
     std::cout << "successfully parsed the rules." << std::endl;
     // std::cout << input.getString() << std::endl;
     std::cout << "Prefixes: " << root->prefixes_.size() << std::endl;
+#endif
     std::map<std::string, std::string> prefixes;
     for (auto& pre : root->prefixes_)
     {
+#ifdef RETE_PARSER_VERBOSE
         std::cout << pre->name_ << " --> " << pre->uri_ << std::endl;
+#endif
         const std::string& uri = pre->uri_;
         prefixes[pre->name_ + ":"] = uri.substr(1, uri.size() - 2); // trim <>
     }
@@ -139,9 +145,11 @@ std::vector<ParsedRule::Ptr> RuleParser::parseRules(const std::string& rulestrin
     */
     for (auto& rule : root->rules_)
     {
+#ifdef RETE_PARSER_VERBOSE
         std::cout << "Rule: ";
         if (rule->name_) std::cout << *rule->name_;
         std::cout << std::endl;
+#endif
         for (auto& condition : rule->conditions_)
         {
             condition->substituteArgumentPrefixes(prefixes);
@@ -149,11 +157,15 @@ std::vector<ParsedRule::Ptr> RuleParser::parseRules(const std::string& rulestrin
 
         for (auto& effect : rule->effects_)
         {
+#ifdef RETE_PARSER_VERBOSE
             std::cout << "  Effect: " << effect->type() << std::endl;
+#endif
             for (auto& arg : effect->args_)
             {
                 arg->substitutePrefixes(prefixes);
+#ifdef RETE_PARSER_VERBOSE
                 std::cout << "    " << *arg << std::endl;
+#endif
             }
         }
     }
@@ -188,12 +200,16 @@ AlphaNode::Ptr implementAlphaNode(AlphaNode::Ptr alpha, AlphaNode::Ptr parent)
 
     if (it != candidates.end())
     {
+#ifdef RETE_PARSER_VERBOSE
         std::cout << "Reusing AlphaNode " << (*it)->getDOTId() << std::endl;
+#endif
         alpha = *it;
     }
     else
     {
+#ifdef RETE_PARSER_VERBOSE
         std::cout << "Adding AlphaNode " << alpha->getDOTId() << " beneath " << parent->getDOTId()  << std::endl;
+#endif
         SetParent(parent, alpha);
     }
 
@@ -222,13 +238,17 @@ BetaMemory::Ptr implementBetaNode(BetaNode::Ptr node, BetaMemory::Ptr parentBeta
     // reuse or connect new, if the same join was found in the beta parent that connects to the wanted alpha
     if (it != candidates.end() && (*it)->getParentAlpha() == parentAlpha)
     {
+#ifdef RETE_PARSER_VERBOSE
         std::cout << "Reusing BetaNode " << (*it)->getDOTId() << std::endl;
+#endif
         beta = *it;
         betamem = beta->getBetaMemory();
     }
     else
     {
+#ifdef RETE_PARSER_VERBOSE
         std::cout << "Adding BetaNode " << beta->getDOTId() << " beneath " << parentBeta->getDOTId() << " and " << (parentAlpha ? parentAlpha->getDOTId() : " 0x0") << std::endl;
+#endif
 
         SetParents(parentBeta, parentAlpha, beta);
         // add a beta memory for the added node
@@ -260,7 +280,9 @@ BetaMemory::Ptr implementBetaBetaNode(BetaBetaNode::Ptr node, BetaMemory::Ptr pa
         auto candidate = std::dynamic_pointer_cast<BetaBetaNode>(*it);
         if (candidate && candidate->getLeftParent() == parentLeft && candidate->getRightParent() == parentRight)
         {
+#ifdef RETE_PARSER_VERBOSE
             std::cout << "Reusing BetaBetaNode " << candidate->getDOTId() << std::endl;
+#endif
             // reuse node!
             betabeta = candidate;
             betamem = betabeta->getBetaMemory();
@@ -268,7 +290,9 @@ BetaMemory::Ptr implementBetaBetaNode(BetaBetaNode::Ptr node, BetaMemory::Ptr pa
         }
     }
 
+#ifdef RETE_PARSER_VERBOSE
     std::cout << "Adding new BetaBetaNode " << betabeta->getDOTId() << " beneath " << parentLeft->getDOTId() << " and " << parentRight->getDOTId() << std::endl;
+#endif
     // not found - insert new
     SetParents(parentLeft, parentRight, betabeta);
     betamem.reset(new BetaMemory());
@@ -390,7 +414,9 @@ BetaMemory::Ptr RuleParser::constructPrimitive(
             for (auto jv : joinVars)
             {
                 Argument& arg = args[jv];
+#ifdef RETE_PARSER_VERBOSE
                 std::cout << "adding join check on variable " << arg.getVariableName() << std::endl;
+#endif
                 if (!arg.getAccessor())
                 {
                     // the node did not bind the variable it was given? this is an error!
@@ -414,7 +440,9 @@ BetaMemory::Ptr RuleParser::constructPrimitive(
         else
         {
             BetaNode::Ptr alphabeta = getAlphaBeta(currentAlpha->getAlphaMemory());
+#ifdef RETE_PARSER_VERBOSE
             std::cout << "Adding AlphaBetaNode " << alphabeta << " beneath <nullptr> and " << currentAlpha << std::endl;
+#endif
 
             BetaMemory::Ptr abmem = alphabeta->getBetaMemory();
             if (!abmem)
@@ -599,7 +627,9 @@ ParsedRule::Ptr RuleParser::construct(ast::Rule& rule, Network& net) const
             ++(binding.second->index());
         }
 
+#ifdef RETE_PARSER_VERBOSE
         std::cout << "currentBeta: " << (currentBeta ? currentBeta->getDOTId() : "nullptr") << std::endl;
+#endif
     } // end loop over conditions
 
 

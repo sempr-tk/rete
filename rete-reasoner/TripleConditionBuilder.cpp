@@ -12,11 +12,13 @@ TripleConditionBuilder::TripleConditionBuilder()
 
 void TripleConditionBuilder::buildAlpha(ArgumentList& args, std::vector<AlphaNode::Ptr>& nodes) const
 {
+#ifdef RETE_PARSER_VERBOSE
     std::cout << "TripleBuilder with args:" << std::endl;
     for (auto& arg : args)
     {
         std::cout << "  " << arg.getAST() << std::endl;
     }
+#endif
 
     // should never happen, since the parser knows that triples need three arguments
     if (args.size() != 3) throw NodeBuilderException("Wrong number of arguments");

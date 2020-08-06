@@ -267,14 +267,21 @@ bool part_in_triple_inferred_from_string_that_looks_like_a_resource_is_still_a_s
 // TODO: More reading / matching tests
 // TODO: Test to INFER triples from different sources
 
-
+/*
 #define TEST(function) \
     if (!((function))()) \
     { \
         std::cout << "failed test: " << #function << std::endl; \
         failed++; \
     }
-
+*/
+#define TEST(function) \
+    { \
+        bool ok = (function)(); \
+        std::cout << (ok ? "passed test: " : "failed test: ") \
+                  << #function << std::endl; \
+        if (!ok) failed++; \
+    }
 
 int main()
 {

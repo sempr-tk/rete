@@ -101,13 +101,19 @@ std::vector<ParsedRule::Ptr> RuleParser::parseRules(const std::string& rulestrin
 
     auto reporter = [&rulestring](const peg::InputRange& err_in, const std::string& descr)
     {
+        std::cout << "Error parsing rules, at "
+                  << err_in.finish.line << ":" << err_in.finish.col << std::endl;
+
         size_t maxCharCount = 80;
         size_t start = 0;
         if (err_in.begin().index() > maxCharCount) start = err_in.begin().index() - maxCharCount;
 
         for (size_t i = start; i < err_in.end().index(); i++)
         {
-            std::cout << rulestring.at(i);
+            if (i < rulestring.size())
+                std::cout << rulestring.at(i);
+            else
+                break;
         }
         std::cout << std::endl;
         for (size_t i = start; i < err_in.end().index() -1; i++)

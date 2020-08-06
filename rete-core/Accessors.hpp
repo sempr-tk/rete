@@ -9,6 +9,8 @@
 #include <functional>
 #include <cassert>
 #include <algorithm>
+#include <exception>
+#include <cxxabi.h>
 
 #include "WME.hpp"
 #include "Token.hpp"
@@ -39,6 +41,12 @@ public:
     virtual bool valuesEqual(const InterpretationBase& other,
                              Token::Ptr token,
                              WME::Ptr wme) const = 0;
+
+    /**
+        For debugging purposes: Returns a string describing the type of
+        interpretation done, the T in Interpretation<T>.
+    */
+    virtual std::string internalTypeName() const = 0;
 };
 
 
@@ -359,7 +367,7 @@ public:
     }
 
 
-    virtual bool valuesEqual(
+    bool valuesEqual(
                     const InterpretationBase& other,
                     Token::Ptr token,
                     WME::Ptr wme) const override
@@ -374,6 +382,11 @@ public:
         this->getValue(token, wme, thisVal);
 
         return otherVal == thisVal;
+    }
+
+    std::string internalTypeName() const override
+    {
+        return util::beautified_typename<T>().value;
     }
 };
 

@@ -4,9 +4,38 @@
 #include <string>
 #include <tuple>
 #include <memory>
+#include <vector>
 
 namespace rete {
 namespace util {
+
+/**
+    Demangle a word, e.g. from typeid(T).name()
+*/
+std::string demangle(const char* name);
+
+
+/**
+    Returns a beautified name for the given type
+*/
+template <class T>
+struct beautified_typename
+{
+    const std::string value = demangle(typeid(T).name());
+};
+
+template <>
+struct beautified_typename<std::string>
+{
+    const std::string value = "std::string";
+};
+
+template <class T>
+struct beautified_typename<std::vector<T>>
+{
+    const std::string value = "std::vector<" + beautified_typename<T>().value + ">";
+};
+
 
 // void* --> "0xdeadbeef"
 std::string ptrToStr(const void* const ptr);

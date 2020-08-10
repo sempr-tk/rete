@@ -115,13 +115,37 @@ struct extract_type<V<Ts...>, I> : index_type_pack<I, Ts...> {};
 
 
 /**
+    Helper to check if std::to_string(const T&) is a valid expression.
+*/
+template <class T>
+struct is_std_to_string_valid {
+    template <class U>
+    static auto test(const U* u) -> decltype(std::to_string(*u),
+                                             std::true_type());
+
+    template <class U>
+    static std::false_type test(...);
+
+    static constexpr bool value =
+        std::is_same<decltype(test<T>(nullptr)), std::true_type>::value;
+};
+
+/**
     Custom, specializable function to print values. Default used std::to_string.
     Used in tuple-printing-methods.
 */
 template <typename T>
-std::string to_string(const T& v)
+typename std::enable_if<is_std_to_string_valid<T>::value, std::string>::type
+    to_string(const T& v)
 {
     return std::to_string(v);
+}
+
+template <typename T>
+typename std::enable_if<not is_std_to_string_valid<T>::value, std::string>::type
+    to_string(const T&)
+{
+    return "";
 }
 
 // specializations in Util.cpp

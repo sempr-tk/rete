@@ -65,8 +65,8 @@ int main()
     auto rules = p.parseRules(
         // "[rule0: (?a ?b ?c) -> (<foo> <bar> <baz>)]\n"
         "[rule1: MutableWME(?value) -> (<foo> <mutable> ?value)]\n"
-        "[rule2: (<foo> <mutable> <value_A>) -> (<test_1> <result> <success>)]\n"
-        "[rule3: (<foo> <mutable> <value_B>) -> (<test_2> <result> <success>)]\n"
+        "[rule2: (<foo> <mutable> \"value_A\") -> (<test_1> <result> <success>)]\n"
+        "[rule3: (<foo> <mutable> \"value_B\") -> (<test_2> <result> <success>)]\n"
         "[rule4: (<foo> <bar> <baz>), MutableWME(?value) -> (<join> <right> ?value)]\n"
         "[rule5: MutableWME(?value), (<foo> <bar> <baz>) -> (<join> <left> ?value)]",
         reasoner.net()
@@ -74,7 +74,7 @@ int main()
 
     // add one mutable wme
     auto wme1 = std::make_shared<MutableWME>();
-    wme1->value_ = "<value_A>";
+    wme1->value_ = "value_A";
     auto ev1 = std::make_shared<AssertedEvidence>("fact-group-1");
     reasoner.addEvidence(wme1, ev1);
 
@@ -98,13 +98,13 @@ int main()
     // check for rule2 success
     if (!containsTriple(wmes, "<test_1>", "<result>", "<success>")) return 3;
     // check for correct value un rule4 and 5:
-    if (!containsTriple(wmes, "<join>", "<right>", "<value_A>") ||
-        !containsTriple(wmes, "<join>", "<left>", "<value_A>")) return 4;
+    if (!containsTriple(wmes, "<join>", "<right>", "\"value_A\"") ||
+        !containsTriple(wmes, "<join>", "<left>", "\"value_A\"")) return 4;
 
     // ------------------------------------------------------------------------
     // now, modify the mutable wme, and check again.
     // ------------------------------------------------------------------------
-    wme1->value_ = "<value_B>";
+    wme1->value_ = "value_B";
     reasoner.net().getRoot()->activate(wme1, PropagationFlag::UPDATE); // TODO: convenience method?
     reasoner.performInference();
     save(reasoner.net(), "mutablewmes-2.dot");
@@ -120,8 +120,8 @@ int main()
     // check for rule2 success
     if (!containsTriple(wmes, "<test_2>", "<result>", "<success>")) return 6;
     // check for correct value un rule4 and 5:
-    if (!containsTriple(wmes, "<join>", "<right>", "<value_B>") ||
-        !containsTriple(wmes, "<join>", "<left>", "<value_B>")) return 7;
+    if (!containsTriple(wmes, "<join>", "<right>", "\"value_B\"") ||
+        !containsTriple(wmes, "<join>", "<left>", "\"value_B\"")) return 7;
 
 
     // now I'm just curious: What happens on an UPDATE when nothing has changed?

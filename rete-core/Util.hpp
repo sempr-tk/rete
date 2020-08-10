@@ -10,6 +10,34 @@ namespace rete {
 namespace util {
 
 /**
+    A small helper struct. Checks if the given pointer can be dynamic_cast to
+    any of the given types.
+*/
+template <class T, class... Ts>
+struct IsOneOf {
+    template <class U>
+    bool operator() (const U* instance)
+    {
+        if (dynamic_cast<const T*>(instance))
+            return true;
+        else
+            return IsOneOf<Ts...>()(instance);
+    }
+};
+
+
+template <class T>
+struct IsOneOf<T> {
+    template <class U>
+    bool operator() (const U* instance)
+    {
+        return dynamic_cast<const T*>(instance);
+    }
+};
+
+
+
+/**
     Demangle a word, e.g. from typeid(T).name()
 */
 std::string demangle(const char* name);

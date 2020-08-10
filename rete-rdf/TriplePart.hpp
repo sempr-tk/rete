@@ -2,6 +2,7 @@
 #define RETE_RDF_TRIPLEPART_HPP_
 
 #include <string>
+#include "../rete-core/Util.hpp"
 
 namespace rete {
 
@@ -20,6 +21,12 @@ struct TriplePart {
         return value == other.value;
     }
 };
+
+
+namespace util {
+
+    template <> std::string to_string(const TriplePart&);
+}
 
 }
 

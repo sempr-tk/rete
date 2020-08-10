@@ -264,6 +264,41 @@ bool part_in_triple_inferred_from_string_that_looks_like_a_resource_is_still_a_s
 }
 
 
+// yes, this is no longer just about strings in triples... but fits the same
+// problem/topic
+bool constant_number_in_triple_stays_unquoted()
+{
+    RuleParser p;
+    Reasoner reasoner;
+    auto rules = p.parseRules(
+        "[true() -> (<test> <foo> 42)]",
+        reasoner.net()
+    );
+
+    reasoner.performInference();
+
+    save(reasoner.net(), __func__ + std::string(".dot"));
+
+    return containsTriple(reasoner, "<test>", "<foo>", "42");
+}
+
+bool computed_number_in_triple_is_not_quoted()
+{
+    RuleParser p;
+    Reasoner reasoner;
+    auto rules = p.parseRules(
+        "[true(), sum(?sum 21 21) -> (<test> <foo> ?sum)]",
+        reasoner.net()
+    );
+
+    reasoner.performInference();
+
+    save(reasoner.net(), __func__ + std::string(".dot"));
+
+    return containsTriple(reasoner, "<test>", "<foo>", std::to_string(42.f));
+}
+
+
 // TODO: More reading / matching tests
 // TODO: Test to INFER triples from different sources
 
@@ -295,6 +330,8 @@ int main()
     TEST(part_in_triple_inferred_from_constant_string_is_quoted);
     TEST(part_in_triple_inferred_from_string_in_wme_is_quoted);
     TEST(part_in_triple_inferred_from_string_that_looks_like_a_resource_is_still_a_string_and_quoted);
+    TEST(constant_number_in_triple_stays_unquoted);
+    TEST(computed_number_in_triple_is_not_quoted);
 
     return failed;
 }

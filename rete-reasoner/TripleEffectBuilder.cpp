@@ -13,20 +13,36 @@ Production::Ptr TripleEffectBuilder::buildEffect(ArgumentList& args) const
     // should never happen, the parser knows that triples need 3 arguments
     if (args.size() != 3) throw NodeBuilderException("Wrong number of arguments");
 
-    InferTriple::ConstructHelper sub, pred, obj;
+    std::unique_ptr<AccessorBase> acc[3];
 
-    // if sub/pred/obj is const: just use the string as written in the rule
-    if (args[0].isConst()) sub.init(args[0].getAST());
-    // else clone the Accessor from the ArgumentList.
-    else sub.init(std::unique_ptr<AccessorBase>(args[0].getAccessor()->clone()));
+    for (int i = 0; i < 3; i++)
+    {
+        // constants in infer triple arguments are always strings in the correct
+        // format, as enforced by the grammar! -> TriplePart, no conversion needed.
+        if (args[i].isConst())
+        {
+            acc[i].reset(new ConstantAccessor<TriplePart>({args[i].getAST()}));
+            acc[i]->index() = 0;
+        }
+        else
+            acc[i].reset(args[i].getAccessor()->clone());
+    }
 
-    if (args[1].isConst()) pred.init(args[1].getAST());
-    else pred.init(std::unique_ptr<AccessorBase>(args[1].getAccessor()->clone()));
+    ToTriplePartConversion s(std::move(acc[0])),
+                           p(std::move(acc[1])),
+                           o(std::move(acc[2]));
 
-    if (args[2].isConst()) obj.init(args[2].getAST());
-    else obj.init(std::unique_ptr<AccessorBase>(args[2].getAccessor()->clone()));
+    if (!s)
+        throw NodeBuilderException("Subject not valid");
+    else if (!p)
+        throw NodeBuilderException("Predicate not valid");
+    else if (!o)
+        throw NodeBuilderException("Object not valid");
 
-    InferTriple::Ptr production(new InferTriple(std::move(sub), std::move(pred), std::move(obj)));
+    InferTriple::Ptr production(
+        new InferTriple(std::move(s), std::move(p), std::move(o))
+    );
+
     return production;
 }
 

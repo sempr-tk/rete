@@ -787,9 +787,9 @@ public:
         variable wasn't set, the given accessor does not support any of the
         source datatypes.
     */
-    bool operator () () const
+    operator bool () const
     {
-        return this->extractor_;
+        return this->extractor_ && this->toString_;
     }
 };
 

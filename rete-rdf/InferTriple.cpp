@@ -1,94 +1,59 @@
+#include <iomanip>
+
 #include "InferTriple.hpp"
 #include "../rete-core/Util.hpp"
-
+#include "TriplePart.hpp"
 
 namespace rete {
 
-InferTriple::ConstructHelper::ConstructHelper(const std::string& predefined)
-    : isPredefined_(true), string_(predefined), accessor_(nullptr)
+ToTriplePartConversion::ToTriplePartConversion(
+        std::unique_ptr<AccessorBase>&& acc)
+    :
+        AccessorConversion(std::move(acc))
 {
 }
 
-InferTriple::ConstructHelper::ConstructHelper(const char* predefined)
-    : isPredefined_(true), string_(predefined), accessor_(nullptr)
+
+void ToTriplePartConversion::convert(const std::string& src, TriplePart& dest) const
 {
+    std::stringstream ss;
+    ss << std::quoted(src);
+    dest.value = ss.str();
 }
 
-InferTriple::ConstructHelper::ConstructHelper(std::unique_ptr<AccessorBase> accessor)
-    : isPredefined_(false), string_("")
+void ToTriplePartConversion::convert(const float& src, TriplePart& dest) const
 {
-    if (!accessor->getInterpretation<std::string>())
-    {
-        throw std::exception(); // see init(...) method
-    }
-
-    accessor_ = std::move(accessor);
+    dest.value = std::to_string(src);
 }
 
-InferTriple::ConstructHelper::ConstructHelper()
-    : isPredefined_(true), string_(""), accessor_(nullptr)
+void ToTriplePartConversion::convert(const double& src, TriplePart& dest) const
 {
+    dest.value = std::to_string(src);
 }
 
-InferTriple::ConstructHelper::ConstructHelper(InferTriple::ConstructHelper&& other)
-    : isPredefined_(other.isPredefined_),
-      string_(std::move(other.string_)),
-      accessor_(std::move(other.accessor_))
+void ToTriplePartConversion::convert(const int& src, TriplePart& dest) const
 {
+    dest.value = std::to_string(src);
 }
 
-void InferTriple::ConstructHelper::init(const std::string& predefined)
+void ToTriplePartConversion::convert(const long& src, TriplePart& dest) const
 {
-    isPredefined_ = true;
-    string_ = predefined;
-}
-
-void InferTriple::ConstructHelper::init(const char* predefined)
-{
-    isPredefined_ = true;
-    string_ = std::string(predefined);
-}
-
-void InferTriple::ConstructHelper::init(std::unique_ptr<AccessorBase> accessor)
-{
-    if (!accessor->getInterpretation<std::string>())
-    {
-        throw std::exception();
-        // InferTriple currently only works with strings.
-        // TODO: Implement a custom type that just flags a string to be a
-        //       (valid) part of an RDF triple.
-        // TODO: Accept different interpretations and handle them differently:
-        //       - RDF-Parts can be taken literally
-        //       - numbers can be taken literally, I guess?
-        //       - strings need to be quoted
-    }
-
-    isPredefined_ = false;
-    accessor_ = std::move(accessor);
-}
-
-std::string InferTriple::ConstructHelper::constructFrom(Token::Ptr token) const
-{
-    if (isPredefined_) return string_;
-    // NOTE: Assumption is that accessor_->getInterpretation<std::string>() is
-    // known to return a valid interpretation as it has been checked in the
-    // init method/ctor.
-    std::string str;
-    accessor_->getInterpretation<std::string>()->getValue(token, str);
-    return str;
-}
-
-std::string InferTriple::ConstructHelper::toString() const
-{
-    if (isPredefined_) return string_;
-    return accessor_->toString();
+    dest.value = std::to_string(src);
 }
 
 
-InferTriple::InferTriple(ConstructHelper&& sub, ConstructHelper&& pred, ConstructHelper&& obj)
-    : subject_(std::move(sub)), predicate_(std::move(pred)), object_(std::move(obj))
+
+InferTriple::InferTriple(
+        ToTriplePartConversion&& sub,
+        ToTriplePartConversion&& pred,
+        ToTriplePartConversion&& obj)
+    :
+        subject_(std::move(sub)),
+        predicate_(std::move(pred)),
+        object_(std::move(obj))
 {
 }
+
 
 std::string InferTriple::toString() const
 {
@@ -97,18 +62,19 @@ std::string InferTriple::toString() const
     p = util::dotEscape(predicate_.toString());
     o = util::dotEscape(object_.toString());
 
-    return "InferTriple (" + s + " " + p + " " + o + ")";
+    return "InferTriple (\n" + s + "\n " + p + "\n " + o + ")";
 }
 
 void InferTriple::execute(Token::Ptr token, PropagationFlag flag, std::vector<WME::Ptr>& inferred)
 {
     if (flag == PropagationFlag::ASSERT || flag == PropagationFlag::UPDATE)
     {
-        auto wme = std::make_shared<Triple>(
-            subject_.constructFrom(token),
-            predicate_.constructFrom(token),
-            object_.constructFrom(token)
-        );
+        TriplePart s, p, o;
+        subject_.getValue(token, s);
+        predicate_.getValue(token, p);
+        object_.getValue(token, o);
+
+        auto wme = std::make_shared<Triple>(s.value, p.value, o.value);
 
         inferred.push_back(wme);
     }

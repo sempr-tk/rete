@@ -15,6 +15,20 @@ Production::Ptr TripleEffectBuilder::buildEffect(ArgumentList& args) const
 
     std::unique_ptr<AccessorBase> acc[3];
 
+    // accessors for subject and predicate must support TriplePart, as strings
+    // or numbers make no sense in that position.
+    if (args[0].isVariable() &&
+        !args[0].getAccessor()->getInterpretation<TriplePart>())
+    {
+        throw NodeBuilderException("Non-RDF element in subject of triple");
+    }
+
+    if (args[1].isVariable() &&
+        !args[1].getAccessor()->getInterpretation<TriplePart>())
+    {
+        throw NodeBuilderException("Non-RDF element in predicate of triple");
+    }
+
     for (int i = 0; i < 3; i++)
     {
         // constants in infer triple arguments are always strings in the correct

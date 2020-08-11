@@ -299,6 +299,29 @@ bool computed_number_in_triple_is_not_quoted()
 }
 
 
+/**
+    ToTripleConversion allows to convert strings and numbers to TriplePart,
+    but this conversion does not make sense in the subject or predicate position
+    of a triple. Hence, the TripleEffectBuilder should throw an exception when
+    it gets an accessor for sub/pred that does not support TriplePart right
+    away.
+*/
+bool computed_number_in_inferred_triple_subject_throws()
+{
+    RuleParser p;
+    Reasoner reasoner;
+    try {
+        auto rules = p.parseRules(
+            "[true(), sum(?sum 21 21) -> (?sum <foo> <bar>)]",
+            reasoner.net()
+        );
+        return false;
+    } catch (NodeBuilderException& e) {
+        return true;
+    }
+}
+
+
 // TODO: More reading / matching tests
 // TODO: Test to INFER triples from different sources
 
@@ -332,6 +355,7 @@ int main()
     TEST(part_in_triple_inferred_from_string_that_looks_like_a_resource_is_still_a_string_and_quoted);
     TEST(constant_number_in_triple_stays_unquoted);
     TEST(computed_number_in_triple_is_not_quoted);
+    TEST(computed_number_in_inferred_triple_subject_throws);
 
     return failed;
 }

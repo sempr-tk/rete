@@ -77,7 +77,8 @@ namespace rete {
                 //     "Hello \"friend\"..."
                 // becomes
                 //     Hello "friend"...
-                std::stringstream(r.str()) >> std::quoted(*this);
+                std::stringstream ss(r.str());
+                ss >> std::quoted(*this);
 
                 return ok;
             }

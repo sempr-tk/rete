@@ -59,6 +59,25 @@ build-bionic:
            - build_bionic
         expire_in: 1 hour
 
+build-focal:
+    stage: build
+    image: buildpack-deps:focal
+    script:
+        # get and install pegmatite
+        - echo "deb [trusted=yes] file:/tmp/debian-pkgs/focal ./" >> /etc/apt/sources.list
+        - apt-get update
+        - apt-get install libpegmatite
+        # build project
+        - mkdir build_focal && cd build_focal
+        - cmake ..
+        - make -j8
+        - make package
+    artifacts:
+        paths:
+           - build_focal
+        expire_in: 1 hour
+
+
 test-xenial:
     stage: test
     image: buildpack-deps:xenial
@@ -83,6 +102,17 @@ test-bionic:
         - cd build_bionic
         - make test
 
+test-focal:
+    stage: test
+    image: buildpack-deps:focal
+    script:
+        # get and install pegmatite
+        - echo "deb [trusted=yes] file:/tmp/debian-pkgs/focal ./" >> /etc/apt/sources.list
+        - apt-get update
+        - apt-get install libpegmatite
+        # test
+        - cd build_focal
+        - make test
 
 deploy-deb:
     stage: deploy
@@ -91,6 +121,7 @@ deploy-deb:
     script:
         - cp build_xenial/rete*.deb /tmp/debian-pkgs/xenial/
         - cp build_bionic/rete*.deb /tmp/debian-pkgs/bionic/
+        - cp build_focal/rete*.deb /tmp/debian-pkgs/focal/
         - cd /tmp/debian-pkgs
         - ./update-pkg-list
         - git add --all

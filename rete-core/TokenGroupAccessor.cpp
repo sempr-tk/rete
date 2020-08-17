@@ -2,11 +2,16 @@
 
 namespace rete {
 
+TokenGroupAccessor::TokenGroupAccessor(std::unique_ptr<AccessorBase>&& child)
+    : child_(std::move(child))
+{
+}
+
 TokenGroupAccessor* TokenGroupAccessor::clone() const
 {
-    auto ptr = new TokenGroupAccessor();
+    std::unique_ptr<AccessorBase> c(child_->clone());
+    auto ptr = new TokenGroupAccessor(std::move(c));
     ptr->index_ = index_;
-    ptr->child_.reset(child_->clone());
 
     return ptr;
 }

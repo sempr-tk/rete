@@ -17,6 +17,8 @@ class TokenGroupAccessor : public Accessor<TokenGroup, TokenGroup::Ptr> {
 
     bool equals(const AccessorBase& other) const override;
 public:
+    TokenGroupAccessor(std::unique_ptr<AccessorBase>&& child);
+
     TokenGroupAccessor* clone() const override;
     std::string toString() const override;
     void getValue(TokenGroup::Ptr, TokenGroup::Ptr& value) const override;

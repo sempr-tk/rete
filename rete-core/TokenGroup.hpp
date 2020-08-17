@@ -1,7 +1,7 @@
 #ifndef RETE_TOKENGROUP_HPP_
 #define RETE_TOKENGROUP_HPP_
 
-#include <vector>
+#include <set>
 
 #include "WME.hpp"
 #include "Token.hpp"
@@ -21,7 +21,7 @@ class TokenGroup : public WME {
 public:
     using Ptr = std::shared_ptr<TokenGroup>;
 
-    std::vector<Token::Ptr> token_;
+    std::set<Token::Ptr> token_;
 
     std::string toString() const override;
     const std::string& type() const override;

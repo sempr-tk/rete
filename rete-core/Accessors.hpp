@@ -51,6 +51,12 @@ public:
                              WME::Ptr wme) const = 0;
 
     /**
+        Checks if the values accessed by this in two tokens are equal.
+        (Note: Implemented specifically for GroupBy nodes)
+    */
+    virtual bool valuesEqual(Token::Ptr t1, Token::Ptr t2) const = 0;
+
+    /**
         For debugging purposes: Returns a string describing the type of
         interpretation done, the T in Interpretation<T>.
     */
@@ -420,6 +426,15 @@ public:
         this->getValue(token, wme, thisVal);
 
         return otherVal == thisVal;
+    }
+
+    bool valuesEqual(Token::Ptr t1, Token::Ptr t2) const override
+    {
+        T val1, val2;
+        getValue(t1, val1);
+        getValue(t2, val2);
+
+        return val1 == val2;
     }
 
     std::string internalTypeName() const override

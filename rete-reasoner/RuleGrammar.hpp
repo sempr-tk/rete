@@ -125,12 +125,19 @@ public:
     Rule effectName = rtrace("effectName", term(+(alphanum | "<>"_S)));
     Rule genericEffect = rtrace("genericEffect", effectName >> "(" >> *argument >> ")");
 
+
+    /**
+        GROUP BY (?var1 ?var2 ...)
+        groups matches by identical values for every variable given
+    */
+    Rule groupBy = rtrace("group by", "GROUP BY"_E >> "(" >> *term(variable) >> ")");
+
     /**
         With the new noValue syntax we allow complex noValue-groups and nesting
         them. To do this, a precondition can now also be a noValueGroup, which
         itself is composed of preconditions.
     */
-    Rule precondition = rtrace("precondition", triple | builtin | genericAlphaCondition | noValueGroup);
+    Rule precondition = rtrace("precondition", triple | builtin | genericAlphaCondition | noValueGroup | groupBy);
     Rule noValueGroup = rtrace("noValueGroup",
             noValue >> "{" >> precondition >> *(',' >> precondition) >> "}"
     );

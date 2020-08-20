@@ -22,7 +22,75 @@ public:
     TokenGroupAccessor* clone() const override;
     std::string toString() const override;
     void getValue(TokenGroup::Ptr, TokenGroup::Ptr& value) const override;
+    const AccessorBase* childAccessor() const;
 };
+
+
+
+/**
+    The TokenGroupAccessorForwarder is an Accessor that tricks a bit in order
+    to expose exactly the interface of a wrapped accessor, but instead of
+    applying it directly on a given token it first extracts a TokenGroup from
+    the token and then applies the wrapped accessor to the first entry in the
+    TokenGroup.
+
+    It makes the encapsulation of matches in a TokenGroup transparent, which
+    is needed to access those variables on which groups are created.
+
+    The actual implementation is a bit tricky. The AccessorBase provides
+    template methods to get interpretations etc, which cannot be overridden.
+    Hence we need to modify the internal representation manually, such that
+    the templates in AccessorBase yield correct results. This means providing
+    the same (identical!) interpretations, but modified in a way that they
+    do this extra step.
+
+*/
+class TokenGroupAccessorForwarder : public AccessorBase {
+    std::unique_ptr<AccessorBase> wrappedAccessor_;
+
+    /**
+        Assumes WME to be a TokenGroup, takes the first entry from the group
+        (a token), returns the WME located at the wrapped accessors index.
+    */
+    WME::Ptr getWMEFromTokenGroup(WME::Ptr) const;
+
+    bool equals(const AccessorBase& other) const override;
+public:
+    using Ptr = std::shared_ptr<TokenGroupAccessorForwarder>;
+
+    TokenGroupAccessorForwarder(std::unique_ptr<AccessorBase>&&);
+    TokenGroupAccessorForwarder* clone() const override;
+    std::string toString() const override;
+
+};
+
+
+
+/**
+    Specialization of Interpretation for TokenGroups. These grant access to
+    the child-interpretation, i.e. the accessor and its interpretations
+    inside a token of the TokenGroup.
+*/
+template <>
+class Interpretation<TokenGroup> : public InterpretationImpl<TokenGroup> {
+public:
+    Interpretation(TokenGroupAccessor* p,
+                   std::function<void(WME::Ptr, TokenGroup&)> extr);
+
+
+    const AccessorBase* childAccessor() const
+    {
+        return static_cast<TokenGroupAccessor*>(this->parent_)->childAccessor();
+    }
+
+    template <class I>
+    const Interpretation<I> getChildInterpretation() const
+    {
+        auto acc = static_cast<TokenGroupAccessor*>(this->parent_)->childAccessor();
+        return acc->getInterpretation<I>();
+    }
+};
+
 
 
 }

@@ -11,7 +11,13 @@ void GroupBy::addCriteria(std::unique_ptr<AccessorBase>&& acc)
 
 std::string GroupBy::getDOTAttr() const
 {
-    std::string str = "[label=\"GroupBy\"]";
+    std::string str = "[label=\"GroupBy\\n";
+    for (auto& acc : accessors_)
+    {
+        str += util::dotEscape(acc->toString()) + "\\n";
+    }
+
+    str += "\"]";
     return str;
 }
 

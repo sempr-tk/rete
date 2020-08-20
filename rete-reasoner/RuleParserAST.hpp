@@ -133,6 +133,7 @@ namespace rete {
 
             virtual ~PreconditionBase() {}
             virtual bool isNoValueGroup() const = 0;
+            virtual bool isGroupBy() const = 0;
             virtual bool isPrimitive() const = 0;
 
             /**
@@ -155,6 +156,7 @@ namespace rete {
 
 
             bool isNoValueGroup() const override { return false; }
+            bool isGroupBy() const override { return false; }
             bool isPrimitive() const override { return true; }
 
             /**
@@ -208,6 +210,7 @@ namespace rete {
 
             bool isPrimitive() const override { return false; }
             bool isNoValueGroup() const override { return true; }
+            bool isGroupBy() const override { return false; }
 
             void substituteArgumentPrefixes(const std::map<std::string, std::string>& pairs) override
             {
@@ -216,6 +219,16 @@ namespace rete {
                     condition->substituteArgumentPrefixes(pairs);
                 }
             }
+        };
+
+
+        class GroupBy : public PreconditionBase {
+        public:
+            peg::ASTList<Variable> variables_;
+
+            bool isPrimitive() const override { return false; }
+            bool isNoValueGroup() const override { return false; }
+            bool isGroupBy() const override { return true; }
         };
 
 

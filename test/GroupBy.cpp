@@ -28,7 +28,7 @@ int main()
         "[dataRule: true()"
         "        -> (<a1> <foo> <b1>), (<a1> <foo> <b2>), (<a1> <foo> <b3>),"
         "           (<a2> <foo> <b1>), (<a2> <foo> <b2>)]\n"
-        "[testRule: (?a <foo> ?b), GROUP BY (?a) -> (<a group> <for> ?a)]",
+        "[testRule: (?a <foo> ?b), GROUP BY (?a), print(\"group for\" ?a), print(?b) -> (<a group> <for> ?a)]",
         reasoner.net()
     );
 
@@ -40,6 +40,22 @@ int main()
 
     // there should be exactly 5+2 WMEs (5 from the data rule, put into 2 groups)
     if (wmes.size() != 7) return 1;
+
+
+
+    // add more data.
+    auto triple = std::make_shared<Triple>("<a1>", "<foo>", "<extra>");
+    auto ev = std::make_shared<AssertedEvidence>("asserted");
+
+    reasoner.addEvidence(triple, ev);
+
+    reasoner.performInference();
+    save(reasoner.net(), "group_test_1_added.dot");
+
+    // remove data.
+    reasoner.removeEvidence(ev);
+    reasoner.performInference();
+    save(reasoner.net(), "group_test_2_removed.dot");
 
     return 0;
 }

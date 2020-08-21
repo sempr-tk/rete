@@ -4,6 +4,7 @@
 #include "../Builtin.hpp"
 #include "../Production.hpp"
 #include "../Accessors.hpp"
+#include "../TokenGroupAccessor.hpp"
 
 namespace rete {
 namespace builtin {
@@ -47,6 +48,23 @@ public:
     Print();
     void add(PersistentInterpretation<std::string>&&);
     void add(const std::string&);
+
+    WME::Ptr process(Token::Ptr) override;
+    bool operator == (const BetaNode& other) const override;
+    std::string getDOTAttr() const override;
+};
+
+/**
+    Prints the contents of a group. All given group accessors must refer to
+    the same token group, as their respective values will be printed together
+    for every entry in the group.
+*/
+class PrintGroup : public Builtin {
+    std::vector<std::unique_ptr<TokenGroupAccessor>> groupAccessors_;
+public:
+    using Ptr = std::shared_ptr<PrintGroup>;
+    PrintGroup();
+    void add(std::unique_ptr<TokenGroupAccessor>);
 
     WME::Ptr process(Token::Ptr) override;
     bool operator == (const BetaNode& other) const override;

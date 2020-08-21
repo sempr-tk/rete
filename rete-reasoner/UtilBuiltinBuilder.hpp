@@ -111,6 +111,8 @@ public:
 
 
 class PrintNodeBuilder : public NodeBuilder {
+    Builtin::Ptr createRegularPrint(ArgumentList& args) const;
+    Builtin::Ptr createGroupPrint(ArgumentList& args) const;
 public:
     PrintNodeBuilder();
     Builtin::Ptr buildBuiltin(ArgumentList& args) const override;

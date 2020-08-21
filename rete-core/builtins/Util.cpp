@@ -3,6 +3,7 @@
 #include <map>
 #include <iostream>
 #include <sstream>
+#include <iomanip>
 
 namespace rete {
 namespace builtin {
@@ -189,6 +190,81 @@ void Print::add(const std::string& str)
     acc.index() = 0;
 
     values_.push_back(acc.getInterpretation<std::string>()->makePersistent());
+}
+
+// ---------------------------------------------------
+// ---------------------------------------------------
+PrintGroup::PrintGroup()
+    : Builtin("printGroup")
+{
+}
+
+WME::Ptr PrintGroup::process(Token::Ptr token)
+{
+    if (groupAccessors_.empty()) return nullptr;
+
+    TokenGroup::Ptr group;
+    groupAccessors_[0]->getInterpretation<TokenGroup::Ptr>()->getValue(token, group);
+
+    // prepare interpretations to not having to search for them for every group entry
+    std::vector<const Interpretation<std::string>*> strGetter;
+    for (auto& acc : groupAccessors_)
+    {
+        auto i = acc->childAccessor()->getInterpretation<std::string>();
+        strGetter.push_back(i);
+    }
+
+    // iterate the group
+    std::cout << "TokenGroup[" << group->token_.size() << "]:" << std::endl;
+    for (auto token : group->token_)
+    {
+        std::cout << std::setw(20);
+        for (auto i : strGetter)
+        {
+            std::string str;
+            i->getValue(token, str);
+            std::cout << str;
+        }
+        std::cout << std::endl;
+    }
+    std::cout << "End of group." << std::endl;
+
+    return std::make_shared<EmptyWME>();
+}
+
+void PrintGroup::add(std::unique_ptr<TokenGroupAccessor> acc)
+{
+    groupAccessors_.push_back(std::move(acc));
+}
+
+bool PrintGroup::operator == (const BetaNode& other) const
+{
+    auto o = dynamic_cast<const PrintGroup*>(&other);
+    if (!o || o->groupAccessors_.size() != this->groupAccessors_.size())
+    {
+        return false;
+    }
+    else
+    {
+        for (size_t i = 0; i < groupAccessors_.size(); i++)
+        {
+            if (!(*groupAccessors_[i] == *o->groupAccessors_[i]))
+                return false;
+        }
+        return true;
+    }
+}
+
+std::string PrintGroup::getDOTAttr() const
+{
+    std::stringstream s;
+    s << "[label=\"print group ";
+    for (auto& acc : groupAccessors_)
+    {
+        s << util::dotEscape(acc->toString()) << ", ";
+    }
+    s << "\b\b" << "\"]";
+    return s.str();
 }
 
 // -------------------------

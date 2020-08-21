@@ -117,4 +117,15 @@ std::string TokenGroupAccessorForwarder::toString() const
     return "{forwarded: " + wrappedAccessor_->toString() + "}";
 }
 
+
+
+Interpretation<TokenGroup::Ptr>::Interpretation(
+        AccessorBase* p,
+        std::function<void(WME::Ptr, TokenGroup::Ptr&)> extr)
+    :
+        InterpretationImpl<TokenGroup::Ptr>(p, extr)
+{
+}
+
+
 }

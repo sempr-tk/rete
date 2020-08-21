@@ -72,10 +72,10 @@ public:
     inside a token of the TokenGroup.
 */
 template <>
-class Interpretation<TokenGroup> : public InterpretationImpl<TokenGroup> {
+class Interpretation<TokenGroup::Ptr> : public InterpretationImpl<TokenGroup::Ptr> {
 public:
-    Interpretation(TokenGroupAccessor* p,
-                   std::function<void(WME::Ptr, TokenGroup&)> extr);
+    Interpretation(AccessorBase* p,
+                   std::function<void(WME::Ptr, TokenGroup::Ptr&)> extr);
 
 
     const AccessorBase* childAccessor() const
@@ -84,7 +84,7 @@ public:
     }
 
     template <class I>
-    const Interpretation<I> getChildInterpretation() const
+    const Interpretation<I>* getChildInterpretation() const
     {
         auto acc = static_cast<TokenGroupAccessor*>(this->parent_)->childAccessor();
         return acc->getInterpretation<I>();

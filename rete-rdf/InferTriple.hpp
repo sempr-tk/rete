@@ -25,19 +25,19 @@ public:
         std::string string_;
 
         // unique pointer: Prevents modification of the index etc. from the outside.
-        std::unique_ptr<Accessor> accessor_;
+        std::unique_ptr<AccessorBase> accessor_;
 
     public:
         ConstructHelper(const std::string& predefined);
         ConstructHelper(const char* predefined);
-        ConstructHelper(std::unique_ptr<Accessor> accessor);
+        ConstructHelper(std::unique_ptr<AccessorBase> accessor);
 
         ConstructHelper();
         ConstructHelper(ConstructHelper&& other);
 
         void init(const std::string& predefined);
         void init(const char* predefined);
-        void init(std::unique_ptr<Accessor> accessor);
+        void init(std::unique_ptr<AccessorBase> accessor);
 
         std::string constructFrom(Token::Ptr token) const;
 

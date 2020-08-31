@@ -33,7 +33,7 @@ public:
             throw NodeBuilderException("MathBuiltins need the first argument to be an unbound variable (to bind the result to!)."); // and it must be unbound
 
         // TODO: tighter coupling between Builtin and Accessor for the return value?
-        Accessor::Ptr resultAccessor(new TupleWME<float>::Accessor<0>());
+        AccessorBase::Ptr resultAccessor(new TupleWME<float>::Accessor<0>());
         args[0].bind(resultAccessor);
 
         for (size_t i = 1; i < args.size(); i++)
@@ -43,7 +43,7 @@ public:
             {
                 if (!arg.getAccessor())
                     throw NodeBuilderException("MathBuiltinBuilder: Unbound variables in operands are not supported. (Variable: " + arg.getVariableName() + ")");
-                std::unique_ptr<Accessor> access(arg.getAccessor()->clone());
+                std::unique_ptr<AccessorBase> access(arg.getAccessor()->clone());
                 builtin->addOperand({std::move(access)});
             }
             else

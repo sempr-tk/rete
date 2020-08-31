@@ -8,23 +8,39 @@ namespace rete {
 namespace builtin {
 
 
-Compare::Compare(Mode mode, std::unique_ptr<Accessor> left, std::unique_ptr<Accessor> right)
-    : Builtin(Compare::ModeName(mode)),
-      left_(std::move(left)), right_(std::move(right)), mode_(mode)
+Compare::Compare(Mode mode,
+        PersistentInterpretation<float>&& left,
+        PersistentInterpretation<float>&& right)
+    :
+        Builtin(Compare::ModeName(mode)),
+        leftNum_(std::move(left)),
+        rightNum_(std::move(right)),
+        mode_(mode),
+        compareNumbers_(true)
 {
-    if (left_->canAs<NumberAccessor>() && right_->canAs<NumberAccessor>())
-    {
-        compareNumbers_ = true;
-    }
-    else
-    {
-        compareNumbers_ = false;
-    }
 }
+
+Compare::Compare(Mode mode,
+        PersistentInterpretation<std::string>&& left,
+        PersistentInterpretation<std::string>&& right)
+    :
+        Builtin(Compare::ModeName(mode)),
+        leftStr_(std::move(left)),
+        rightStr_(std::move(right)),
+        mode_(mode),
+        compareNumbers_(false)
+{
+}
+
 
 std::string Compare::getDOTAttr() const
 {
-    std::string l = left_->toString() + " " + Compare::ModeName(mode_) + " " + right_->toString();
+    std::string left = (compareNumbers_ ? leftNum_.accessor->toString()
+                                        : leftStr_.accessor->toString());
+    std::string right = (compareNumbers_ ? rightNum_.accessor->toString()
+                                        : rightStr_.accessor->toString());
+
+    std::string l = left + " " + Compare::ModeName(mode_) + " " + right;
     return "[label=\"" + util::dotEscape(l) + "\"]";
 }
 
@@ -46,15 +62,29 @@ std::string Compare::ModeName(Mode m)
 bool Compare::operator == (const BetaNode& other) const
 {
     auto o = dynamic_cast<const Compare*>(&other);
-    if (!o) return false;
-
-    if (o->left_ == this->left_ &&
-        o->right_ == this->right_ &&
-        o->mode_ == this->mode_)
+    if (!o)
     {
-        return true;
+        return false;
     }
-    return false;
+    else if ((o->compareNumbers_ != this->compareNumbers_) ||
+             (o->mode_ != this->mode_))
+    {
+        return false;
+    }
+    else if (o->compareNumbers_ && this->compareNumbers_)
+    {
+        return (*o->leftNum_.accessor == *this->leftNum_.accessor) &&
+               (*o->rightNum_.accessor == *this->rightNum_.accessor);
+    }
+    else if (!o->compareNumbers_ && !this->compareNumbers_)
+    {
+        return (*o->leftStr_.accessor == *this->leftStr_.accessor) &&
+               (*o->rightStr_.accessor == *this->rightStr_.accessor);
+    }
+    else
+    {
+        return false;
+    }
 }
 
 
@@ -73,20 +103,22 @@ WME::Ptr Compare::process(Token::Ptr token)
 {
     if (compareNumbers_)
     {
-        auto l = left_->as<NumberAccessor>();
-        auto r = right_->as<NumberAccessor>();
+        float l, r;
+        leftNum_.interpretation->getValue(token, l);
+        rightNum_.interpretation->getValue(token, r);
 
-        if (compare(mode_, l->getFloat(token), r->getFloat(token)))
+        if (compare(mode_, l, r))
         {
             return std::make_shared<EmptyWME>();
         }
     }
     else
     {
-        auto l = left_->as<StringAccessor>();
-        auto r = right_->as<StringAccessor>();
+        std::string l, r;
+        leftStr_.interpretation->getValue(token, l);
+        rightStr_.interpretation->getValue(token, r);
 
-        if (compare(mode_, l->getString(token), r->getString(token)))
+        if (compare(mode_, l, r))
         {
             return std::make_shared<EmptyWME>();
         }
@@ -109,7 +141,9 @@ WME::Ptr Print::process(Token::Ptr token)
 {
     for (auto& val : values_)
     {
-        std::cout << val->getString(token) << ", ";
+        std::string str;
+        val.interpretation->getValue(token, str);
+        std::cout << str << ", ";
     }
     std::cout << "\b\b  \b\b" << std::endl;
 
@@ -125,7 +159,7 @@ bool Print::operator == (const BetaNode& other) const
     // equal if accessors are pairwise equal
     for (size_t i = 0; i < values_.size(); i++)
     {
-        if (!(*values_[i] == *o->values_[i])) return false;
+        if (!(*values_[i].accessor == *o->values_[i].accessor)) return false;
     }
 
     return true;
@@ -137,22 +171,24 @@ std::string Print::getDOTAttr() const
     s << "[label=\"print ";
     for (auto& val : values_)
     {
-        s << util::dotEscape(val->toString()) << ", ";
+        s << util::dotEscape(val.accessor->toString()) << ", ";
     }
     s << "\b\b"
       << "\"]";
     return s.str();
 }
 
-void Print::add(std::unique_ptr<StringAccessor> accessor)
+void Print::add(PersistentInterpretation<std::string>&& accessor)
 {
     values_.push_back(std::move(accessor));
 }
 
 void Print::add(const std::string& str)
 {
-    values_.push_back(std::unique_ptr<ConstantStringAccessor>(new ConstantStringAccessor(str)));
-    (*values_.rbegin())->index() = 0;
+    ConstantAccessor<std::string> acc(str);
+    acc.index() = 0;
+
+    values_.push_back(acc.getInterpretation<std::string>()->makePersistent());
 }
 
 // -------------------------
@@ -163,15 +199,17 @@ PrintEffect::PrintEffect()
 {
 }
 
-void PrintEffect::add(std::unique_ptr<StringAccessor> accessor)
+void PrintEffect::add(PersistentInterpretation<std::string>&& accessor)
 {
     values_.push_back(std::move(accessor));
 }
 
 void PrintEffect::add(const std::string& str)
 {
-    values_.push_back(std::unique_ptr<ConstantStringAccessor>(new ConstantStringAccessor(str)));
-    (*values_.rbegin())->index() = 0;
+    ConstantAccessor<std::string> acc(str);
+    acc.index() = 0;
+
+    values_.push_back(acc.getInterpretation<std::string>()->makePersistent());
 }
 
 void PrintEffect::execute(Token::Ptr token, PropagationFlag flag, std::vector<WME::Ptr>&)
@@ -187,7 +225,9 @@ void PrintEffect::execute(Token::Ptr token, PropagationFlag flag, std::vector<WM
 
     for (auto& val : values_)
     {
-        std::cout << val->getString(token) << ", ";
+        std::string str;
+        val.interpretation->getValue(token, str);
+        std::cout << str << ", ";
     }
     std::cout << "\b\b  \b\b" << std::endl;
 }

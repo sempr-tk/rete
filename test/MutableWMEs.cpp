@@ -55,20 +55,22 @@ const std::string MutableWME::type_("MutableWME");
 /**
     An accessor for the MutableWME
 */
-class MutableWMEAccessor : public StringAccessor {
-    bool equals(const Accessor& other) const override
+class MutableWMEAccessor : public Accessor<MutableWME, std::string> {
+    bool equals(const AccessorBase& other) const override
     {
         return nullptr != dynamic_cast<const MutableWMEAccessor*>(&other);
     }
 
-    void getValue(WME::Ptr wme, std::string& value) const override
+    void getValue(MutableWME::Ptr wme, std::string& value) const override
     {
-        value = std::static_pointer_cast<MutableWME>(wme)->value_;
+        value = wme->value_;
     }
 
     MutableWMEAccessor* clone() const override
     {
-        return new MutableWMEAccessor(*this);
+        auto acc = new MutableWMEAccessor();
+        acc->index() = index_;
+        return acc;
     }
 };
 

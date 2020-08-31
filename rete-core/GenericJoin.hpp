@@ -30,8 +30,8 @@ class GenericJoin : public JoinNode {
         for (auto check : checks_)
         {
             s = s + "\\n" +
-                util::dotEscape(check.first->toString()) + " == " +
-                util::dotEscape(check.second->toString());
+                util::dotEscape(check.leftAccessor->toString()) + " == " +
+                util::dotEscape(check.rightAccessor->toString());
         }
         return s +"\"]\n";
     }
@@ -43,14 +43,23 @@ class GenericJoin : public JoinNode {
 
         for (auto check : checks_)
         {
-            s = s + "\n" + check.first->toString() + " == " + check.second->toString();
+            s = s + "\n" + check.leftAccessor->toString() + " == " + check.rightAccessor->toString();
         }
 
         return s;
     }
 
-    typedef std::pair<Accessor::Ptr, Accessor::Ptr> AccessorPair;
-    std::vector<AccessorPair> checks_;
+    typedef std::pair<InterpretationBase*, InterpretationBase*> InterpretationPair;
+    /**
+        Small helper struct to keep left and right accessors together with
+        their common interpretation.
+    */
+    struct Check {
+        AccessorBase::Ptr leftAccessor, rightAccessor;
+        InterpretationPair common;
+    };
+    std::vector<Check> checks_;
+
 public:
     using Ptr = std::shared_ptr<GenericJoin>;
     /**
@@ -62,26 +71,31 @@ public:
         Also throws if the two accessors are unable to compare their pointed-at values, i.e.,
         implement different ValueAccessor<T>s.
     */
-    void addCheck(Accessor::Ptr left, Accessor::Ptr right)
+    void addCheck(AccessorBase::Ptr left, AccessorBase::Ptr right)
     {
         if (left->index() == -1 || right->index() != -1) throw std::exception();
 
-        if (left->canCompareValues(*right))
+        auto pair = left->getCommonInterpretation(*right);
+        if (!std::get<0>(pair) || !std::get<1>(pair))
         {
-            checks_.push_back({left, right});
+            // No common interpretation of accessors
+            throw std::exception();
         }
-        else if (right->canCompareValues(*left))
+        else
         {
-            checks_.push_back({right, left});
+            Check c;
+            c.leftAccessor = left;
+            c.rightAccessor = right;
+            c.common = pair;
+            checks_.push_back(c);
         }
-        else throw std::exception();
     }
 
     bool isValidCombination(Token::Ptr token, WME::Ptr wme) override
     {
         for (auto check : checks_)
         {
-            if (!check.first->valuesEqual(*check.second, token, wme))
+            if (!check.common.first->valuesEqual(*check.common.second, token, wme))
             {
                 return false;
             }
@@ -98,10 +112,10 @@ public:
             for (auto check : this->checks_)
             {
                 if (std::find_if(o->checks_.begin(), o->checks_.end(),
-                        [check](const AccessorPair& other) -> bool
+                        [check](const Check& other) -> bool
                         {
-                            return (*other.first == *check.first) &&
-                                   (*other.second == *check.second);
+                            return (*other.leftAccessor == *check.leftAccessor) &&
+                                   (*other.rightAccessor == *check.rightAccessor);
                         })
                     == o->checks_.end())
                 {

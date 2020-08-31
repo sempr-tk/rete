@@ -70,9 +70,9 @@ int main()
     /* ------------------ */
     /* ----- STEP 5 ----- */
     /* ------------------ */
-    std::unique_ptr<Accessor> accA(new TripleAccessor(Triple::SUBJECT));
+    std::unique_ptr<AccessorBase> accA(new TripleAccessor(Triple::SUBJECT));
     accA->index() = 1;
-    std::unique_ptr<Accessor> accC(new TripleAccessor(Triple::OBJECT));
+    std::unique_ptr<AccessorBase> accC(new TripleAccessor(Triple::OBJECT));
     accC->index() = 0;
 
     // the consequence: construct (C1.?a  rdfs:subClassOf  C2.?c)

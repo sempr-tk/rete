@@ -308,7 +308,7 @@ BetaMemory::Ptr RuleParser::constructPrimitive(
         ast::Rule& rule,
         ast::Precondition& condition,
         BetaMemory::Ptr currentBeta,
-        std::map<std::string, Accessor::Ptr>& bindings) const
+        std::map<std::string, AccessorBase::Ptr>& bindings) const
 {
     auto bIt = conditionBuilders_.find(condition.type());
     if (bIt == conditionBuilders_.end())
@@ -327,8 +327,8 @@ BetaMemory::Ptr RuleParser::constructPrimitive(
     ArgumentList args;
     for (auto& astArg : condition.args_)
     {
-        std::map<std::string, Accessor::Ptr> emptyBindings;
-        std::map<std::string, Accessor::Ptr>* usedBindings = &emptyBindings;
+        std::map<std::string, AccessorBase::Ptr> emptyBindings;
+        std::map<std::string, AccessorBase::Ptr>* usedBindings = &emptyBindings;
         if (builder.builderType() != NodeBuilder::ALPHA)
             usedBindings = &bindings;
 
@@ -400,8 +400,8 @@ BetaMemory::Ptr RuleParser::constructPrimitive(
                             " unbound!");
                 }
 
-                Accessor::Ptr beta(bindings[arg.getVariableName()]->clone());
-                Accessor::Ptr alpha(arg.getAccessor()->clone());
+                AccessorBase::Ptr beta(bindings[arg.getVariableName()]->clone());
+                AccessorBase::Ptr alpha(arg.getAccessor()->clone());
 
                 // add the check to the join
                 join->addCheck(beta, alpha);
@@ -477,7 +477,7 @@ BetaMemory::Ptr RuleParser::constructNoValueGroup(
         ast::Rule& rule,
         ast::NoValueGroup& noValueGroup,
         BetaMemory::Ptr currentBeta,
-        std::map<std::string, Accessor::Ptr>& bindings) const
+        std::map<std::string, AccessorBase::Ptr>& bindings) const
 {
     if (currentBeta == nullptr)
     {
@@ -494,10 +494,10 @@ BetaMemory::Ptr RuleParser::constructNoValueGroup(
     */
 
     // 0. make a copy of the bindings to work with while constructing the group
-    std::map<std::string, Accessor::Ptr> tmpBindings;
+    std::map<std::string, AccessorBase::Ptr> tmpBindings;
     for (auto entry : bindings)
     {
-        tmpBindings[entry.first] = Accessor::Ptr(entry.second->clone());
+        tmpBindings[entry.first] = AccessorBase::Ptr(entry.second->clone());
     }
     BetaMemory::Ptr newBeta = currentBeta;
 
@@ -567,7 +567,7 @@ ParsedRule::Ptr RuleParser::construct(ast::Rule& rule, Network& net) const
     BetaMemory::Ptr currentBeta = nullptr;
 
     // remember already bound variables
-    std::map<std::string, Accessor::Ptr> bindings;
+    std::map<std::string, AccessorBase::Ptr> bindings;
 
     // construct all the conditions
     for (auto& condition : rule.conditions_)

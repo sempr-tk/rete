@@ -81,8 +81,19 @@ class RuleParser : peg::ASTParserDelegate {
     */
     ParsedRule::Ptr construct(ast::Rule&, Network&) const;
 
-    BetaMemory::Ptr constructPrimitive(Network&, ast::Rule&, ast::Precondition&, BetaMemory::Ptr, std::map<std::string, Accessor::Ptr>&) const;
-    BetaMemory::Ptr constructNoValueGroup(Network&, ast::Rule&, ast::NoValueGroup&, BetaMemory::Ptr, std::map<std::string, Accessor::Ptr>&) const;
+    BetaMemory::Ptr constructPrimitive(
+            Network&,
+            ast::Rule&,
+            ast::Precondition&,
+            BetaMemory::Ptr,
+            std::map<std::string, AccessorBase::Ptr>&) const;
+
+    BetaMemory::Ptr constructNoValueGroup(
+            Network&,
+            ast::Rule&,
+            ast::NoValueGroup&,
+            BetaMemory::Ptr,
+            std::map<std::string, AccessorBase::Ptr>&) const;
 
 public:
     RuleParser();
@@ -108,7 +119,9 @@ public:
         \return the list of parsed rules. If these run out of scope the network
                 will be deconstructed automatically!
     */
-    std::vector<ParsedRule::Ptr> parseRules(const std::string& rules, Network& network) __attribute__((warn_unused_result));
+    std::vector<ParsedRule::Ptr> parseRules(
+            const std::string& rules,
+            Network& network) __attribute__((warn_unused_result));
 
     const RuleGrammar& g = RuleGrammar::get();
 };

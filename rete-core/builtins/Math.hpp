@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <limits>
+#include <exception>
 
 namespace rete {
 namespace builtin {
@@ -16,16 +17,16 @@ namespace builtin {
     Only holds Accessors or floats.
 */
 struct NumericValue {
-    std::unique_ptr<Accessor> variable_;
+    PersistentInterpretation<float> variable_;
     float constant_;
 
     NumericValue(float constant)
-        : variable_(nullptr), constant_(constant)
+        : variable_(), constant_(constant)
     {
     }
 
-    NumericValue(std::unique_ptr<Accessor> variable)
-        : variable_(std::move(variable)), constant_(0)
+    NumericValue(PersistentInterpretation<float> var)
+        : variable_(std::move(var)), constant_(0)
     {
     }
 
@@ -36,11 +37,26 @@ struct NumericValue {
 
     bool operator == (const NumericValue& other) const
     {
-        if (variable_ && other.variable_) return *variable_ == *other.variable_;
-        else if (variable_ && !other.variable_) return false;
-        else if (!variable_ && other.variable_) return false;
+        if (variable_.accessor && other.variable_.accessor)
+        {
+            // both are variables -- are they the same?
+            return *variable_.accessor == *other.variable_.accessor;
+        }
+        else if ((variable_.accessor && !other.variable_.accessor) ||
+                 (!variable_.accessor && other.variable_.accessor))
+        {
+            // one is a variable, one a constant
+            return false;
+        }
         else /*if (!variable_ && !other.variable_)*/
-            return constant_ == other.constant_; // TODO: FLOAT EQUALITY! :( Should be okay for constants, as they are written by hand in the rules right? They are not computed by some algorithm, just parsed from string.
+        {
+            // both are constants
+            return constant_ == other.constant_;
+            // TODO: FLOAT EQUALITY! :(
+            // Should be okay for constants, as they are written by hand in the
+            // rules right? They are not computed by some algorithm, just
+            // parsed from string.
+        }
     }
 };
 
@@ -73,9 +89,10 @@ public:
 
     /**
         Add a variable to the operand list
-        \throws if the accessor doesn't implement a ValueAccessor<float> or the maximum number of operands is exceeded
+        \throws if the accessor doesn't implement a ValueAccessor<float> or the
+                maximum number of operands is exceeded
     */
-    void addOperand(std::unique_ptr<Accessor> var);
+    void addOperand(std::unique_ptr<AccessorBase> var);
 
     /**
         Equality operator: checks if the names of the operators and all the operands match.

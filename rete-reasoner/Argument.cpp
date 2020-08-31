@@ -36,18 +36,20 @@ const ast::Argument& Argument::getAST() const
     return *parsedArgument_;
 }
 
-Accessor::Ptr Argument::getAccessor() const
+AccessorBase::Ptr Argument::getAccessor() const
 {
     return accessor_;
 }
 
-void Argument::bind(Accessor::Ptr accessor)
+void Argument::bind(AccessorBase::Ptr accessor)
 {
     if (accessor_) throw std::exception(); // TODO custom exception: variable already bound!
     accessor_ = accessor;
 }
 
-Argument Argument::createFromAST(std::unique_ptr<ast::Argument> ast, const std::map<std::string, Accessor::Ptr>& bindings)
+Argument Argument::createFromAST(
+        std::unique_ptr<ast::Argument> ast,
+        const std::map<std::string, AccessorBase::Ptr>& bindings)
 {
     Argument arg;
 
@@ -57,7 +59,7 @@ Argument Argument::createFromAST(std::unique_ptr<ast::Argument> ast, const std::
         if (it != bindings.end())
         {
             // create a copy of the accessor to keep the correct index!
-            arg.accessor_ = Accessor::Ptr(it->second->clone());
+            arg.accessor_ = AccessorBase::Ptr(it->second->clone());
         }
     }
     arg.parsedArgument_ = std::move(ast);

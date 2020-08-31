@@ -12,46 +12,27 @@ namespace rete {
     a TupleWME of the correct type. This is assumed to be the case, please make sure to keep track
     of the structure of your network and tokens.
 */
-template <size_t I, typename TWME, typename T = typename util::extract_type<TWME, I>::type>
-class TupleWMEAccessor : public SpecificTypeAccessor<T> {
-    bool equals(const Accessor& other) const override
+template <size_t I, typename TWME,
+          typename T = typename util::extract_type<TWME, I>::type,
+          typename Enable = void>
+class TupleWMEAccessor : public Accessor<TWME, T> {
+    bool equals(const AccessorBase& other) const override
     {
         auto o = dynamic_cast<const TupleWMEAccessor*>(&other);
-        if (o) return true; // everything encoded in the type -- WME-type,
-        return false;
+        return o != nullptr; // everything encoded in the type -- WME-type,
     }
 public:
-    void getValue(WME::Ptr wme, T& value) const override
+    void getValue(std::shared_ptr<TWME> wme, T& value) const override
     {
-        auto twme = std::static_pointer_cast<TWME>(wme);
-        value = std::get<I>(twme->value_);
+        value = std::get<I>(wme->value_);
     }
 
-    using SpecificTypeAccessor<T>::getValue;
-
-    TupleWMEAccessor* clone() const override { return new TupleWMEAccessor(*this); }
-
-};
-
-/**
-    Specializations for number and string types
-*/
-template <size_t I, typename TWME>
-class TupleWMEAccessor<I, TWME, std::string> : public StringAccessor {
-    bool equals(const Accessor& other) const override
+    TupleWMEAccessor* clone() const override
     {
-        auto o = dynamic_cast<const TupleWMEAccessor*>(&other);
-        if (o) return true;
-        return false;
+        auto acc = new TupleWMEAccessor();
+        acc->index() = this->index_;
+        return acc;
     }
-public:
-    void getValue(WME::Ptr wme, std::string& value) const override
-    {
-        auto twme = std::static_pointer_cast<TWME>(wme);
-        value = std::get<I>(twme->value_);
-    }
-
-    TupleWMEAccessor* clone() const override { return new TupleWMEAccessor(*this); }
 };
 
 
@@ -59,18 +40,23 @@ public:
     Helper to reduce redundant code for number types
 */
 template <size_t I, typename TWME, typename T>
-class TNumWMEAccessor : public SpecificNumAccessor<T> {
-    bool equals(const Accessor& other) const override
+class TNumWMEAccessor : public Accessor<TWME, T, std::string> {
+    bool equals(const AccessorBase& other) const override
     {
         auto o = dynamic_cast<const TNumWMEAccessor*>(&other);
-        if (o) return true;
-        return false;
+        return o != nullptr;
     }
 public:
-    T internalValue(WME::Ptr wme) const override
+    void getValue(std::shared_ptr<TWME> wme, T& value) const override
     {
-        auto twme = std::static_pointer_cast<TWME>(wme);
-        return std::get<I>(twme->value_);
+        value = std::get<I>(wme->value_);
+    }
+
+    void getValue(std::shared_ptr<TWME> wme, std::string& value) const override
+    {
+        T v;
+        getValue(wme, v);
+        value = std::to_string(v);
     }
 };
 
@@ -80,25 +66,46 @@ public:
 template <size_t I, typename TWME>
 class TupleWMEAccessor<I, TWME, int> : public TNumWMEAccessor<I, TWME, int> {
 public:
-    TupleWMEAccessor* clone() const override { return new TupleWMEAccessor(*this); }
+    TupleWMEAccessor* clone() const override
+    {
+        auto acc = new TupleWMEAccessor();
+        acc->index() = this->index_;
+        return acc;
+    }
 };
+
 
 template <size_t I, typename TWME>
 class TupleWMEAccessor<I, TWME, long> : public TNumWMEAccessor<I, TWME, long> {
 public:
-    TupleWMEAccessor* clone() const override { return new TupleWMEAccessor(*this); }
+    TupleWMEAccessor* clone() const override
+    {
+        auto acc = new TupleWMEAccessor();
+        acc->index() = this->index_;
+        return acc;
+    }
 };
 
 template <size_t I, typename TWME>
 class TupleWMEAccessor<I, TWME, float> : public TNumWMEAccessor<I, TWME, float> {
 public:
-    TupleWMEAccessor* clone() const override { return new TupleWMEAccessor(*this); }
+    TupleWMEAccessor* clone() const override
+    {
+        auto acc = new TupleWMEAccessor();
+        acc->index() = this->index_;
+        return acc;
+    }
 };
 
 template <size_t I, typename TWME>
 class TupleWMEAccessor<I, TWME, double> : public TNumWMEAccessor<I, TWME, double> {
 public:
-    TupleWMEAccessor* clone() const override { return new TupleWMEAccessor(*this); }
+    TupleWMEAccessor* clone() const override
+    {
+        auto acc = new TupleWMEAccessor();
+        acc->index() = this->index_;
+        return acc;
+    }
 };
 
 } /* rete */

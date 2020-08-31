@@ -12,7 +12,9 @@ namespace rete {
     a TupleWME of the correct type. This is assumed to be the case, please make sure to keep track
     of the structure of your network and tokens.
 */
-template <size_t I, typename TWME, typename T = typename util::extract_type<TWME, I>::type>
+template <size_t I, typename TWME,
+          typename T = typename util::extract_type<TWME, I>::type,
+          typename Enable = void>
 class TupleWMEAccessor : public Accessor<TWME, T> {
     bool equals(const AccessorBase& other) const override
     {
@@ -71,6 +73,7 @@ public:
         return acc;
     }
 };
+
 
 template <size_t I, typename TWME>
 class TupleWMEAccessor<I, TWME, long> : public TNumWMEAccessor<I, TWME, long> {

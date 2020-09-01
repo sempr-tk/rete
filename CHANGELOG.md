@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.6.0] - 2020-08-01
+
+- Fixed incorrect handling of strings/triples in the reasoner/rule parser.
+  String constants in rules are now correctly parsed without the quotation
+  marks, while the contents of triples are unquoted when interpreted as string.
+  Added a "TriplePart" wrapper for strings to identify strings that can be used
+  as part of a triple as they are.
+  NOTE: Obviously, this is a breaking change.
+- Introduced concept of AccessorConversion: Helper classes that convert any of
+  a given set of interpretations into a single data type. Can be used by nodes
+  to provide compatibility to a range of types while still respecting the
+  preferred interpretation of the source data.
+- Require: C++14.
+- util::to\_string now defaults to an empty string if std::to\_string cannot be
+  used.
+
 ## [0.5.0] - 2020-08-31
 
 - Reworked the accessor system. How to access a value in a WME and what type of

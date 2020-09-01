@@ -1,4 +1,5 @@
 #include "AgendaNode.hpp"
+#include "Util.hpp"
 
 namespace rete {
 
@@ -10,7 +11,9 @@ AgendaNode::AgendaNode(Production::Ptr p, Agenda::Ptr a)
 
 std::string AgendaNode::getDOTAttr() const
 {
-    return "[label=\"AgendaNode \'" + getName() + "\'\\n" + production_->toString() + "\"]";
+    return "[label=\"AgendaNode \'" +
+                util::dotEscape(getName()) + "\'\\n" +
+                util::dotEscape(production_->toString()) + "\"]";
 }
 
 std::string AgendaNode::toString() const

@@ -58,9 +58,9 @@ InferTriple::InferTriple(
 std::string InferTriple::toString() const
 {
     std::string s, p, o;
-    s = util::dotEscape(subject_.toString());
-    p = util::dotEscape(predicate_.toString());
-    o = util::dotEscape(object_.toString());
+    s = subject_.toString();
+    p = predicate_.toString();
+    o = object_.toString();
 
     return "InferTriple (\n" + s + "\n " + p + "\n " + o + ")";
 }

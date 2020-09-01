@@ -59,9 +59,12 @@ int main()
     accC->index() = 0;
 
     // the consequence: construct (C1.?a  rdfs:subClassOf  C2.?c)
+    auto accB = std::unique_ptr<AccessorBase>(
+                    new ConstantAccessor<TriplePart>({"rdfs:subClassOf"}));
+
     InferTriple::Ptr infer(new InferTriple(
         std::move(accA),
-        "rdfs:subClassOf",
+        std::move(accB),
         std::move(accC)
     ));
 

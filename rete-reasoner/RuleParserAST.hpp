@@ -9,6 +9,7 @@
 #include <map>
 
 #include <iostream>
+#include <iomanip>
 
 /**
 This file contains the class declarations from which an AST can be constructed. The actual
@@ -62,6 +63,26 @@ namespace rete {
 
         class QuotedString : public Argument {
             bool isString() const override { return true; }
+
+        public:
+            /**
+                During construction, unquote the string!
+            */
+            bool construct(const peg::InputRange& r, peg::ASTStack& st, const peg::ErrorReporter& err) override
+            {
+                // first construct the argument
+                bool ok = Argument::construct(r, st, err);
+                // then update this (which is a std::string!) by removing quotes
+                // and escape chars.
+                //     "Hello \"friend\"..."
+                // becomes
+                //     Hello "friend"...
+                std::stringstream ss(r.str());
+                ss >> std::quoted(*this);
+
+                return ok;
+            }
+
         };
 
         class URI : public Argument {

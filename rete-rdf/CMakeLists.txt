@@ -1,6 +1,7 @@
 set(RDF_SRC
     InferTriple.cpp
     Triple.cpp
+    TriplePart.cpp
     TripleAccessor.cpp
     TripleAlpha.cpp
     TripleTypeAlpha.cpp

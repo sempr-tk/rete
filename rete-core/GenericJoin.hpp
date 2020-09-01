@@ -31,7 +31,10 @@ class GenericJoin : public JoinNode {
         {
             s = s + "\\n" +
                 util::dotEscape(check.leftAccessor->toString()) + " == " +
-                util::dotEscape(check.rightAccessor->toString());
+                util::dotEscape(check.rightAccessor->toString()) +
+                util::dotEscape(" [") +
+                util::dotEscape(check.common.first->internalTypeName()) +
+                util::dotEscape("]");
         }
         return s +"\"]\n";
     }
@@ -43,7 +46,9 @@ class GenericJoin : public JoinNode {
 
         for (auto check : checks_)
         {
-            s = s + "\n" + check.leftAccessor->toString() + " == " + check.rightAccessor->toString();
+            s = s + "\n" + check.leftAccessor->toString() + " == " +
+                           check.rightAccessor->toString() +
+                           " [" + check.common.first->internalTypeName() + "]";
         }
 
         return s;

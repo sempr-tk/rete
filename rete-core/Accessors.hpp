@@ -9,12 +9,22 @@
 #include <functional>
 #include <cassert>
 #include <algorithm>
+#include <exception>
+#include <cxxabi.h>
 
 #include "WME.hpp"
 #include "Token.hpp"
 #include "Util.hpp"
 
 namespace rete {
+
+// forward declaration of Interpretation<T>
+template <class T> class Interpretation;
+
+// ... and of PersistentInterpretation<T>
+template <class T> struct PersistentInterpretation;
+
+
 
 /**
     The InterpretationBase is the base class for the implementation of
@@ -39,14 +49,23 @@ public:
     virtual bool valuesEqual(const InterpretationBase& other,
                              Token::Ptr token,
                              WME::Ptr wme) const = 0;
+
+    /**
+        For debugging purposes: Returns a string describing the type of
+        interpretation done, the T in Interpretation<T>.
+    */
+    virtual std::string internalTypeName() const = 0;
+
+    /**
+        Checks if this interpretation is for one of the given types.
+    */
+    template <class... Ts> bool isOneOf() const
+    {
+        return rete::util::IsOneOf<Interpretation<Ts>...>()(this);
+    }
+
 };
 
-
-// forward declaration of Interpretation<T>
-template <class T> class Interpretation;
-
-// ... and of PersistentInterpretation<T>
-template <class T> struct PersistentInterpretation;
 
 /**
     Objects of type AccessorBase are used to grant access to values inside of
@@ -73,14 +92,8 @@ class AccessorBase {
     */
     virtual bool equals(const AccessorBase& other) const = 0;
 
-protected:
-    int index_;
-
-    typedef std::pair<std::type_index, InterpretationBase*> TypeInterpretationPair;
-    /// A vector containing all possible interpretations of the accessed value
-    std::vector<TypeInterpretationPair> interpretations_;
-
 public:
+    typedef std::pair<std::type_index, InterpretationBase*> TypeInterpretationPair;
     using Ptr = std::shared_ptr<AccessorBase>;
 
     /**
@@ -143,6 +156,34 @@ public:
         }
     }
 
+    /**
+        Returns the Interpretation<X> where X is the first intepretation
+        available that is from the given set of types {T, Ts...}.
+
+        If a node can e.g. support to work with int, float and string, it can
+        get the one interpretation that is preferred by the accessor by calling
+            getPreferredInterpretation<int, float, string>()
+        So that if the original value is e.g. an int we will use that
+        interpretation.
+
+        Since this decision happens at runtime there is no way to make this
+        typesafe. You'll get a const InterpretationBase* as a result (or a
+        nullptr if no match is found), and have to check for the actual type
+        dynamically.
+    */
+    template <class... Ts>
+    const InterpretationBase* getPreferredInterpretation()
+    {
+        for (auto interpretation : interpretations_)
+        {
+            if (interpretation.second->isOneOf<Ts...>())
+            {
+                return interpretation.second;
+            }
+        }
+        return nullptr;
+    }
+
 
     /**
         Equality between accessors is given when they use the same token-index,
@@ -176,6 +217,10 @@ public:
     */
     virtual std::string toString() const;
 
+protected:
+    int index_;
+    /// A vector containing all possible interpretations of the accessed value
+    std::vector<TypeInterpretationPair> interpretations_;
 };
 
 
@@ -257,6 +302,7 @@ public:
 */
 template <class T>
 class Interpretation : public InterpretationBase {
+protected:
     AccessorBase* parent_;
     std::function<void(WME::Ptr, T&)> extractor_;
 
@@ -359,7 +405,7 @@ public:
     }
 
 
-    virtual bool valuesEqual(
+    bool valuesEqual(
                     const InterpretationBase& other,
                     Token::Ptr token,
                     WME::Ptr wme) const override
@@ -374,6 +420,11 @@ public:
         this->getValue(token, wme, thisVal);
 
         return otherVal == thisVal;
+    }
+
+    std::string internalTypeName() const override
+    {
+        return util::beautified_typename<T>().value;
     }
 };
 
@@ -509,7 +560,239 @@ public:
         else
             return o->value_ == this->value_;
     }
+
+    std::string toString() const override
+    {
+        return util::to_string(value_);
+    }
 };
+
+
+
+/**
+    A utility to create conversion objects that help supporting multiple
+    interpretations in a Node/NodeBuilder that all need to be converted to the
+    same type. E.g., the TripleEffect-Node stores everything as string, but
+    needs to support TriplePart, string, float, int, ... and convert them to
+    strings, sometimes quoting them (for string literals), or putting them in
+    brackets (for resources), ...
+*/
+template <class Destination, class S = void, class... Sources> class AccessorConversion;
+
+
+template <class D, class S, class... Ss>
+class AccessorConversion : public AccessorConversion<D, Ss...> {
+    /**
+        A getter to retrieve S from a wme --
+        nullptr if S is not the preferred interpretation of the accessor in the
+        set {S, Ss...}.
+
+        Explanation:
+        Every subclass of AccessorConversion gets the preferred interpretation
+        of the accessor under the assumption that only the type S (implemented
+        by this class) and the types Ss... (implemented by the inherited
+        AccessorConversion<D, Ss...>) are supported.
+        If from this set of types S is actually the preferred we mark this by
+        selecting the get-function of this class as the one to use.
+        If not, leave everything as it is -- either none of the types so far
+        is supported by the accessor, or a previous type from Ss... is preferred
+        over S.
+        Since the ctor of the base class is evaluated first we start with the
+        minimal set of one type to check, and with every layer of this template
+        extend it by a type and only change the selected getter if the added
+        type if preferred over all previous types.
+    */
+    const Interpretation<S>* getter_;
+
+    void get(WME::Ptr wme, D& destination) const
+    {
+        S source;
+        getter_->getValue(wme, source);
+        convert(source, destination);
+    }
+
+    std::string toStringImpl() const
+    {
+        return this->parent_->toString() +
+            " [" + util::beautified_typename<S>().value + " -> " +
+                   util::beautified_typename<D>().value + "]";
+    }
+
+
+    /**
+        Checks the accessor for its preferred interpretation and sets the
+        function pointers in the base class of this to special methods of this
+        class if it matches the interpretation supported by it.
+    */
+    void init()
+    {
+        if (!this->destDirectlyAvailable_)
+        {
+            const InterpretationBase* i =
+                this->accessorKeepAlive_->template getPreferredInterpretation<S, Ss...>();
+
+            getter_ = dynamic_cast<const Interpretation<S>*>(i);
+            if (getter_)
+            {
+                this->extractor_ = std::bind(&AccessorConversion::get,
+                        this,
+                        std::placeholders::_1,
+                        std::placeholders::_2);
+                this->toString_ = std::bind(&AccessorConversion::toStringImpl, this);
+            }
+        }
+    }
+
+protected:
+    AccessorConversion(std::unique_ptr<AccessorBase>&& base)
+        : AccessorConversion<D, Ss...>(std::move(base))
+    {
+        init();
+    }
+
+    AccessorConversion(const AccessorConversion&) = delete;
+    AccessorConversion& operator = (const AccessorConversion&) = delete;
+
+    AccessorConversion(AccessorConversion&& other)
+        : AccessorConversion<D, Ss...>(std::move(other))
+    {
+        init();
+    }
+
+    /**
+        The actual conversion method to be implemented by the user.
+    */
+    virtual void convert(const S& source, D& destination) const = 0;
+
+    // pull the other conversion methods, avoid hiding overloaded virtual
+    //using AccessorConversion<D, Ss...>::convert;
+};
+
+/**
+    Recursion anchor. Reuses Interpretation<D> for the token-iterating stuff,
+    but should not be seen as one. The AccessorConversion actually owns the
+    accessor it is based on, which is not the case for interpretations.
+
+    Also, adds support for D->D conversion and a reduced toString method.
+*/
+template <class D>
+class AccessorConversion<D> : protected Interpretation<D> {
+protected:
+    std::unique_ptr<AccessorBase> accessorKeepAlive_;
+    std::function<std::string(void)> toString_;
+
+    /**
+        If the destination type D is already supported by the accessor it is
+        to be used! Even if it is not the preferred datatype of the accessor.
+        Using a not-preferred type here means just letting the source decide
+        how to convert to the destination type, instead of getting a more
+        "preferred" type from the accessor (potentially already converting) and
+        then providing our own conversion to the destination type.
+
+        This flag is set if the destination type D is supported by the accessor
+        and prevents the function pointers from being overwritten by subclasses.
+    */
+    bool destDirectlyAvailable_;
+
+private:
+    const Interpretation<D>* getter_;
+
+    void get(WME::Ptr wme, D& destination) const
+    {
+        getter_->getValue(wme, destination);
+    }
+
+    std::string toStringImpl() const
+    {
+        return this->parent_->toString() +
+               " [" + util::beautified_typename<D>().value + "]";
+    }
+
+    /**
+        Checks the accessor for its preferred interpretation and sets the
+        function pointers in the base class of this to special methods of this
+        class if it matches the interpretation supported by it.
+    */
+    void init()
+    {
+        getter_ = this->accessorKeepAlive_->template getInterpretation<D>();
+        if (getter_)
+        {
+            this->extractor_ = std::bind(&AccessorConversion::get,
+                                        this,
+                                        std::placeholders::_1,
+                                        std::placeholders::_2);
+            this->toString_ = std::bind(&AccessorConversion::toStringImpl, this);
+            destDirectlyAvailable_ = true;
+        }
+        else
+        {
+            destDirectlyAvailable_ = false;
+        }
+    }
+
+public:
+    AccessorConversion(std::unique_ptr<AccessorBase>&& accessor)
+        : Interpretation<D>(accessor.get(), nullptr),
+          accessorKeepAlive_(std::move(accessor))
+    {
+        init();
+    }
+
+    // not copyable. has a unique_ptr, so these should be implicitely
+    // deleted either way.
+    AccessorConversion(const AccessorConversion&) = delete;
+    AccessorConversion& operator = (const AccessorConversion&) = delete;
+
+    /**
+        Move-ctor of AccessorConversion. Moves the keep-alive-ptr to the
+        accessor, but uses the usual (not move!)-ctor of Interpretation<D>
+        to set std::functions to nullptr. Those must neither be moved nor
+        copied, as they are bound to the "other" object which is probably
+        deleted! Instead, the ctor-chain needs to do the same checks as in
+        the normal ctor again to set these functions.
+    */
+    AccessorConversion(AccessorConversion&& other)
+        : Interpretation<D>(other.parent_, nullptr),
+          toString_(nullptr)
+    {
+        accessorKeepAlive_ = std::move(other.accessorKeepAlive_);
+        init();
+    }
+
+    // ... don't really need the move assignment.
+    // Just adds more ways to create errors. A lot of care needs to be taken to
+    // not let the std::functions point to deleted objects, which I only want
+    // to do once.
+    AccessorConversion& operator = (AccessorConversion&&) = delete;
+
+    /**
+        Users of AccessorConversion basically make use of the
+        Interpretation<D>::getValue, just that the extractor-function in the
+        Interpretation has been set to a getter/conversion function of the
+        AccessorConversion
+    */
+    using Interpretation<D>::getValue;
+
+    std::string toString() const
+    {
+        if (toString_)
+            return toString_();
+        else
+            return "";
+    }
+
+    /**
+        Quick check if the conversion object is valid: If the extractor
+        variable wasn't set, the given accessor does not support any of the
+        source datatypes.
+    */
+    operator bool () const
+    {
+        return this->extractor_ && this->toString_;
+    }
+};
+
 
 }
 

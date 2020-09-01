@@ -1,5 +1,6 @@
 #include "TripleAccessor.hpp"
 #include <sstream>
+#include <iomanip>
 
 rete::TripleAccessor::TripleAccessor(rete::Triple::Field field)
     : field_(field)
@@ -8,8 +9,29 @@ rete::TripleAccessor::TripleAccessor(rete::Triple::Field field)
 
 void rete::TripleAccessor::getValue(rete::Triple::Ptr wme, std::string& value) const
 {
-    auto triple = std::static_pointer_cast<rete::Triple>(wme);
-    value = triple->getField(field_);
+    std::string raw = wme->getField(field_);
+    if (raw.size() >= 2 &&
+        *raw.begin() == '\"' &&
+        *raw.rbegin() == '\"')
+    {
+        // quoted -> remove quotes to get the string
+        std::stringstream ss(raw);
+        ss >> std::quoted(value);
+    }
+    else if (raw.size() >= 2 &&
+            *raw.begin() == '<' &&
+            *raw.rbegin() == '>')
+    {
+        // a resource -> remove the brackets.
+        value = raw.substr(1, raw.size()-2);
+    }
+    else
+    {
+        // ... it wasn't really something well formed that should be interpreted
+        // as a string, right? No quotes, no <...>, just.. something. Maybe
+        // a plain number? Whatever. Just output the raw thing.
+        value = raw;
+    }
 }
 
 
@@ -27,6 +49,11 @@ void rete::TripleAccessor::getValue(rete::Triple::Ptr wme, float& value) const
     getValue(wme, str);
 
     std::istringstream(str) >> value;
+}
+
+void rete::TripleAccessor::getValue(rete::Triple::Ptr wme, TriplePart& value) const
+{
+    value.value = wme->getField(field_);
 }
 
 

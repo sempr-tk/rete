@@ -21,7 +21,7 @@ public:
     std::tuple<Types...> value_;
 
     template <size_t I> using Accessor = TupleWMEAccessor<I, TupleWME>;
-    template <size_t, typename, typename> friend class TupleWMEAccessor;
+    template <size_t, typename, typename, typename> friend class TupleWMEAccessor;
 
     using Ptr = std::shared_ptr<TupleWME>;
 

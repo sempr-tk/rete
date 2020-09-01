@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0] - 2020-08-31
+
+- Reworked the accessor system. How to access a value in a WME and what type of
+  value can be accessed are now properly decoupled into Accessor and
+  Interpretation.
+  NOTE: This is a breaking change in the fundamental structure of this project!
+
+
 ## [0.4.1] - 2020-05-20
 
 - Fixed a segfault that would occur after removing and adding rules again,

@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.6.1] - 2020-08-02
+
+- Workaround: Compiler bug during template method overload resolution at
+  static initialization. There were conflicts between type traits in cereal
+  (used in sempr, not here) and rete::util::is\_std\_to\_string\_valid.
+
 ## [0.6.0] - 2020-08-01
 
 - Fixed incorrect handling of strings/triples in the reasoner/rule parser.

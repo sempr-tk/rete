@@ -127,7 +127,8 @@ struct is_std_to_string_valid {
     static std::false_type test(...);
 
     static constexpr bool value =
-        std::is_same<decltype(test<T>(nullptr)), std::true_type>::value;
+        std::is_same<decltype(is_std_to_string_valid::test<T>(nullptr)),
+                     std::true_type>::value;
 };
 
 /**

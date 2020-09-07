@@ -11,6 +11,7 @@ set(CORE_SRC
     BetaBetaNode.cpp
     Builtin.cpp
     connect.cpp
+    EditDistance.cpp
     JoinNode.cpp
     Network.cpp
     Node.cpp

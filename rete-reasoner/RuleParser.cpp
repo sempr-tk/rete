@@ -660,7 +660,7 @@ ParsedRule::Ptr RuleParser::construct(ast::Rule& rule, Network& net) const
         {
             std::vector<std::string> knownTypes;
             for (auto& builder : effectBuilders_) knownTypes.push_back(builder.first);
-            throw NoBuilderException(rule.str_, effect->str_, effect->type());
+            throw NoBuilderException(rule.str_, effect->str_, effect->type(), knownTypes);
         }
 
         // create an argument list. The ast::Arguments are consumed.

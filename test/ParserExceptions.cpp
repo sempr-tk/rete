@@ -96,7 +96,7 @@ int main()
     // unknown production
     try {
         rules = p.parseRules(
-            "[rule7: (?a <foo> ?b) -> whatever(?b)]",
+            "[rule7: (?a <foo> ?b) -> pront(?b)]",
             reasoner.net()
         );
         return 7;
@@ -119,6 +119,18 @@ int main()
     } catch (ParserException& e) {
         std::cout << e.what() << std::endl;
     }
+
+    // unknown builtin - small typo
+    try {
+        rules = p.parseRules(
+            "[rule2: trupe() -> (?b <foo> ?a)]\n",
+            reasoner.net()
+        );
+        return 9;
+    } catch (ParserException& e) {
+        std::cout << e.what() << std::endl;
+    }
+
 
     // net network must be really ugly by now :D
     save(reasoner.net(), "exceptions.dot");

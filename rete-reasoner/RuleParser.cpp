@@ -4,12 +4,14 @@
 #include "../rete-core/NoValue.hpp"
 #include "../rete-core/GroupBy.hpp"
 #include "../rete-core/TokenGroupAccessor.hpp"
+#include "../rete-core/builtins/MathBulk.hpp"
 
 #include "RuleParser.hpp"
 #include "RuleParserAST.hpp"
 #include "TripleConditionBuilder.hpp"
 #include "TripleEffectBuilder.hpp"
 #include "MathBuiltinBuilder.hpp"
+#include "MathBulkBuiltinBuilder.hpp"
 #include "UtilBuiltinBuilder.hpp"
 #include "TrueNodeBuilder.hpp"
 
@@ -45,6 +47,8 @@ RuleParser::RuleParser()
     registerNodeBuilder<builtin::MathBuiltinBuilder<builtin::Sum>>();
     registerNodeBuilder<builtin::MathBuiltinBuilder<builtin::Mul>>();
     registerNodeBuilder<builtin::MathBuiltinBuilder<builtin::Div>>();
+    registerNodeBuilder<builtin::MathBulkBuiltinBuilder<builtin::SumBulk>>("SumBulk");
+    registerNodeBuilder<builtin::MathBulkBuiltinBuilder<builtin::MulBulk>>("MulBulk");
     registerNodeBuilder<builtin::CompareNodeBuilder<builtin::Compare::LT>>();
     registerNodeBuilder<builtin::CompareNodeBuilder<builtin::Compare::LE>>();
     registerNodeBuilder<builtin::CompareNodeBuilder<builtin::Compare::EQ>>();

@@ -73,6 +73,10 @@ add_executable(GroupBy GroupBy.cpp)
 target_link_libraries(GroupBy rete-core rete-rdf rete-reasoner)
 add_test(NAME GroupBy COMMAND GroupBy)
 
+add_executable(GroupByBuiltins GroupByBuiltins.cpp)
+target_link_libraries(GroupByBuiltins rete-core rete-rdf rete-reasoner)
+add_test(NAME GroupByBuiltins COMMAND GroupByBuiltins)
+
 add_executable(StringsInTriples StringsInTriples.cpp)
 target_link_libraries(StringsInTriples rete-core rete-rdf rete-reasoner)
 add_test(NAME StringsInTriples COMMAND StringsInTriples)

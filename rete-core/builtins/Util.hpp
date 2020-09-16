@@ -87,6 +87,23 @@ public:
 };
 
 
+
+/**
+    Counts the number of entries inside the token group that the given
+    accessor points to.
+*/
+class CountEntriesInGroup : public Builtin {
+    PersistentInterpretation<TokenGroup::Ptr> group_;
+public:
+    using Ptr = std::shared_ptr<CountEntriesInGroup>;
+    CountEntriesInGroup(PersistentInterpretation<TokenGroup::Ptr>);
+
+    WME::Ptr process(Token::Ptr) override;
+    bool operator == (const BetaNode& other) const override;
+    std::string getDOTAttr() const override;
+};
+
+
 } /* builtin */
 } /* rete */
 

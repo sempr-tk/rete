@@ -143,5 +143,37 @@ Production::Ptr PrintEffectNodeBuilder::buildEffect(ArgumentList& args) const
     return print;
 }
 
+
+CountEntriesInGroupBuilder::CountEntriesInGroupBuilder()
+    : NodeBuilder("count", BuilderType::BUILTIN)
+{
+}
+
+Builtin::Ptr CountEntriesInGroupBuilder::buildBuiltin(ArgumentList& args) const
+{
+    if (args.size() != 2)
+        throw NodeBuilderException(
+                "Need exactly 2 arguments: "
+                "A result variable and a group to count");
+
+    if (!args[0].isVariable() || args[0].getAccessor())
+        throw NodeBuilderException(
+                "First argument must be an unbound variable.");
+    if (!args[1].isVariable() || !args[1].getAccessor() ||
+        !args[1].getAccessor()->getInterpretation<TokenGroup::Ptr>())
+        throw NodeBuilderException(
+                "Second argument must refer to a variable in a group.");
+
+    auto pi = args[1].getAccessor()->getInterpretation<TokenGroup::Ptr>()
+                                    ->makePersistent();
+
+    auto node = std::make_shared<CountEntriesInGroup>(std::move(pi));
+    auto resultAcc = std::make_shared<TupleWME<int>::Accessor<0>>();
+
+    args[0].bind(resultAcc);
+    return node;
+}
+
+
 } /* builtin */
 } /* rete */

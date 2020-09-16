@@ -126,6 +126,12 @@ public:
     Production::Ptr buildEffect(ArgumentList& args) const override;
 };
 
+class CountEntriesInGroupBuilder : public NodeBuilder {
+public:
+    CountEntriesInGroupBuilder();
+    Builtin::Ptr buildBuiltin(ArgumentList& args) const override;
+};
+
 } /* builtin */
 } /* rete */
 

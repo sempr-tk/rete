@@ -49,6 +49,7 @@ RuleParser::RuleParser()
     registerNodeBuilder<builtin::MathBuiltinBuilder<builtin::Div>>();
     registerNodeBuilder<builtin::MathBulkBuiltinBuilder<builtin::SumBulk>>("SumBulk");
     registerNodeBuilder<builtin::MathBulkBuiltinBuilder<builtin::MulBulk>>("MulBulk");
+    registerNodeBuilder<builtin::CountEntriesInGroupBuilder>();
     registerNodeBuilder<builtin::CompareNodeBuilder<builtin::Compare::LT>>();
     registerNodeBuilder<builtin::CompareNodeBuilder<builtin::Compare::LE>>();
     registerNodeBuilder<builtin::CompareNodeBuilder<builtin::Compare::EQ>>();

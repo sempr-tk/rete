@@ -173,6 +173,37 @@ bool mul_bulk()
 }
 
 
+bool count()
+{
+    RuleParser p;
+    Reasoner reasoner;
+    auto rules = p.parseRules(
+        "[(?player <inTeam> ?team),"
+        " GROUP BY (?team),"
+        " count(?count ?player)"
+        " -> (?team <playerCount> ?count)]",
+        reasoner.net()
+    );
+
+    auto data = p.parseRules(
+        "[true() ->"
+        " (<pb1> <inTeam> <blue>),"
+        " (<pb2> <inTeam> <blue>),"
+        " (<pb3> <inTeam> <blue>),"
+        " (<pr1> <inTeam> <red>),"
+        " (<pr2> <inTeam> <red>),"
+        " (<pr3> <inTeam> <red>),"
+        " (<pr4> <inTeam> <red>)]",
+        reasoner.net()
+    );
+
+    reasoner.performInference();
+    save(reasoner.net(), __func__ + std::string(".dot"));
+
+    return containsTriple(reasoner, "<blue>", "<playerCount>", std::to_string(3)) &&
+           containsTriple(reasoner, "<red>", "<playerCount>", std::to_string(4));
+}
+
 
 #define TEST(function) \
     { \
@@ -190,5 +221,6 @@ int main()
     TEST(sum_bulk);
     TEST(mul_bulk);
     TEST(sum_bulk_retract);
+    TEST(count);
     return failed;
 }

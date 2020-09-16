@@ -308,5 +308,38 @@ void PrintEffect::execute(Token::Ptr token, PropagationFlag flag, std::vector<WM
     std::cout << "\b\b  \b\b" << std::endl;
 }
 
+// ------------------------------------------
+// CountEntriesInGroup (aka 'count(?c ?var)')
+// ------------------------------------------
+CountEntriesInGroup::CountEntriesInGroup(
+        PersistentInterpretation<TokenGroup::Ptr> acc)
+    :
+        Builtin("count"),
+        group_(std::move(acc))
+{
+}
+
+WME::Ptr CountEntriesInGroup::process(Token::Ptr token)
+{
+    TokenGroup::Ptr group;
+    group_.interpretation->getValue(token, group);
+
+    auto result = std::make_shared<TupleWME<int>>(group->token_.size());
+    return result;
+}
+
+bool CountEntriesInGroup::operator==(const BetaNode& other) const
+{
+    auto o = dynamic_cast<const CountEntriesInGroup*>(&other);
+    return o && (*o->group_.accessor == *group_.accessor);
+}
+
+std::string CountEntriesInGroup::getDOTAttr() const
+{
+    return "[label=\"count(" +
+                util::dotEscape(group_.accessor->toString()) +
+           ")\"]";
+}
+
 } /* builtin */
 } /* rete */

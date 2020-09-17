@@ -783,6 +783,11 @@ public:
     AccessorConversion(const AccessorConversion&) = delete;
     AccessorConversion& operator = (const AccessorConversion&) = delete;
 
+    bool hasEqualAccessor(const AccessorConversion& other)
+    {
+        return (*this->accessorKeepAlive_ == *other.accessorKeepAlive_);
+    }
+
     /**
         Move-ctor of AccessorConversion. Moves the keep-alive-ptr to the
         accessor, but uses the usual (not move!)-ctor of Interpretation<D>

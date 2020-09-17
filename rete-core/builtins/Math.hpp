@@ -3,129 +3,167 @@
 
 #include "../Builtin.hpp"
 #include "../Accessors.hpp"
-
+#include "NumberToNumberConversion.hpp"
+#include "../TupleWME.hpp"
 
 #include <vector>
 #include <limits>
 #include <exception>
+#include <sstream>
+#include <algorithm>
+#include <numeric>
 
 namespace rete {
 namespace builtin {
 
-/**
-    Simple container for constant values or accessor objects.
-    Only holds Accessors or floats.
-*/
-struct NumericValue {
-    PersistentInterpretation<float> variable_;
-    float constant_;
-
-    NumericValue(float constant)
-        : variable_(), constant_(constant)
-    {
-    }
-
-    NumericValue(PersistentInterpretation<float> var)
-        : variable_(std::move(var)), constant_(0)
-    {
-    }
-
-    NumericValue(NumericValue&& other)
-        : variable_(std::move(other.variable_)), constant_(other.constant_)
-    {
-    }
-
-    bool operator == (const NumericValue& other) const
-    {
-        if (variable_.accessor && other.variable_.accessor)
-        {
-            // both are variables -- are they the same?
-            return *variable_.accessor == *other.variable_.accessor;
-        }
-        else if ((variable_.accessor && !other.variable_.accessor) ||
-                 (!variable_.accessor && other.variable_.accessor))
-        {
-            // one is a variable, one a constant
-            return false;
-        }
-        else /*if (!variable_ && !other.variable_)*/
-        {
-            // both are constants
-            return constant_ == other.constant_;
-            // TODO: FLOAT EQUALITY! :(
-            // Should be okay for constants, as they are written by hand in the
-            // rules right? They are not computed by some algorithm, just
-            // parsed from string.
-        }
-    }
-};
-
 
 /**
-    Base class for math builtins. Allows adding operands
+    Base class for math builtins. Allows adding operands.
+    All operands are converted to the given NumberType (static_casts!), and the
+    result will thus be of NumberType, too.
 */
-class MathBuiltin : public Builtin {
+template <class NumberType,
+          size_t MaxOperands = std::numeric_limits<size_t>::max()>
+class MathBuiltinBase : public Builtin {
 protected:
-    std::vector<NumericValue> operands_;
-    size_t maxOperands_;
-
-    /**
-        Constructs the base for math plugins. The name is used for visualization and parsing rules,
-        maxOperands specifies the maximum number of operands.
-    */
-    MathBuiltin(const std::string& name, size_t maxOperands = std::numeric_limits<size_t>::max());
+    std::vector<NumberToNumberConversion<NumberType>> operands_;
 
     /**
         Returns a format string for dot visualization
     */
-    std::string getDOTAttr() const override;
-public:
-    using Ptr = std::shared_ptr<MathBuiltin>;
-    /**
-        Add a constant to the operand list
-        \throws if the maximum number of operands is exceeded
-    */
-    void addOperand(float val);
+    std::string getDOTAttr() const override
+    {
+        std::stringstream ss;
+        ss << name() << "(";
+        for (auto& o : operands_)
+        {
+            ss << o.toString() << ", ";
+        }
+        ss << "\b\b" << ")";
+
+        return "[label=\"" + util::dotEscape(ss.str()) + "\"]";
+    }
 
     /**
-        Add a variable to the operand list
-        \throws if the accessor doesn't implement a ValueAccessor<float> or the
-                maximum number of operands is exceeded
+        Constructs a math builtin. The name is used for
+        visualization and parsing rules.
     */
-    void addOperand(std::unique_ptr<AccessorBase> var);
+    MathBuiltinBase(const std::string& name)
+        : Builtin(name)
+    {
+    }
+
+public:
+    using Ptr = std::shared_ptr<MathBuiltinBase>;
+
+    /**
+        Add an operand to the list
+        \throws if the accessors value cannot be converted to NumberType, and
+                if the maximum number of operands is exceeded
+    */
+    void addOperand(std::unique_ptr<AccessorBase> var)
+    {
+        if (MaxOperands == operands_.size())
+            throw std::exception();
+
+        if (!var)
+            throw std::exception();
+
+        NumberToNumberConversion<NumberType> conv(std::move(var));
+        if (!conv)
+            throw std::exception();
+
+        operands_.push_back(std::move(conv));
+    }
 
     /**
         Equality operator: checks if the names of the operators and all the operands match.
     */
-    bool operator == (const BetaNode& other) const override;
+    bool operator == (const BetaNode& other) const override
+    {
+        auto o = dynamic_cast<const MathBuiltinBase*>(&other);
+        if (!(o &&
+              o->operands_.size() == this->operands_.size() &&
+              o->name() == this->name()))
+        {
+            return false;
+        }
+        else
+        {
+            std::vector<std::pair<AccessorBase*, AccessorBase*>> zipped;
+            std::transform(
+                this->operands_.first(), this->operands_.last(),
+                o->operands_.first(),
+                std::back_inserter(zipped),
+                [](std::unique_ptr<AccessorBase> a,
+                   std::unique_ptr<AccessorBase> b)
+                {
+                    return std::make_pair(a.get(), b.get());
+                }
+            );
+
+            for (auto& entry : zipped)
+            {
+                if (!(*entry.first == *entry.second))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
 };
 
-/**
-    Sums all values given through the accessors and stores the result in a new TupleWME
-*/
-class Sum : public MathBuiltin {
+
+template <class NumberType,
+          class Operator,
+          NumberType IdentityElement = 0,
+          size_t MaxOperands = std::numeric_limits<size_t>::max()>
+class MathBuiltin
+    : public MathBuiltinBase<NumberType, MaxOperands> {
 public:
-    Sum();
-    WME::Ptr process(Token::Ptr) override;
+    MathBuiltin(const std::string& name)
+        : MathBuiltinBase<NumberType, MaxOperands>(name)
+    {
+    }
+
+    WME::Ptr process(Token::Ptr token) override
+    {
+        NumberType result(IdentityElement);
+        for (auto& operand : this->operands_)
+        {
+            NumberType val;
+            operand->getValue(token, val);
+
+            result = this->operator_(result, val);
+        }
+
+        return std::make_shared<TupleWME<NumberType>>(result);
+    }
 };
 
-/**
-    Multiplies all given values
-*/
-class Mul : public MathBuiltin {
+
+template <class NumberType, NumberType IdentityElement>
+class MathBuiltin<NumberType, std::divides<NumberType>, IdentityElement, 2>
+    : public MathBuiltinBase<NumberType, 2> {
 public:
-    Mul();
-    WME::Ptr process(Token::Ptr) override;
+    MathBuiltin(const std::string& name)
+        : MathBuiltinBase<NumberType, 2>(name)
+    {
+    }
+
+    WME::Ptr process(Token::Ptr token) override
+    {
+        if (this->operands_.size() != 2) throw std::exception();
+
+        NumberType a, b;
+        this->operands_[0].getValue(token, a);
+        this->operands_[1].getValue(token, b);
+
+        return std::shared_ptr<NumberType>(a/b);
+    }
 };
 
-/**
-    Devides the first operand by the second
-*/
-class Div : public MathBuiltin {
-public:
-    Div();
-    WME::Ptr process(Token::Ptr) override;
-};
 
 } /* builtin */
 } /* rete */

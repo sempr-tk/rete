@@ -90,21 +90,9 @@ public:
         }
         else
         {
-            std::vector<std::pair<AccessorBase*, AccessorBase*>> zipped;
-            std::transform(
-                this->operands_.first(), this->operands_.last(),
-                o->operands_.first(),
-                std::back_inserter(zipped),
-                [](std::unique_ptr<AccessorBase> a,
-                   std::unique_ptr<AccessorBase> b)
-                {
-                    return std::make_pair(a.get(), b.get());
-                }
-            );
-
-            for (auto& entry : zipped)
+            for (size_t i = 0; i < this->operands_.size(); i++)
             {
-                if (!(*entry.first == *entry.second))
+                if (!this->operands_[i].hasEqualAccessor(o->operands_[i]))
                 {
                     return false;
                 }
@@ -117,23 +105,25 @@ public:
 
 template <class NumberType,
           class Operator,
-          NumberType IdentityElement = 0,
           size_t MaxOperands = std::numeric_limits<size_t>::max()>
 class MathBuiltin
     : public MathBuiltinBase<NumberType, MaxOperands> {
+    Operator operator_;
+    NumberType identity_;
 public:
-    MathBuiltin(const std::string& name)
-        : MathBuiltinBase<NumberType, MaxOperands>(name)
+    MathBuiltin(const std::string& name, NumberType identityElement = 0)
+        : MathBuiltinBase<NumberType, MaxOperands>(name),
+          identity_(identityElement)
     {
     }
 
     WME::Ptr process(Token::Ptr token) override
     {
-        NumberType result(IdentityElement);
+        NumberType result(identity_);
         for (auto& operand : this->operands_)
         {
             NumberType val;
-            operand->getValue(token, val);
+            operand.getValue(token, val);
 
             result = this->operator_(result, val);
         }
@@ -143,8 +133,8 @@ public:
 };
 
 
-template <class NumberType, NumberType IdentityElement>
-class MathBuiltin<NumberType, std::divides<NumberType>, IdentityElement, 2>
+template <class NumberType>
+class MathBuiltin<NumberType, std::divides<NumberType>, 2>
     : public MathBuiltinBase<NumberType, 2> {
 public:
     MathBuiltin(const std::string& name)
@@ -160,7 +150,7 @@ public:
         this->operands_[0].getValue(token, a);
         this->operands_[1].getValue(token, b);
 
-        return std::shared_ptr<NumberType>(a/b);
+        return std::make_shared<TupleWME<NumberType>>(a/b);
     }
 };
 

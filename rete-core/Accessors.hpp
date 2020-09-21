@@ -704,7 +704,7 @@ protected:
     virtual void convert(const S& source, D& destination) const = 0;
 
     // pull the other conversion methods, avoid hiding overloaded virtual
-    //using AccessorConversion<D, Ss...>::convert;
+    using AccessorConversion<D, Ss...>::convert;
 };
 
 /**
@@ -732,6 +732,13 @@ protected:
         and prevents the function pointers from being overwritten by subclasses.
     */
     bool destDirectlyAvailable_;
+
+    // Just to make the compiler shut up.
+    // In derived classes there is a "using ___::convert" statement to silence
+    // the "hiding overloaded virtual" warning, but this base class does not
+    // have a meaningful convert function. And without one, we get a compiler
+    // error. So here it is, basic, small, and meaningless.
+    void convert() const {}
 
 private:
     const Interpretation<D>* getter_;
@@ -783,7 +790,7 @@ public:
     AccessorConversion(const AccessorConversion&) = delete;
     AccessorConversion& operator = (const AccessorConversion&) = delete;
 
-    bool hasEqualAccessor(const AccessorConversion& other)
+    bool hasEqualAccessor(const AccessorConversion& other) const
     {
         return (*this->accessorKeepAlive_ == *other.accessorKeepAlive_);
     }

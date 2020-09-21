@@ -20,7 +20,7 @@ class NumberToNumberConversion
                 D
             >::value,
         void>
-    warn_if_lossy()
+    warn_if_lossy() const
     {
         std::cerr
             << "Warning: Possible lossy conversion from "
@@ -37,7 +37,7 @@ class NumberToNumberConversion
                 D
             >::value,
         void>
-    warn_if_lossy()
+    warn_if_lossy() const
     {
         // All is good.
         // The common type of "From" and "D" is "D".

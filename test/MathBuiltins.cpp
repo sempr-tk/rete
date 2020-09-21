@@ -65,7 +65,7 @@ R"delimiter(
     reasoner.removeEvidence(evidence1);
     reasoner.performInference();
     // expect retraction of evidence1, ?sum, ?neg ?quot, but dummy and area still hold
-    save(reasoner.net(), "mathbuiltins.dot");
+    save(reasoner.net(), "mathbuiltins2.dot");
 
     if (asserted != 7) return 4;
     if (retracted != 4) return 5;

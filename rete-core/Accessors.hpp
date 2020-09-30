@@ -683,6 +683,12 @@ class AccessorConversion : public AccessorConversion<D, Ss...> {
     }
 
 protected:
+    // create an invalid/empty conversion
+    AccessorConversion()
+        : AccessorConversion<D, Ss...>()
+    {
+    }
+
     AccessorConversion(std::unique_ptr<AccessorBase>&& base)
         : AccessorConversion<D, Ss...>(std::move(base))
     {
@@ -778,6 +784,13 @@ private:
     }
 
 public:
+    // creates an invalid conversion
+    AccessorConversion()
+        : Interpretation<D>(nullptr, nullptr),
+          accessorKeepAlive_(nullptr)
+    {
+    }
+
     AccessorConversion(std::unique_ptr<AccessorBase>&& accessor)
         : Interpretation<D>(accessor.get(), nullptr),
           accessorKeepAlive_(std::move(accessor))

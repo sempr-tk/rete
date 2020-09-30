@@ -45,6 +45,11 @@ class NumberToNumberConversion
 
 
 public:
+    // create an invalid/empty conversion.
+    NumberToNumberConversion()
+    {
+    }
+
     NumberToNumberConversion(std::unique_ptr<AccessorBase> acc)
         : AccessorConversion<D, float, double, int, long, size_t>(std::move(acc))
     {

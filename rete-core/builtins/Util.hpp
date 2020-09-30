@@ -6,11 +6,16 @@
 #include "../Accessors.hpp"
 #include "../TokenGroupAccessor.hpp"
 
+#include "NumberToNumberConversion.hpp"
+
 namespace rete {
 namespace builtin {
 
 /**
     Comparisons: lt, le, eq, neq, ge, gt
+
+    Can be setup to either compare the values as numbers, where both will be
+    converted to double before comparison, or to compare them as strings.
 */
 class Compare : public Builtin {
 public:
@@ -19,15 +24,15 @@ public:
     };
     static std::string ModeName(Mode m);
 private:
-    PersistentInterpretation<float> leftNum_, rightNum_;
+    NumberToNumberConversion<double> leftNum_, rightNum_;
     PersistentInterpretation<std::string> leftStr_, rightStr_;
 
     Mode mode_;
     bool compareNumbers_;
 public:
     using Ptr = std::shared_ptr<Compare>;
-    Compare(Mode mode, PersistentInterpretation<float>&& left,
-                       PersistentInterpretation<float>&& right);
+    Compare(Mode mode, NumberToNumberConversion<double>&& left,
+                       NumberToNumberConversion<double>&& right);
     Compare(Mode mode, PersistentInterpretation<std::string>&& left,
                        PersistentInterpretation<std::string>&& right);
 

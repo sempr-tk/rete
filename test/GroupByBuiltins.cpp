@@ -185,6 +185,17 @@ bool count()
         reasoner.net()
     );
 
+
+    // add another unimportant rule to see if group-by nodes are reused
+    auto rules2 = p.parseRules(
+        "[(?player <inTeam> ?team),"
+        " GROUP BY (?team),"
+        " count(?count ?player)"
+        " -> print(?team \"<playerCount>\" ?count)]",
+        reasoner.net()
+    );
+
+
     auto data = p.parseRules(
         "[true() ->"
         " (<pb1> <inTeam> <blue>),"
@@ -203,6 +214,7 @@ bool count()
     return containsTriple(reasoner, "<blue>", "<playerCount>", std::to_string(3)) &&
            containsTriple(reasoner, "<red>", "<playerCount>", std::to_string(4));
 }
+
 
 
 #define TEST(function) \

@@ -732,10 +732,8 @@ BetaMemory::Ptr RuleParser::constructGroupBy(
         std::unique_ptr<AccessorBase> accClone(acc->clone());
         node->addCriteria(std::move(accClone));
     }
-    rete::SetParents(currentBeta, nullptr, node);
 
-    currentBeta = std::make_shared<BetaMemory>();
-    rete::SetParent(node, currentBeta);
+    currentBeta = implementBetaNode(node, currentBeta, nullptr);
 
     for (auto entry : bindings)
     {

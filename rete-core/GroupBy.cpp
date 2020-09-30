@@ -37,7 +37,9 @@ bool GroupBy::operator==(const BetaNode& other) const
                 });
     }
     else
+    {
         return false;
+    }
 }
 
 void GroupBy::rightActivate(WME::Ptr, PropagationFlag)

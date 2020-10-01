@@ -60,11 +60,30 @@ protected:
                 }
                 else
                 {
-                    // TODO: Extend parser to differ between floats and ints!
-                    auto access =
-                        std::make_unique<ConstantAccessor<float>>(ast.toFloat());
-                    access->index() = 0;
-                    operands.push_back(std::move(access));
+                    if (ast.isFloat())
+                    {
+                        auto access =
+                            std::make_unique<ConstantAccessor<float>>(ast.toFloat());
+                        access->index() = 0;
+                        operands.push_back(std::move(access));
+                    }
+                    else if (ast.isInt())
+                    {
+                        auto access =
+                            std::make_unique<ConstantAccessor<int>>(ast.toInt());
+                        access->index() = 0;
+                        operands.push_back(std::move(access));
+                    }
+                    else
+                    {
+                        // should never happen[*], but... just in case.
+                        // [*] The parser only knows ints and floats as numbers
+                        //     and if it creates a number, it definitely is one
+                        //     of those.
+                        throw rete::NodeBuilderException(
+                                "Argument '" + ast + "' is a number but neither"
+                                " float nor int?!");
+                    }
                 }
             }
         }

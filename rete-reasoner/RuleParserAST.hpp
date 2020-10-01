@@ -35,7 +35,11 @@ namespace rete {
         public:
             virtual ~Argument() {}
             virtual bool isVariable() const { return false; }
+
             virtual bool isNumber() const { return false; }
+            virtual bool isInt() const { return false; }
+            virtual bool isFloat() const { return false; }
+
             virtual bool isString() const { return false; }
             virtual bool isURI() const { return false; }
 
@@ -51,6 +55,14 @@ namespace rete {
                 ss >> tmp;
                 return tmp;
             }
+
+            virtual int toInt() const
+            {
+                std::stringstream ss(*this);
+                int tmp;
+                ss >> tmp;
+                return tmp;
+            }
         };
 
         class Variable : public Argument {
@@ -59,6 +71,14 @@ namespace rete {
 
         class Number : public Argument {
             bool isNumber() const override { return true; }
+        };
+
+        class Int : public Number {
+            bool isInt() const override { return true; }
+        };
+
+        class Float : public Number {
+            bool isFloat() const override { return true; }
         };
 
         class QuotedString : public Argument {

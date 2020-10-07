@@ -26,7 +26,7 @@ std::string MakeSkolem::getDOTAttr() const
         ss << part.toString() << " ";
     }
 
-    return "[label=\"" + util::dotEscape(ss.str()) + "\"]";
+    return "[label=\"makeSkolem(" + util::dotEscape(ss.str()) + ")\"]";
 }
 
 

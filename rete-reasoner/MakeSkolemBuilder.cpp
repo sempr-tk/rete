@@ -26,8 +26,16 @@ Builtin::Ptr MakeSkolemBuilder::buildBuiltin(ArgumentList& args) const
 
     auto node = std::make_shared<builtin::MakeSkolem>();
 
+    bool first = true;
     for (auto& arg : args)
     {
+        if (first)
+        {
+            first = false;
+            continue;
+        }
+
+
         if (arg.isVariable())
         {
             auto acc = arg.getAccessor();

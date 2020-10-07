@@ -2,6 +2,7 @@
 
 #include <openssl/evp.h>
 #include <sstream>
+#include <iostream>
 
 namespace rete { namespace util {
 
@@ -32,11 +33,11 @@ std::string Hash::digest(const std::string& msg) const
     else if (1 != EVP_DigestFinal_ex(mdcontext_, digest, &digest_length))
         throw std::exception();
 
-    std::stringstream ss;
+    std::ostringstream ss;
     ss << std::hex;
     for (unsigned int i = 0; i < digest_length; i++)
     {
-        ss << digest[i];
+        ss << static_cast<unsigned>(digest[i]);
     }
 
     OPENSSL_free(digest);

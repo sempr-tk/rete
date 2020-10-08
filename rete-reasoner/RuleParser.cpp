@@ -11,6 +11,9 @@
 #include "TripleConditionBuilder.hpp"
 #include "TripleEffectBuilder.hpp"
 #include "MathBuiltinBuilder.hpp"
+#include "SumBuiltinBuilder.hpp"
+#include "MulBuiltinBuilder.hpp"
+#include "DivBuiltinBuilder.hpp"
 #include "MathBulkBuiltinBuilder.hpp"
 #include "UtilBuiltinBuilder.hpp"
 #include "TrueNodeBuilder.hpp"
@@ -44,9 +47,15 @@ RuleParser::RuleParser()
     // registerNodeBuilder(std::unique_ptr<TripleConditionBuilder>(new TripleConditionBuilder()));
     registerNodeBuilder<TripleConditionBuilder>();
     registerNodeBuilder<TripleEffectBuilder>();
+    /*
     registerNodeBuilder<builtin::MathBuiltinBuilder<builtin::Sum>>();
     registerNodeBuilder<builtin::MathBuiltinBuilder<builtin::Mul>>();
     registerNodeBuilder<builtin::MathBuiltinBuilder<builtin::Div>>();
+    */
+    registerNodeBuilder<builtin::SumBuiltinBuilder>("sum");
+    registerNodeBuilder<builtin::MulBuiltinBuilder>("mul");
+    registerNodeBuilder<builtin::DivBuiltinBuilder>("div");
+
     registerNodeBuilder<builtin::MathBulkBuiltinBuilder<builtin::SumBulk>>("SumBulk");
     registerNodeBuilder<builtin::MathBulkBuiltinBuilder<builtin::MulBulk>>("MulBulk");
     registerNodeBuilder<builtin::CountEntriesInGroupBuilder>();

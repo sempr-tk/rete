@@ -190,7 +190,7 @@ public:
         dynamically.
     */
     template <class... Ts>
-    const InterpretationBase* getPreferredInterpretation()
+    const InterpretationBase* getPreferredInterpretation() const
     {
         for (auto interpretation : interpretations_)
         {
@@ -683,6 +683,12 @@ class AccessorConversion : public AccessorConversion<D, Ss...> {
     }
 
 protected:
+    // create an invalid/empty conversion
+    AccessorConversion()
+        : AccessorConversion<D, Ss...>()
+    {
+    }
+
     AccessorConversion(std::unique_ptr<AccessorBase>&& base)
         : AccessorConversion<D, Ss...>(std::move(base))
     {
@@ -704,7 +710,7 @@ protected:
     virtual void convert(const S& source, D& destination) const = 0;
 
     // pull the other conversion methods, avoid hiding overloaded virtual
-    //using AccessorConversion<D, Ss...>::convert;
+    using AccessorConversion<D, Ss...>::convert;
 };
 
 /**
@@ -732,6 +738,13 @@ protected:
         and prevents the function pointers from being overwritten by subclasses.
     */
     bool destDirectlyAvailable_;
+
+    // Just to make the compiler shut up.
+    // In derived classes there is a "using ___::convert" statement to silence
+    // the "hiding overloaded virtual" warning, but this base class does not
+    // have a meaningful convert function. And without one, we get a compiler
+    // error. So here it is, basic, small, and meaningless.
+    void convert() const {}
 
 private:
     const Interpretation<D>* getter_;
@@ -771,6 +784,13 @@ private:
     }
 
 public:
+    // creates an invalid conversion
+    AccessorConversion()
+        : Interpretation<D>(nullptr, nullptr),
+          accessorKeepAlive_(nullptr)
+    {
+    }
+
     AccessorConversion(std::unique_ptr<AccessorBase>&& accessor)
         : Interpretation<D>(accessor.get(), nullptr),
           accessorKeepAlive_(std::move(accessor))
@@ -782,6 +802,11 @@ public:
     // deleted either way.
     AccessorConversion(const AccessorConversion&) = delete;
     AccessorConversion& operator = (const AccessorConversion&) = delete;
+
+    bool hasEqualAccessor(const AccessorConversion& other) const
+    {
+        return (*this->accessorKeepAlive_ == *other.accessorKeepAlive_);
+    }
 
     /**
         Move-ctor of AccessorConversion. Moves the keep-alive-ptr to the

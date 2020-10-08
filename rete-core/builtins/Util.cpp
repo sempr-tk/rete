@@ -10,8 +10,8 @@ namespace builtin {
 
 
 Compare::Compare(Mode mode,
-        PersistentInterpretation<float>&& left,
-        PersistentInterpretation<float>&& right)
+        NumberToNumberConversion<double>&& left,
+        NumberToNumberConversion<double>&& right)
     :
         Builtin(Compare::ModeName(mode)),
         leftNum_(std::move(left)),
@@ -36,9 +36,9 @@ Compare::Compare(Mode mode,
 
 std::string Compare::getDOTAttr() const
 {
-    std::string left = (compareNumbers_ ? leftNum_.accessor->toString()
+    std::string left = (compareNumbers_ ? leftNum_.toString()
                                         : leftStr_.accessor->toString());
-    std::string right = (compareNumbers_ ? rightNum_.accessor->toString()
+    std::string right = (compareNumbers_ ? rightNum_.toString()
                                         : rightStr_.accessor->toString());
 
     std::string l = left + " " + Compare::ModeName(mode_) + " " + right;
@@ -74,8 +74,8 @@ bool Compare::operator == (const BetaNode& other) const
     }
     else if (o->compareNumbers_ && this->compareNumbers_)
     {
-        return (*o->leftNum_.accessor == *this->leftNum_.accessor) &&
-               (*o->rightNum_.accessor == *this->rightNum_.accessor);
+        return o->leftNum_.hasEqualAccessor(this->leftNum_) &&
+               o->rightNum_.hasEqualAccessor(this->rightNum_);
     }
     else if (!o->compareNumbers_ && !this->compareNumbers_)
     {
@@ -104,9 +104,9 @@ WME::Ptr Compare::process(Token::Ptr token)
 {
     if (compareNumbers_)
     {
-        float l, r;
-        leftNum_.interpretation->getValue(token, l);
-        rightNum_.interpretation->getValue(token, r);
+        double l, r;
+        leftNum_.getValue(token, l);
+        rightNum_.getValue(token, r);
 
         if (compare(mode_, l, r))
         {

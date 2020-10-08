@@ -29,7 +29,6 @@ set(CORE_SRC
 
 set(BUILTIN_SRC
     builtins/Util.cpp
-    builtins/MathBulk.cpp
 )
 
 add_library(rete-core SHARED ${CORE_SRC} ${BUILTIN_SRC})

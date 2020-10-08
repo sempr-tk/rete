@@ -190,7 +190,7 @@ public:
         dynamically.
     */
     template <class... Ts>
-    const InterpretationBase* getPreferredInterpretation()
+    const InterpretationBase* getPreferredInterpretation() const
     {
         for (auto interpretation : interpretations_)
         {

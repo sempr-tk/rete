@@ -15,9 +15,18 @@ namespace builtin {
     TokenGroup::Ptr, pointing at floats. Also, it assumes the output is a
     TupleWME<float>.
 */
-template <class T>
+template <template<class> class BuiltinTemplate>
 class MathBulkBuiltinBuilder : public NodeBuilder {
     const std::string name_;
+
+    template <class NumberType>
+    void setup(Builtin::Ptr& builtin, AccessorBase::Ptr& accessor,
+               PersistentInterpretation<TokenGroup::Ptr> interp) const
+    {
+        builtin = std::make_shared<BuiltinTemplate<NumberType>>(std::move(interp));
+        accessor = std::make_shared<typename TupleWME<NumberType>::template Accessor<0>>();
+    }
+
 public:
     MathBulkBuiltinBuilder(const std::string& name)
         :
@@ -50,11 +59,29 @@ public:
         auto interp = args[1].getAccessor()
                         ->getInterpretation<TokenGroup::Ptr>()
                         ->makePersistent();
-        //  create the node
-        MathBulkBuiltin::Ptr builtin(new T(std::move(interp)));
+
+        std::shared_ptr<AccessorBase> resultAccessor;
+        Builtin::Ptr builtin;
+
+        // check which is the preferred interpretation of the childAccessor.
+        auto preferredInterp =
+            interp.interpretation->childAccessor()
+                ->getPreferredInterpretation<int, long, size_t, float, double>();
+
+        // based on the result we choose which NumberType to use for the
+        // MathBulkBuiltins.
+        if (preferredInterp->isOneOf<int>())
+            setup<int>(builtin, resultAccessor, std::move(interp));
+        else if (preferredInterp->isOneOf<long>())
+            setup<long>(builtin, resultAccessor, std::move(interp));
+        else if (preferredInterp->isOneOf<size_t>())
+            setup<size_t>(builtin, resultAccessor, std::move(interp));
+        else if (preferredInterp->isOneOf<float>())
+            setup<float>(builtin, resultAccessor, std::move(interp));
+        else if (preferredInterp->isOneOf<double>())
+            setup<double>(builtin, resultAccessor, std::move(interp));
 
         // bind result variable
-        auto resultAccessor = std::make_shared<TupleWME<float>::Accessor<0>>();
         args[0].bind(resultAccessor);
 
         return builtin;

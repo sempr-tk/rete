@@ -19,11 +19,12 @@
 namespace rete {
 
 // forward declaration of Interpretation<T>
+template <class T> class InterpretationImpl;
 template <class T> class Interpretation;
 
 // ... and of PersistentInterpretation<T>
 template <class T> struct PersistentInterpretation;
-
+class AccessorBase;
 
 
 /**
@@ -38,7 +39,18 @@ template <class T> struct PersistentInterpretation;
     of InterpretationBase* to do the check on the data.
 */
 class InterpretationBase {
+protected:
+    AccessorBase* parent_;
+    /// Introduced to make changes to the given WME before extracting a value
+    /// from it. Only set by the TokenGroupAccessorForwarder.
+    std::function<WME::Ptr(WME::Ptr)> wmeModifier_;
+    friend class TokenGroupAccessorForwarder;
 public:
+    InterpretationBase(AccessorBase* ab)
+        : parent_(ab)
+    {
+    }
+
     virtual ~InterpretationBase() = default;
 
     /**
@@ -49,6 +61,12 @@ public:
     virtual bool valuesEqual(const InterpretationBase& other,
                              Token::Ptr token,
                              WME::Ptr wme) const = 0;
+
+    /**
+        Checks if the values accessed by this in two tokens are equal.
+        (Note: Implemented specifically for GroupBy nodes)
+    */
+    virtual bool valuesEqual(Token::Ptr t1, Token::Ptr t2) const = 0;
 
     /**
         For debugging purposes: Returns a string describing the type of
@@ -91,7 +109,7 @@ class AccessorBase {
         Necessary to check if two join nodes are equal.
     */
     virtual bool equals(const AccessorBase& other) const = 0;
-
+    friend class TokenGroupAccessorForwarder;
 public:
     typedef std::pair<std::type_index, InterpretationBase*> TypeInterpretationPair;
     using Ptr = std::shared_ptr<AccessorBase>;
@@ -301,9 +319,8 @@ public:
     of the *same type*!
 */
 template <class T>
-class Interpretation : public InterpretationBase {
+class InterpretationImpl : public InterpretationBase {
 protected:
-    AccessorBase* parent_;
     std::function<void(WME::Ptr, T&)> extractor_;
 
 public:
@@ -314,13 +331,13 @@ public:
         get a function to use in order to extract the value of type T from a
         WME.
     */
-    Interpretation(AccessorBase* p, std::function<void(WME::Ptr, T&)> extr)
-        : parent_(p), extractor_(extr)
+    InterpretationImpl(AccessorBase* p, std::function<void(WME::Ptr, T&)> extr)
+        : InterpretationBase(p), extractor_(extr)
     {
     }
 
-    Interpretation(const Interpretation&) = delete;
-    Interpretation& operator = (const Interpretation&) = delete;
+    InterpretationImpl(const InterpretationImpl&) = delete;
+    InterpretationImpl& operator = (const InterpretationImpl&) = delete;
 
     /**
         Accessor may have multiple interpretations, and nodes are usually
@@ -345,6 +362,8 @@ public:
     */
     void getValue(WME::Ptr wme, T& value) const
     {
+        if (this->wmeModifier_)
+            wme = this->wmeModifier_(wme);
         extractor_(wme, value);
     }
 
@@ -413,7 +432,7 @@ public:
         // assume only those get compared who access the same type!
         assert(typeid(*this) == typeid(other));
 
-        auto o = static_cast<const Interpretation*>(&other);
+        auto o = static_cast<const InterpretationImpl*>(&other);
 
         T otherVal, thisVal;
         o->getValue(token, wme, otherVal);
@@ -422,9 +441,29 @@ public:
         return otherVal == thisVal;
     }
 
+    bool valuesEqual(Token::Ptr t1, Token::Ptr t2) const override
+    {
+        T val1, val2;
+        getValue(t1, val1);
+        getValue(t2, val2);
+
+        return val1 == val2;
+    }
+
     std::string internalTypeName() const override
     {
         return util::beautified_typename<T>().value;
+    }
+};
+
+
+/// the default Integration<T> is exactly IntegrationImpl<T>.
+template <class T>
+class Interpretation : public InterpretationImpl<T> {
+public:
+    Interpretation(AccessorBase* p, std::function<void(WME::Ptr, T&)> extr)
+        : InterpretationImpl<T>(p, extr)
+    {
     }
 };
 

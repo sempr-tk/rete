@@ -11,6 +11,7 @@ set(CORE_SRC
     BetaBetaNode.cpp
     Builtin.cpp
     connect.cpp
+    GroupBy.cpp
     JoinNode.cpp
     Network.cpp
     Node.cpp
@@ -18,6 +19,8 @@ set(CORE_SRC
     Production.cpp
     ProductionNode.cpp
     Token.cpp
+    TokenGroup.cpp
+    TokenGroupAccessor.cpp
     TrueNode.cpp
     Util.cpp
     WME.cpp
@@ -27,6 +30,7 @@ set(CORE_SRC
 set(BUILTIN_SRC
     builtins/Math.cpp
     builtins/Util.cpp
+    builtins/MathBulk.cpp
 )
 
 add_library(rete-core SHARED ${CORE_SRC} ${BUILTIN_SRC})

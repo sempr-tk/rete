@@ -1,8 +1,24 @@
 #include "Hash.hpp"
 
 #include <openssl/evp.h>
+#include <openssl/opensslv.h>
+
 #include <sstream>
 #include <iostream>
+
+/*
+    EVP_MD_CTX_new() in 1.1.0 has replaced EVP_MD_CTX_create() in 1.0.x
+    EVP_MD_CTX_free() in 1.1.0 has replaced EVP_MD_CTX_destroy() in 1.0.x
+    OPENSSL_VERSION_NUMBER =   MMNNFFPPS
+                               MM = major
+                               | NN = minor
+                               |   FF = fix
+                               |     PP = patch
+                               |       S = status */
+#if OPENSSL_VERSION_NUMBER < 0x010100000
+    #define EVP_MD_CTX_new() EVP_MD_CTX_create()
+    #define EVP_MD_CTX_free(X) EVP_MD_CTX_destroy(X)
+#endif
 
 namespace rete { namespace util {
 

@@ -1,5 +1,8 @@
 set(RDF_SRC
     InferTriple.cpp
+    MakeSkolem.cpp
+    Skolem.cpp
+    SkolemAccessor.cpp
     Triple.cpp
     TriplePart.cpp
     TripleAccessor.cpp

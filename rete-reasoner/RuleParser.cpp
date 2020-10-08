@@ -17,6 +17,7 @@
 #include "MathBulkBuiltinBuilder.hpp"
 #include "UtilBuiltinBuilder.hpp"
 #include "TrueNodeBuilder.hpp"
+#include "MakeSkolemBuilder.hpp"
 
 #include "Exceptions.hpp"
 
@@ -68,6 +69,7 @@ RuleParser::RuleParser()
     registerNodeBuilder<builtin::PrintNodeBuilder>();
     registerNodeBuilder<builtin::PrintEffectNodeBuilder>();
     registerNodeBuilder<TrueNodeBuilder>();
+    registerNodeBuilder<MakeSkolemBuilder>();
 }
 
 void RuleParser::registerNodeBuilder(std::unique_ptr<NodeBuilder> builder)

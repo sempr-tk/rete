@@ -41,12 +41,30 @@ public:
     Rule alphanum = alpha | num;
     Rule echar  = '\\' >> "tbnrf\"\'\\"_S;
 
+    /*
     // while num is just a single digit,
     // number is a complete, terminal value.
     Rule number = term( -("+-"_S) >> +num >> // some digits, plus optionally...
                   -('.'_E >> +num >>  // dot and numbers, plus optionally...
                     -("eE"_S >> -("+-"_S) >> +num) // an optionally signed exponent
                     ));
+    */
+
+    // integer: optional sign + digits, *not* followed by a dot.
+    // e.g.  -42e3 = -42*10^3 = -42000
+    Rule integer = term(-("+-"_S) >> +num >> (!"."_E));
+
+    // float: optional sign, digites, optional dot+digits,
+    //        optional exponent which may be signed.
+    // e.g. -1.2e-3 = -0.0012
+    Rule floating = term(-("+-"_S) >> +num >> -('.'_E >> +num) >> -("eE"_S >> -("+-"_S) >> +num));
+
+    Rule number = rtrace("number",
+                    rtrace("integer", integer) |
+                    rtrace("floating", floating)
+                  );
+
+
     // to allow whitespaces etc as a single argument, define a quoted string.
     // starts with a ", ends with a ", and everything inbetween is either \" or just not "
     Rule quotedString = "\"" >> *("\\\""_E | (!"\""_E >> any())) >> "\"";
@@ -125,12 +143,19 @@ public:
     Rule effectName = rtrace("effectName", term(+(alphanum | "<>"_S)));
     Rule genericEffect = rtrace("genericEffect", effectName >> "(" >> *argument >> ")");
 
+
+    /**
+        GROUP BY (?var1 ?var2 ...)
+        groups matches by identical values for every variable given
+    */
+    Rule groupBy = rtrace("group by", "GROUP BY"_E >> "(" >> *term(variable) >> ")");
+
     /**
         With the new noValue syntax we allow complex noValue-groups and nesting
         them. To do this, a precondition can now also be a noValueGroup, which
         itself is composed of preconditions.
     */
-    Rule precondition = rtrace("precondition", triple | builtin | genericAlphaCondition | noValueGroup);
+    Rule precondition = rtrace("precondition", triple | builtin | genericAlphaCondition | noValueGroup | groupBy);
     Rule noValueGroup = rtrace("noValueGroup",
             noValue >> "{" >> precondition >> *(',' >> precondition) >> "}"
     );

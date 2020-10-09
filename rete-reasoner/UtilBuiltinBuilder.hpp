@@ -76,19 +76,14 @@ public:
             right->index() = 0;
         }
 
-
-        auto lNum = left->getInterpretation<float>();
-        auto rNum = right->getInterpretation<float>();
         auto lStr = left->getInterpretation<std::string>();
         auto rStr = right->getInterpretation<std::string>();
+        auto lNum = NumberToNumberConversion<double>(std::move(left));
+        auto rNum = NumberToNumberConversion<double>(std::move(right));
 
         if (lNum && rNum)
         {
-            auto builtin =
-                std::make_shared<Compare>(
-                        MODE,
-                        lNum->makePersistent(),
-                        rNum->makePersistent());
+            auto builtin = std::make_shared<Compare>(MODE, std::move(lNum), std::move(rNum));
             return builtin;
         }
         else if(lStr && rStr)
@@ -103,7 +98,7 @@ public:
         else
         {
             throw rete::NodeBuilderException(
-                    "The arguments to compare do not share a float- or "
+                    "The arguments to compare do not share a number- or "
                     "std::string-interpretation");
         }
     }
@@ -111,6 +106,8 @@ public:
 
 
 class PrintNodeBuilder : public NodeBuilder {
+    Builtin::Ptr createRegularPrint(ArgumentList& args) const;
+    Builtin::Ptr createGroupPrint(ArgumentList& args) const;
 public:
     PrintNodeBuilder();
     Builtin::Ptr buildBuiltin(ArgumentList& args) const override;
@@ -122,6 +119,12 @@ class PrintEffectNodeBuilder : public NodeBuilder {
 public:
     PrintEffectNodeBuilder();
     Production::Ptr buildEffect(ArgumentList& args) const override;
+};
+
+class CountEntriesInGroupBuilder : public NodeBuilder {
+public:
+    CountEntriesInGroupBuilder();
+    Builtin::Ptr buildBuiltin(ArgumentList& args) const override;
 };
 
 } /* builtin */

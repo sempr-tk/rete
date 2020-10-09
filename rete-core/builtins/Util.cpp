@@ -3,14 +3,15 @@
 #include <map>
 #include <iostream>
 #include <sstream>
+#include <iomanip>
 
 namespace rete {
 namespace builtin {
 
 
 Compare::Compare(Mode mode,
-        PersistentInterpretation<float>&& left,
-        PersistentInterpretation<float>&& right)
+        NumberToNumberConversion<double>&& left,
+        NumberToNumberConversion<double>&& right)
     :
         Builtin(Compare::ModeName(mode)),
         leftNum_(std::move(left)),
@@ -35,9 +36,9 @@ Compare::Compare(Mode mode,
 
 std::string Compare::getDOTAttr() const
 {
-    std::string left = (compareNumbers_ ? leftNum_.accessor->toString()
+    std::string left = (compareNumbers_ ? leftNum_.toString()
                                         : leftStr_.accessor->toString());
-    std::string right = (compareNumbers_ ? rightNum_.accessor->toString()
+    std::string right = (compareNumbers_ ? rightNum_.toString()
                                         : rightStr_.accessor->toString());
 
     std::string l = left + " " + Compare::ModeName(mode_) + " " + right;
@@ -73,8 +74,8 @@ bool Compare::operator == (const BetaNode& other) const
     }
     else if (o->compareNumbers_ && this->compareNumbers_)
     {
-        return (*o->leftNum_.accessor == *this->leftNum_.accessor) &&
-               (*o->rightNum_.accessor == *this->rightNum_.accessor);
+        return o->leftNum_.hasEqualAccessor(this->leftNum_) &&
+               o->rightNum_.hasEqualAccessor(this->rightNum_);
     }
     else if (!o->compareNumbers_ && !this->compareNumbers_)
     {
@@ -103,9 +104,9 @@ WME::Ptr Compare::process(Token::Ptr token)
 {
     if (compareNumbers_)
     {
-        float l, r;
-        leftNum_.interpretation->getValue(token, l);
-        rightNum_.interpretation->getValue(token, r);
+        double l, r;
+        leftNum_.getValue(token, l);
+        rightNum_.getValue(token, r);
 
         if (compare(mode_, l, r))
         {
@@ -191,6 +192,81 @@ void Print::add(const std::string& str)
     values_.push_back(acc.getInterpretation<std::string>()->makePersistent());
 }
 
+// ---------------------------------------------------
+// ---------------------------------------------------
+PrintGroup::PrintGroup()
+    : Builtin("printGroup")
+{
+}
+
+WME::Ptr PrintGroup::process(Token::Ptr token)
+{
+    if (groupAccessors_.empty()) return nullptr;
+
+    TokenGroup::Ptr group;
+    groupAccessors_[0]->getInterpretation<TokenGroup::Ptr>()->getValue(token, group);
+
+    // prepare interpretations to not having to search for them for every group entry
+    std::vector<const Interpretation<std::string>*> strGetter;
+    for (auto& acc : groupAccessors_)
+    {
+        auto i = acc->childAccessor()->getInterpretation<std::string>();
+        strGetter.push_back(i);
+    }
+
+    // iterate the group
+    std::cout << "TokenGroup[" << group->token_.size() << "]:" << std::endl;
+    for (auto token : group->token_)
+    {
+        std::cout << std::setw(20);
+        for (auto i : strGetter)
+        {
+            std::string str;
+            i->getValue(token, str);
+            std::cout << str;
+        }
+        std::cout << std::endl;
+    }
+    std::cout << "End of group." << std::endl;
+
+    return std::make_shared<EmptyWME>();
+}
+
+void PrintGroup::add(std::unique_ptr<TokenGroupAccessor> acc)
+{
+    groupAccessors_.push_back(std::move(acc));
+}
+
+bool PrintGroup::operator == (const BetaNode& other) const
+{
+    auto o = dynamic_cast<const PrintGroup*>(&other);
+    if (!o || o->groupAccessors_.size() != this->groupAccessors_.size())
+    {
+        return false;
+    }
+    else
+    {
+        for (size_t i = 0; i < groupAccessors_.size(); i++)
+        {
+            if (!(*groupAccessors_[i] == *o->groupAccessors_[i]))
+                return false;
+        }
+        return true;
+    }
+}
+
+std::string PrintGroup::getDOTAttr() const
+{
+    std::stringstream s;
+    s << "[label=\"print group ";
+    for (auto& acc : groupAccessors_)
+    {
+        s << util::dotEscape(acc->toString()) << ", ";
+    }
+    s << "\b\b" << "\"]";
+    return s.str();
+}
+
 // -------------------------
 // PrintEffect
 // -------------------------
@@ -230,6 +306,39 @@ void PrintEffect::execute(Token::Ptr token, PropagationFlag flag, std::vector<WM
         std::cout << str << ", ";
     }
     std::cout << "\b\b  \b\b" << std::endl;
+}
+
+// ------------------------------------------
+// CountEntriesInGroup (aka 'count(?c ?var)')
+// ------------------------------------------
+CountEntriesInGroup::CountEntriesInGroup(
+        PersistentInterpretation<TokenGroup::Ptr> acc)
+    :
+        Builtin("count"),
+        group_(std::move(acc))
+{
+}
+
+WME::Ptr CountEntriesInGroup::process(Token::Ptr token)
+{
+    TokenGroup::Ptr group;
+    group_.interpretation->getValue(token, group);
+
+    auto result = std::make_shared<TupleWME<int>>(group->token_.size());
+    return result;
+}
+
+bool CountEntriesInGroup::operator==(const BetaNode& other) const
+{
+    auto o = dynamic_cast<const CountEntriesInGroup*>(&other);
+    return o && (*o->group_.accessor == *group_.accessor);
+}
+
+std::string CountEntriesInGroup::getDOTAttr() const
+{
+    return "[label=\"count(" +
+                util::dotEscape(group_.accessor->toString()) +
+           ")\"]";
 }
 
 } /* builtin */

@@ -4,12 +4,18 @@
 #include "../Builtin.hpp"
 #include "../Production.hpp"
 #include "../Accessors.hpp"
+#include "../TokenGroupAccessor.hpp"
+
+#include "NumberToNumberConversion.hpp"
 
 namespace rete {
 namespace builtin {
 
 /**
     Comparisons: lt, le, eq, neq, ge, gt
+
+    Can be setup to either compare the values as numbers, where both will be
+    converted to double before comparison, or to compare them as strings.
 */
 class Compare : public Builtin {
 public:
@@ -18,15 +24,15 @@ public:
     };
     static std::string ModeName(Mode m);
 private:
-    PersistentInterpretation<float> leftNum_, rightNum_;
+    NumberToNumberConversion<double> leftNum_, rightNum_;
     PersistentInterpretation<std::string> leftStr_, rightStr_;
 
     Mode mode_;
     bool compareNumbers_;
 public:
     using Ptr = std::shared_ptr<Compare>;
-    Compare(Mode mode, PersistentInterpretation<float>&& left,
-                       PersistentInterpretation<float>&& right);
+    Compare(Mode mode, NumberToNumberConversion<double>&& left,
+                       NumberToNumberConversion<double>&& right);
     Compare(Mode mode, PersistentInterpretation<std::string>&& left,
                        PersistentInterpretation<std::string>&& right);
 
@@ -54,6 +60,23 @@ public:
 };
 
 /**
+    Prints the contents of a group. All given group accessors must refer to
+    the same token group, as their respective values will be printed together
+    for every entry in the group.
+*/
+class PrintGroup : public Builtin {
+    std::vector<std::unique_ptr<TokenGroupAccessor>> groupAccessors_;
+public:
+    using Ptr = std::shared_ptr<PrintGroup>;
+    PrintGroup();
+    void add(std::unique_ptr<TokenGroupAccessor>);
+
+    WME::Ptr process(Token::Ptr) override;
+    bool operator == (const BetaNode& other) const override;
+    std::string getDOTAttr() const override;
+};
+
+/**
     Similar to "Print", but as a rule effect that also adds a
     ADD/REMOVE/UPDATE prefix given on what actually happened.
 */
@@ -66,6 +89,23 @@ public:
     void add(const std::string&);
 
     void execute(Token::Ptr, PropagationFlag, std::vector<WME::Ptr>&) override;
+};
+
+
+
+/**
+    Counts the number of entries inside the token group that the given
+    accessor points to.
+*/
+class CountEntriesInGroup : public Builtin {
+    PersistentInterpretation<TokenGroup::Ptr> group_;
+public:
+    using Ptr = std::shared_ptr<CountEntriesInGroup>;
+    CountEntriesInGroup(PersistentInterpretation<TokenGroup::Ptr>);
+
+    WME::Ptr process(Token::Ptr) override;
+    bool operator == (const BetaNode& other) const override;
+    std::string getDOTAttr() const override;
 };
 
 

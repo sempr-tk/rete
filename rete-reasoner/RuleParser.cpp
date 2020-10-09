@@ -2,14 +2,22 @@
 #include "../rete-rdf/ReteRDF.hpp"
 #include "../rete-core/BetaBetaNode.hpp"
 #include "../rete-core/NoValue.hpp"
+#include "../rete-core/GroupBy.hpp"
+#include "../rete-core/TokenGroupAccessor.hpp"
+#include "../rete-core/builtins/MathBulk.hpp"
 
 #include "RuleParser.hpp"
 #include "RuleParserAST.hpp"
 #include "TripleConditionBuilder.hpp"
 #include "TripleEffectBuilder.hpp"
 #include "MathBuiltinBuilder.hpp"
+#include "SumBuiltinBuilder.hpp"
+#include "MulBuiltinBuilder.hpp"
+#include "DivBuiltinBuilder.hpp"
+#include "MathBulkBuiltinBuilder.hpp"
 #include "UtilBuiltinBuilder.hpp"
 #include "TrueNodeBuilder.hpp"
+#include "MakeSkolemBuilder.hpp"
 
 #include "Exceptions.hpp"
 
@@ -20,6 +28,7 @@
 #include <sstream>
 #include <iostream>
 #include <stdexcept>
+#include <memory>
 
 namespace rete {
 
@@ -39,9 +48,18 @@ RuleParser::RuleParser()
     // registerNodeBuilder(std::unique_ptr<TripleConditionBuilder>(new TripleConditionBuilder()));
     registerNodeBuilder<TripleConditionBuilder>();
     registerNodeBuilder<TripleEffectBuilder>();
+    /*
     registerNodeBuilder<builtin::MathBuiltinBuilder<builtin::Sum>>();
     registerNodeBuilder<builtin::MathBuiltinBuilder<builtin::Mul>>();
     registerNodeBuilder<builtin::MathBuiltinBuilder<builtin::Div>>();
+    */
+    registerNodeBuilder<builtin::SumBuiltinBuilder>("sum");
+    registerNodeBuilder<builtin::MulBuiltinBuilder>("mul");
+    registerNodeBuilder<builtin::DivBuiltinBuilder>("div");
+
+    registerNodeBuilder<builtin::MathBulkBuiltinBuilder<builtin::SumBulk>>("SumBulk");
+    registerNodeBuilder<builtin::MathBulkBuiltinBuilder<builtin::MulBulk>>("MulBulk");
+    registerNodeBuilder<builtin::CountEntriesInGroupBuilder>();
     registerNodeBuilder<builtin::CompareNodeBuilder<builtin::Compare::LT>>();
     registerNodeBuilder<builtin::CompareNodeBuilder<builtin::Compare::LE>>();
     registerNodeBuilder<builtin::CompareNodeBuilder<builtin::Compare::EQ>>();
@@ -51,6 +69,7 @@ RuleParser::RuleParser()
     registerNodeBuilder<builtin::PrintNodeBuilder>();
     registerNodeBuilder<builtin::PrintEffectNodeBuilder>();
     registerNodeBuilder<TrueNodeBuilder>();
+    registerNodeBuilder<MakeSkolemBuilder>();
 }
 
 void RuleParser::registerNodeBuilder(std::unique_ptr<NodeBuilder> builder)
@@ -549,26 +568,7 @@ BetaMemory::Ptr RuleParser::constructNoValueGroup(
     // 1. add all the conditions as usual
     for (auto& condition : noValueGroup.conditions_)
     {
-        if (condition->isPrimitive())
-        {
-            auto& primitive = dynamic_cast<ast::Precondition&>(*(condition.get()));
-            newBeta = constructPrimitive(net, rule, primitive, newBeta, tmpBindings);
-        }
-        else if (condition->isNoValueGroup())
-        {
-            auto& nvGroup = dynamic_cast<ast::NoValueGroup&>(*(condition.get()));
-            newBeta = constructNoValueGroup(net, rule, nvGroup, newBeta, tmpBindings); // recursive call
-        }
-        else
-        {
-            throw RuleConstructionException(rule.str_, condition->str_, "Condition is neither primitive nor a noValueGroup. What have you done?!");
-        }
-
-        // update the variable bindings! a wme is added to the token, update index!
-        for (auto binding : tmpBindings)
-        {
-            ++(binding.second->index());
-        }
+        newBeta = constructCondition(rule, net, newBeta, tmpBindings, *condition);
     }
 
     // 2. add the noValue node
@@ -617,36 +617,7 @@ ParsedRule::Ptr RuleParser::construct(ast::Rule& rule, Network& net) const
     // construct all the conditions
     for (auto& condition : rule.conditions_)
     {
-
-        if (condition->isPrimitive())
-        {
-            auto& primitive = dynamic_cast<ast::Precondition&>(*(condition.get()));
-            currentBeta = constructPrimitive(net, rule, primitive, currentBeta, bindings);
-        }
-        else if (condition->isNoValueGroup())
-        {
-            auto& nvGroup = dynamic_cast<ast::NoValueGroup&>(*(condition.get()));
-            currentBeta = constructNoValueGroup(net, rule, nvGroup, currentBeta, bindings); // recursive call
-        }
-        else
-        {
-            throw RuleConstructionException(rule.str_, condition->str_, "Condition is neither primitive nor a noValueGroup. What have you done?!");
-        }
-
-        /*
-            Every time we created a beta node (join, builtin, alphabeta, noValue), we need to increment
-            the accessors afterwards. ASSUMPTION: The accessors bound to variables by the node
-            builders are indexed at -1, so that we can just increment them all and get them to
-            index 0, the first wme in the token chain.
-        */
-        for (auto binding : bindings)
-        {
-            ++(binding.second->index());
-        }
-
-#ifdef RETE_PARSER_VERBOSE
-        std::cout << "currentBeta: " << (currentBeta ? currentBeta->getDOTId() : "nullptr") << std::endl;
-#endif
+      currentBeta = constructCondition(rule, net, currentBeta, bindings, *condition);
     } // end loop over conditions
 
 
@@ -711,7 +682,106 @@ ParsedRule::Ptr RuleParser::construct(ast::Rule& rule, Network& net) const
 }
 
 
+BetaMemory::Ptr RuleParser::constructCondition(
+        ast::Rule& rule,
+        Network& net,
+        BetaMemory::Ptr currentBeta,
+        std::map<std::string, AccessorBase::Ptr>& bindings,
+        ast::PreconditionBase& condition) const
+{
+    if (condition.isPrimitive())
+    {
+        auto& primitive = dynamic_cast<ast::Precondition&>(condition);
+        currentBeta = constructPrimitive(net, rule, primitive, currentBeta, bindings);
+    }
+    else if (condition.isNoValueGroup())
+    {
+        auto& nvGroup = dynamic_cast<ast::NoValueGroup&>(condition);
+        currentBeta = constructNoValueGroup(net, rule, nvGroup, currentBeta, bindings); // recursive call
+    }
+    else if (condition.isGroupBy())
+    {
+        auto& groupBy = dynamic_cast<ast::GroupBy&>(condition);
+        currentBeta = constructGroupBy(rule, groupBy, currentBeta, bindings);
+    }
+    else
+    {
+        throw RuleConstructionException(rule.str_, condition.str_, "Condition is neither primitive nor a noValueGroup. What have you done?!");
+    }
 
+    /*
+       Every time we created a beta node (join, builtin, alphabeta, noValue), we need to increment
+       the accessors afterwards. ASSUMPTION: The accessors bound to variables by the node
+       builders are indexed at -1, so that we can just increment them all and get them to
+       index 0, the first wme in the token chain.
+    */
+    for (auto binding : bindings)
+    {
+        ++(binding.second->index());
+    }
+
+#ifdef RETE_PARSER_VERBOSE
+    std::cout << "currentBeta: " << (currentBeta ? currentBeta->getDOTId() : "nullptr") << std::endl;
+#endif
+
+    return currentBeta;
+}
+
+
+BetaMemory::Ptr RuleParser::constructGroupBy(
+        ast::Rule& rule,
+        ast::GroupBy& groupBy,
+        BetaMemory::Ptr currentBeta,
+        std::map<std::string, AccessorBase::Ptr>& bindings) const
+{
+    /*
+        Construct a GroupBy-Node,
+        give it the accessors to the grouping-variables,
+        update the accessors:
+            - grouping vars -> special wrapper that just forwards the existing
+              accessor to the first entry in the group (all entries in the group
+              have the same value for the grouping variable)
+            - all other vars -> Wrap in TokenGroupAccessor
+    */
+    auto node = std::make_shared<GroupBy>();
+    for (auto& var : groupBy.variables_)
+    {
+        auto acc = bindings[*var];
+        if (!acc)
+            throw RuleConstructionException(rule.str_, groupBy.str_,
+                    "cannot group on unbound variable " + *var);
+
+        std::unique_ptr<AccessorBase> accClone(acc->clone());
+        node->addCriteria(std::move(accClone));
+    }
+
+    currentBeta = implementBetaNode(node, currentBeta, nullptr);
+
+    for (auto entry : bindings)
+    {
+        std::unique_ptr<AccessorBase> clone(entry.second->clone());
+
+        if (std::find_if(groupBy.variables_.begin(),
+                      groupBy.variables_.end(),
+                      [name = entry.first](auto& var) -> bool
+                      {
+                        return *var == name;
+                      }) != groupBy.variables_.end())
+        {
+            // its a variable to match on -> forward accessor
+            bindings[entry.first] =
+                std::make_shared<TokenGroupAccessorForwarder>(std::move(clone));
+        }
+        else
+        {
+            // different value for this var in the group -- TokenGroupAccessor
+            bindings[entry.first] =
+                std::make_shared<TokenGroupAccessor>(std::move(clone));
+        }
+    }
+
+    return currentBeta;
+}
 
 
 } /* rete */

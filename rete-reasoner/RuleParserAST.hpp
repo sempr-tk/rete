@@ -35,7 +35,11 @@ namespace rete {
         public:
             virtual ~Argument() {}
             virtual bool isVariable() const { return false; }
+
             virtual bool isNumber() const { return false; }
+            virtual bool isInt() const { return false; }
+            virtual bool isFloat() const { return false; }
+
             virtual bool isString() const { return false; }
             virtual bool isURI() const { return false; }
 
@@ -51,6 +55,14 @@ namespace rete {
                 ss >> tmp;
                 return tmp;
             }
+
+            virtual int toInt() const
+            {
+                std::stringstream ss(*this);
+                int tmp;
+                ss >> tmp;
+                return tmp;
+            }
         };
 
         class Variable : public Argument {
@@ -59,6 +71,14 @@ namespace rete {
 
         class Number : public Argument {
             bool isNumber() const override { return true; }
+        };
+
+        class Int : public Number {
+            bool isInt() const override { return true; }
+        };
+
+        class Float : public Number {
+            bool isFloat() const override { return true; }
         };
 
         class QuotedString : public Argument {
@@ -133,6 +153,7 @@ namespace rete {
 
             virtual ~PreconditionBase() {}
             virtual bool isNoValueGroup() const = 0;
+            virtual bool isGroupBy() const = 0;
             virtual bool isPrimitive() const = 0;
 
             /**
@@ -155,6 +176,7 @@ namespace rete {
 
 
             bool isNoValueGroup() const override { return false; }
+            bool isGroupBy() const override { return false; }
             bool isPrimitive() const override { return true; }
 
             /**
@@ -208,6 +230,7 @@ namespace rete {
 
             bool isPrimitive() const override { return false; }
             bool isNoValueGroup() const override { return true; }
+            bool isGroupBy() const override { return false; }
 
             void substituteArgumentPrefixes(const std::map<std::string, std::string>& pairs) override
             {
@@ -216,6 +239,16 @@ namespace rete {
                     condition->substituteArgumentPrefixes(pairs);
                 }
             }
+        };
+
+
+        class GroupBy : public PreconditionBase {
+        public:
+            peg::ASTList<Variable> variables_;
+
+            bool isPrimitive() const override { return false; }
+            bool isNoValueGroup() const override { return false; }
+            bool isGroupBy() const override { return true; }
         };
 
 

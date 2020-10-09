@@ -38,7 +38,10 @@ class RuleParser : peg::ASTParserDelegate {
 
     // peg::BindAST<ast::Argument> argument = RuleGrammar::get().argument;
     peg::BindAST<ast::Variable> variable = RuleGrammar::get().variable;
-    peg::BindAST<ast::Number> number = RuleGrammar::get().number;
+    //peg::BindAST<ast::Number> number = RuleGrammar::get().number;
+    peg::BindAST<ast::Float> floating = RuleGrammar::get().floating;
+    peg::BindAST<ast::Int> integer = RuleGrammar::get().integer;
+
     peg::BindAST<ast::QuotedString> quotedstring = RuleGrammar::get().quotedString;
     // peg::BindAST<ast::URI> uri = RuleGrammar::get().uri;
 
@@ -53,6 +56,7 @@ class RuleParser : peg::ASTParserDelegate {
     peg::BindAST<ast::GenericAlphaCondition> alphacon = RuleGrammar::get().genericAlphaCondition;
 
     peg::BindAST<ast::NoValueGroup> noValueGroup = RuleGrammar::get().noValueGroup;
+    peg::BindAST<ast::GroupBy> groupBy = RuleGrammar::get().groupBy;
 
     peg::BindAST<peg::ASTString> effname = RuleGrammar::get().effectName;
     peg::BindAST<ast::GenericEffect> geneffect = RuleGrammar::get().genericEffect;
@@ -81,6 +85,19 @@ class RuleParser : peg::ASTParserDelegate {
     */
     ParsedRule::Ptr construct(ast::Rule&, Network&) const;
 
+    /**
+        Helper function doing the actual work, designed for recursive parsing
+        of e.g. noValue groups, returns the new current beta node, updates the
+        bindings.
+    */
+    BetaMemory::Ptr constructCondition(
+            ast::Rule& rule,
+            Network& net,
+            BetaMemory::Ptr currentBeta,
+            std::map<std::string, AccessorBase::Ptr>& bindings,
+            ast::PreconditionBase& condition) const;
+
+
     BetaMemory::Ptr constructPrimitive(
             Network&,
             ast::Rule&,
@@ -92,6 +109,12 @@ class RuleParser : peg::ASTParserDelegate {
             Network&,
             ast::Rule&,
             ast::NoValueGroup&,
+            BetaMemory::Ptr,
+            std::map<std::string, AccessorBase::Ptr>&) const;
+
+    BetaMemory::Ptr constructGroupBy(
+            ast::Rule&,
+            ast::GroupBy&,
             BetaMemory::Ptr,
             std::map<std::string, AccessorBase::Ptr>&) const;
 

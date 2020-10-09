@@ -295,7 +295,7 @@ bool computed_number_in_triple_is_not_quoted()
 
     save(reasoner.net(), __func__ + std::string(".dot"));
 
-    return containsTriple(reasoner, "<test>", "<foo>", std::to_string(42.f));
+    return containsTriple(reasoner, "<test>", "<foo>", std::to_string(42));
 }
 
 

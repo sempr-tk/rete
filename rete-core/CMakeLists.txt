@@ -1,3 +1,8 @@
+find_package(PkgConfig)
+pkg_check_modules(openssl REQUIRED openssl)
+include_directories(${openssl_INCLUDE_DIR})
+link_directories(${openssl_LIBRARY_DIR})
+
 set(CORE_SRC
     Accessors.cpp
     Agenda.cpp
@@ -12,6 +17,8 @@ set(CORE_SRC
     Builtin.cpp
     connect.cpp
     EditDistance.cpp
+    GroupBy.cpp
+    Hash.cpp
     JoinNode.cpp
     Network.cpp
     Node.cpp
@@ -19,6 +26,8 @@ set(CORE_SRC
     Production.cpp
     ProductionNode.cpp
     Token.cpp
+    TokenGroup.cpp
+    TokenGroupAccessor.cpp
     TrueNode.cpp
     Util.cpp
     WME.cpp
@@ -26,11 +35,12 @@ set(CORE_SRC
 )
 
 set(BUILTIN_SRC
-    builtins/Math.cpp
     builtins/Util.cpp
+    builtins/NumberToStringConversion.cpp
 )
 
 add_library(rete-core SHARED ${CORE_SRC} ${BUILTIN_SRC})
+target_link_libraries(rete-core ${openssl_LIBRARIES})
 set_target_properties(rete-core PROPERTIES VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR})
 
 install(

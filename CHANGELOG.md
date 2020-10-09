@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.7.0] - 2020-10-09
+
+- Improved error messages for illformed rules
+- Added `GROUP BY (?var1 ?var2 ...)`: Gathers all sub-matches so far, putting
+  those with equal values on the given variables in the same group. This allows
+  you to perform operations on collections of facts.
+  See `test/GroupByBuiltins.cpp` for examples.
+- Improved math builtins to support multiple number types; added NumberToNumber
+  conversion utility for that sake.
+- Added `makeSkolem(?skolem ?val1 ?val2 ...)`, which creates unique identifiers
+  from a combination of values (strings and numbers supported).
+
+
 ## [0.6.1] - 2020-08-02
 
 - Workaround: Compiler bug during template method overload resolution at

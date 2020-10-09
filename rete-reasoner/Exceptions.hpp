@@ -4,6 +4,9 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <algorithm>
+
+#include "../rete-core/EditDistance.hpp"
 
 /**
     This file declares different exceptions that may occur when working with the reasoner.
@@ -66,8 +69,19 @@ public:
         : RuleConstructionException(rule, part, "")
     {
         detail_ = "No builder for node type: " + type + "\n"
-                  "Available types are: \n";
-        for (auto type : knownTypes)
+                  "Candidates are: \n";
+
+        auto copy = knownTypes;
+        std::sort(copy.begin(), copy.end());
+        std::stable_sort(
+            copy.begin(),
+            copy.end(),
+            [&type](const std::string& a, const std::string& b) -> bool
+            {
+                return util::editDistance(a, type) < util::editDistance(b, type);
+            });
+
+        for (auto type : copy)
         {
             detail_ += "    " + type + "\n";
         }

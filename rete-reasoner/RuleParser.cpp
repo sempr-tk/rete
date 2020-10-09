@@ -120,26 +120,37 @@ std::vector<ParsedRule::Ptr> RuleParser::parseRules(const std::string& rulestrin
 
     auto reporter = [&rulestring](const peg::InputRange& err_in, const std::string& descr)
     {
+        // find row of error
+        auto numNL = std::count(rulestring.begin(),
+                                rulestring.begin() + err_in.begin().index(),
+                                '\n');
+
+        // find column of error
+        auto rErrIt = rulestring.rbegin() + (rulestring.length() - err_in.begin().index());
+        auto column = std::find(
+                        rErrIt,
+                        rulestring.rend(),
+                        '\n');
+
         std::cout << "Error parsing rules, at "
-                  << err_in.finish.line << ":" << err_in.finish.col << std::endl;
+                  << numNL << ":" << std::distance(rErrIt, column) << std::endl;
 
-        size_t maxCharCount = 80;
-        size_t start = 0;
-        if (err_in.begin().index() > maxCharCount) start = err_in.begin().index() - maxCharCount;
-
-        for (size_t i = start; i < err_in.end().index(); i++)
+        int indent = 0;
+        for (size_t pos = 0; pos <= err_in.begin().index(); pos++)
         {
-            if (i < rulestring.size())
-                std::cout << rulestring.at(i);
-            else
-                break;
+            char c = rulestring[pos];
+            std::cout << c;
+            indent++;
+            if (c == '\n') indent = 0;
         }
         std::cout << std::endl;
-        for (size_t i = start; i < err_in.end().index() -1; i++)
+
+        for (int i = 0; i < indent-1; i++)
         {
             std::cout << "-";
         }
-        std::cout << "^" << std::endl << descr << std::endl;
+        std::cout << "^" << std::endl;
+        std::cout << descr << std::endl;
     };
 
     this->parse(input, g.rules, g.ws, reporter, root);
@@ -620,7 +631,7 @@ ParsedRule::Ptr RuleParser::construct(ast::Rule& rule, Network& net) const
         {
             std::vector<std::string> knownTypes;
             for (auto& builder : effectBuilders_) knownTypes.push_back(builder.first);
-            throw NoBuilderException(rule.str_, effect->str_, effect->type());
+            throw NoBuilderException(rule.str_, effect->str_, effect->type(), knownTypes);
         }
 
         // create an argument list. The ast::Arguments are consumed.

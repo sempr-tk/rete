@@ -88,10 +88,49 @@ int main()
             "[rule6: (?a <foo> ?b), sum(?sum 1 \"abc\") -> (?b <foo> ?a)]\n",
             reasoner.net()
         );
-        return 5; // no exception? --> error!
+        return 6; // no exception? --> error!
     } catch (ParserException& e) {
         std::cout << e.what() << std::endl;
     }
+
+    // unknown production
+    try {
+        rules = p.parseRules(
+            "[rule7: (?a <foo> ?b) -> pront(?b)]",
+            reasoner.net()
+        );
+        return 7;
+    } catch (ParserException& e) {
+        std::cout << e.what() << std::endl;
+    }
+
+    // syntax error in multiline rule
+    try {
+        rules = p.parseRules(
+            "[rule8:\n"
+            "    (?a ?b ?c),\n"
+            "    (?c ?d ?)\n"
+            " ->\n"
+            "    (?a ?e ?c)]",
+            reasoner.net()
+        );
+    save(reasoner.net(), "exceptions.dot");
+        return 8;
+    } catch (ParserException& e) {
+        std::cout << e.what() << std::endl;
+    }
+
+    // unknown builtin - small typo
+    try {
+        rules = p.parseRules(
+            "[rule2: trupe() -> (?b <foo> ?a)]\n",
+            reasoner.net()
+        );
+        return 9;
+    } catch (ParserException& e) {
+        std::cout << e.what() << std::endl;
+    }
+
 
     // net network must be really ugly by now :D
     save(reasoner.net(), "exceptions.dot");

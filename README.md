@@ -14,7 +14,9 @@ For a detailed documentation please **[visit the WIKI](https://git.ni.dfki.de/se
 
 ## Install
 
-This project is _mostly_ independent. The only external project you will need is the `pegmatite` parser library:
+This project is _mostly_ independent. The only dependencies are openssl (for a
+hash function -- shouldn't be too critical as it is probably installed on most
+systems anyway), and the `pegmatite` parser library:
 
 ```
 git clone git@git.ni.dfki.de:sempr/Pegmatite.git
@@ -57,7 +59,9 @@ make -j8 && make install
 - Special builtins / syntax:
   - Math operators (so far: `add`, `multiply`, `divide`)
   - Comparisons (`<`, `<=`, `==`, `!=`, `>=`, `>`)
-  - `noValue` to check for non-existence of a fact
+  - `noValue` to check for non-existence patterns
+  - `makeSkolem` creates an identifier from the given arguments which can be
+     used e.g. as the id of a semantic entity in triples.
 
 
 

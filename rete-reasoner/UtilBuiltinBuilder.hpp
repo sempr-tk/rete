@@ -59,7 +59,7 @@ public:
         }
         else
         {
-            left.reset(new ConstantAccessor<std::string>(args[0].getAST()));
+            left.reset(new ConstantAccessor<std::string>(args[0].getAST().toString()));
             left->index() = 0;
         }
 
@@ -72,7 +72,7 @@ public:
         }
         else
         {
-            right.reset(new ConstantAccessor<std::string>(args[1].getAST()));
+            right.reset(new ConstantAccessor<std::string>(args[1].getAST().toString()));
             right->index() = 0;
         }
 

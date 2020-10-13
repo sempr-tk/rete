@@ -63,6 +63,17 @@ namespace rete {
                 ss >> tmp;
                 return tmp;
             }
+
+
+            /**
+                Converts the value to std::string. In most cases this just
+                copies the argument as it was specified in the rule, but
+                it allows e.g. the URI subclass return a modified value.
+            */
+            virtual std::string toString() const
+            {
+                return *this;
+            }
         };
 
         class Variable : public Argument {
@@ -137,6 +148,19 @@ namespace rete {
                         break;
                     }
                 }
+            }
+
+            /**
+                Returns the URI without the angular brackets.
+            */
+            std::string toString() const override
+            {
+                std::string result = *this;
+                if (*result.begin() == '<' && *result.rbegin() == '>')
+                {
+                    result = result.substr(1, result.size()-2);
+                }
+                return result;
             }
         };
 

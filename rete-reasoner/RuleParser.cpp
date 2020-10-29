@@ -176,8 +176,33 @@ std::vector<ParsedRule::Ptr> RuleParser::parseRules(const std::string& rulestrin
         prefixes[pre->name_ + ":"] = uri.substr(1, uri.size() - 2); // trim <>
     }
 
+#ifdef RETE_PARSER_VERBOSE
+    std::cout << "Global constants: " << root->constants_.size() << std::endl;
+    for (auto& c : root->constants_)
+    {
+        std::cout << c->id_ << " -> " << *c->value_ << " ["
+                  << (c->value_->isString() ? "string" :
+                      (c->value_->isNumber() ? "number" :
+                      (c->value_->isURI() ? "uri" :
+                      std::string("wtf?") + typeid(c->value_).name()
+                      ))) << "]" << std::endl;
+    }
+#endif
+
     /*
-        Preprocess: Substitute prefixes in the arguments of conditions and effects
+        Preprocess: Substitute global constants in the arguments of conditions
+                    and effects
+    */
+    for (auto& rule : root->rules_)
+    {
+        for (auto& condition : rule->conditions_)
+        {
+            condition->
+        }
+    }
+
+    /*
+        Preprocess: Substitute prefixes in the arguments of conditions and effects,
     */
     for (auto& rule : root->rules_)
     {
@@ -205,6 +230,7 @@ std::vector<ParsedRule::Ptr> RuleParser::parseRules(const std::string& rulestrin
             }
         }
     }
+
 
     /**
       Construct the network

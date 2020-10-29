@@ -35,6 +35,7 @@ namespace rete {
         public:
             virtual ~Argument() {}
             virtual bool isVariable() const { return false; }
+            virtual bool isGlobalConstRef() const { return false; }
 
             virtual bool isNumber() const { return false; }
             virtual bool isInt() const { return false; }
@@ -163,6 +164,28 @@ namespace rete {
                 return result;
             }
         };
+
+
+        /**
+            A GlobalConstantReference is an argument which refers to a
+            previously defined global constant, and must thus be replaced by
+            that.
+        */
+        class GlobalConstantReference : public Argument {
+        public:
+            bool isGlobalConstRef() const override { return true; }
+        };
+
+        /**
+            A GlobalConstantDefinition defines a global constant.
+            It is a mapping between an identifier and another argument.
+        */
+        class GlobalConstantDefinition : public peg::ASTContainer {
+        public:
+            peg::ASTChild<peg::ASTString> id_;
+            peg::ASTPtr<Argument, false> value_;
+        };
+
 
         /**
             Base class for preconditions, without any ast members.
@@ -336,6 +359,7 @@ namespace rete {
         class Rules : public peg::ASTContainer {
         public:
             peg::ASTList<PrefixDefinition> prefixes_;
+            peg::ASTList<GlobalConstantDefinition> constants_;
             peg::ASTList<Rule> rules_;
         };
 

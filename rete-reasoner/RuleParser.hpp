@@ -28,6 +28,8 @@ class RuleParser : peg::ASTParserDelegate {
     peg::BindAST<ast::Argument> literal     = RuleGrammar::get().literal; // TODO subclass Argument!
     peg::BindAST<ast::URI> prefixedURI     = RuleGrammar::get().prefixedURI;
     peg::BindAST<ast::URI> blank_node_label     = RuleGrammar::get().blank_node_label;
+    peg::BindAST<ast::GlobalConstantReference> globalConstRef = RuleGrammar::get().globalConstID;
+    peg::BindAST<ast::GlobalConstantDefinition> globalConstDef = RuleGrammar::get().globalConstDef;
 
     peg::BindAST<peg::ASTString> prefixname = RuleGrammar::get().prefixname;
     peg::BindAST<ast::PrefixDefinition> prefix = RuleGrammar::get().prefixdef;

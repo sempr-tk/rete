@@ -100,15 +100,22 @@ public:
     Rule variable =         ("?"_E >> +alphanum);
     Rule uri =              prefixedURI | iriref;
 
-    Rule subject    = rtrace("subject",   term(variable | iriref | prefixedURI | blank_node_label));
-    Rule predicate  = rtrace("predicate", term(variable | iriref | prefixedURI));
-    Rule object     = rtrace("object",    term(variable | iriref | prefixedURI | blank_node_label | literal | number));
+    Rule subject    = rtrace("subject",   term(variable | iriref | prefixedURI | blank_node_label | globalConstID));
+    Rule predicate  = rtrace("predicate", term(variable | iriref | prefixedURI | globalConstID));
+    Rule object     = rtrace("object",    term(variable | iriref | prefixedURI | blank_node_label | literal | number | globalConstID));
 
     /**
     Modifier to negate joins (forward only when there is no match)
     */
     Rule noValue = rtrace("noValue", "noValue "_E | "no " | "novalue ");
     Rule triple = rtrace("triple", '('_E >> subject >> predicate >> object >> ')');
+
+
+    /*
+        Definition of global constants
+    */
+    Rule globalConstID = rtrace("globalConstID", term("$"_E >> +alphanum));
+    Rule globalConstDef = rtrace("globalConstDef", globalConstID >> ":" >> (quotedString | number | uri));
 
     /*
         Here comes the more general stuff: Basically, rules are created from preconditions and
@@ -121,7 +128,7 @@ public:
         Further extensions to alpha conditions can be implemented without changing the grammar by
         simply accepting arguments as defined below.
     */
-    Rule argument = rtrace("argument", term(quotedString | number | variable | uri));
+    Rule argument = rtrace("argument", term(quotedString | number | variable | uri | globalConstID));
 
     // cannot reuse triple for infertriple, would lead to triple being constructed before infertriple, and the infertriple being empty...
     Rule inferTriple = rtrace("inferTriple", '('_E >> subject >> predicate >> object >> ')');
@@ -166,7 +173,7 @@ public:
     // [name: (precondition1), (precondition2) --> (effect1), (effect2)]
     Rule rulename = rtrace("rulename", +alphanum);
     Rule rule = rtrace("rule", ('['_E >> -(rulename >> ':') >> precondition >> *(',' >> precondition) >> "->" >> effect >> *(',' >> effect) >> ']'));
-    Rule rules = rtrace("rules", *prefixdef >> +rule);
+    Rule rules = rtrace("rules", *prefixdef >> *globalConstDef >> +rule);
 
     // TODO: Overhaul for builtins, other WMEs than triples, ...
 };

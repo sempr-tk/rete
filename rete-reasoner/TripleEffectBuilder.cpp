@@ -3,6 +3,7 @@
 
 namespace rete {
 
+
 TripleEffectBuilder::TripleEffectBuilder()
     : NodeBuilder("Triple", BuilderType::EFFECT)
 {
@@ -35,7 +36,14 @@ Production::Ptr TripleEffectBuilder::buildEffect(ArgumentList& args) const
         // format, as enforced by the grammar! -> TriplePart, no conversion needed.
         if (args[i].isConst())
         {
-            acc[i].reset(new ConstantAccessor<TriplePart>({args[i].getAST()}));
+            if (args[i].getAST().isString())
+            {
+                acc[i].reset(new ConstantAccessor<std::string>(args[i].getAST()));
+            }
+            else
+            {
+                acc[i].reset(new ConstantAccessor<TriplePart>({args[i].getAST()}));
+            }
             acc[i]->index() = 0;
         }
         else

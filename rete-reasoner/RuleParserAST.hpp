@@ -48,7 +48,6 @@ namespace rete {
             more specific, like variables, numbers, URIs, ...
         */
         class Argument : public peg::ASTString {
-            std::string fromStr_;
         public:
             virtual ~Argument() {}
             virtual bool isVariable() const { return false; }

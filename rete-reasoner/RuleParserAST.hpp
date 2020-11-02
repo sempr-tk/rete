@@ -11,6 +11,25 @@
 #include <iostream>
 #include <iomanip>
 
+
+// helper def for an easy setup of clone methods.
+// ASTNodes cannot be copied directly (ASTNode(const ASTNode&) = delete;),
+// but the copy assignment operator is defaulted...
+// So I can copy? Is this a hack? A bug? Probably. Do I care? Yes.
+// Do I hack it anyway? ....
+#define CLONE_METHOD(classname) \
+    classname* clone() const override\
+    {\
+        std::cout << "cloning " << *this;\
+        classname* arg = new classname();\
+        *arg = *this;\
+        std::cout << " to " << *arg << std::endl;\
+        std::cout << this->isString() << " | " << arg->isString() << std::endl;\
+        return arg;\
+    }
+
+
+
 /**
 This file contains the class declarations from which an AST can be constructed. The actual
 construction is done by the parserlib library and according to the rule grammar.
@@ -32,6 +51,7 @@ namespace rete {
             more specific, like variables, numbers, URIs, ...
         */
         class Argument : public peg::ASTString {
+            std::string fromStr_;
         public:
             virtual ~Argument() {}
             virtual bool isVariable() const { return false; }
@@ -75,22 +95,40 @@ namespace rete {
             {
                 return *this;
             }
+
+            virtual Argument* clone() const
+            {
+                // ASTNode(const ASTNode&) = delete; aber
+                // ASTNode::operator = (const ASTNode&) = default;
+                // ... hacky?
+                Argument* arg = new Argument();
+                *arg = *this;
+                return arg;
+            }
         };
 
         class Variable : public Argument {
             bool isVariable() const override { return true; }
+        public:
+            CLONE_METHOD(Variable);
         };
 
         class Number : public Argument {
             bool isNumber() const override { return true; }
+        public:
+            CLONE_METHOD(Number);
         };
 
         class Int : public Number {
             bool isInt() const override { return true; }
+        public:
+            CLONE_METHOD(Int);
         };
 
         class Float : public Number {
             bool isFloat() const override { return true; }
+        public:
+            CLONE_METHOD(Float);
         };
 
         class QuotedString : public Argument {
@@ -115,6 +153,7 @@ namespace rete {
                 return ok;
             }
 
+            CLONE_METHOD(QuotedString);
         };
 
         class URI : public Argument {
@@ -163,6 +202,9 @@ namespace rete {
                 }
                 return result;
             }
+
+        public:
+            CLONE_METHOD(URI)
         };
 
 
@@ -174,6 +216,7 @@ namespace rete {
         class GlobalConstantReference : public Argument {
         public:
             bool isGlobalConstRef() const override { return true; }
+            CLONE_METHOD(GlobalConstantReference)
         };
 
         /**
@@ -210,6 +253,14 @@ namespace rete {
             {
             }
 
+            /**
+                Replaces references to global constants by the actual values
+            */
+            virtual void replaceGlobalConstantReferences(
+                    const peg::ASTList<GlobalConstantDefinition>&)
+            {
+            }
+
             bool construct(const peg::InputRange& r, peg::ASTStack& st, const peg::ErrorReporter& err) override
             {
                 str_ = r.str();
@@ -243,6 +294,31 @@ namespace rete {
                 for (auto& arg : args_)
                 {
                     arg->substitutePrefixes(pairs);
+                }
+            }
+
+            virtual void replaceGlobalConstantReferences(
+                    const peg::ASTList<GlobalConstantDefinition>& defs) override
+            {
+                for (auto& arg : args_)
+                {
+                    if (arg->isGlobalConstRef())
+                    {
+                        bool found = false;
+                        for (auto& def : defs)
+                        {
+                            if(*arg == def->id_)
+                            {
+                                arg.reset(def->value_->clone());
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found)
+                        {
+                            throw std::exception();
+                        }
+                    }
                 }
             }
 
@@ -286,6 +362,15 @@ namespace rete {
                     condition->substituteArgumentPrefixes(pairs);
                 }
             }
+
+            virtual void replaceGlobalConstantReferences(
+                    const peg::ASTList<GlobalConstantDefinition>& defs) override
+            {
+                for (auto& condition : conditions_)
+                {
+                    condition->replaceGlobalConstantReferences(defs);
+                }
+            }
         };
 
 
@@ -322,10 +407,28 @@ namespace rete {
                 return "Triple";
             }
 
-            bool construct(const peg::InputRange& r, peg::ASTStack& st, const peg::ErrorReporter& err)
+            bool construct(const peg::InputRange& r, peg::ASTStack& st, const peg::ErrorReporter& err) override
             {
                 str_ = r.str();
                 return this->peg::ASTContainer::construct(r, st, err);
+            }
+
+            virtual void replaceGlobalConstantReferences(
+                    const peg::ASTList<GlobalConstantDefinition>& defs)
+            {
+                for (auto& arg : args_)
+                {
+                    if (arg->isGlobalConstRef())
+                    {
+                        for (auto& def : defs)
+                        {
+                            if(*arg == def->id_)
+                            {
+                                arg = std::unique_ptr<Argument>(def->value_->clone());
+                            }
+                        }
+                    }
+                }
             }
 
         };
@@ -366,5 +469,6 @@ namespace rete {
     } /* ast */
 } /* rete */
 
+#undef CLONE_METHOD
 
 #endif /* end of include guard: RETE_RULEPARSERAST_HPP_ */

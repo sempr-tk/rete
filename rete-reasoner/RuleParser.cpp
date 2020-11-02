@@ -197,9 +197,15 @@ std::vector<ParsedRule::Ptr> RuleParser::parseRules(const std::string& rulestrin
     {
         for (auto& condition : rule->conditions_)
         {
-            condition->
+            condition->replaceGlobalConstantReferences(root->constants_);
+        }
+
+        for (auto& effect : rule->effects_)
+        {
+            effect->replaceGlobalConstantReferences(root->constants_);
         }
     }
+
 
     /*
         Preprocess: Substitute prefixes in the arguments of conditions and effects,

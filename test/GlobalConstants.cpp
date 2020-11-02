@@ -7,6 +7,7 @@
 
 using namespace rete;
 
+namespace {
 
 void save(Network& net, const std::string& filename)
 {
@@ -155,9 +156,38 @@ bool global_const_shorthand_uri_can_be_used_in_triple_condition()
 
     return containsTriple(reasoner, "<test>", "<is>", "<successfull>");
 }
-bool global_const_number_can_be_used_in_math_builtin();
-bool global_const_string_can_be_used_in_triple_consequence();
 
+bool global_const_number_can_be_used_in_math_builtin()
+{
+    RuleParser p;
+    Reasoner reasoner;
+    auto rules = p.parseRules(
+        "$foo : 21\n"
+        "[true(), sum(?s $foo $foo) -> (<the-answer> <is> ?s)]",
+        reasoner.net()
+    );
+
+    reasoner.performInference();
+    save(reasoner.net(), __func__ + std::string(".dot"));
+
+    return containsTriple(reasoner, "<the-answer>", "<is>", std::to_string(42));
+}
+
+bool global_const_string_can_be_used_in_triple_consequence()
+{
+    RuleParser p;
+    Reasoner reasoner;
+    auto rules = p.parseRules(
+        "$foo : \"Hello, World!\"\n"
+        "[true() -> (<greeting> <message> $foo)]",
+        reasoner.net()
+    );
+
+    reasoner.performInference();
+    save(reasoner.net(), __func__ + std::string(".dot"));
+
+    return containsTriple(reasoner, "<greeting>", "<message>", "\"Hello, World!\"");
+}
 
 
 #define TEST(function) \
@@ -174,6 +204,7 @@ bool global_const_string_can_be_used_in_triple_consequence();
         if (!ok) failed++; \
     }
 
+}
 
 int main()
 {
@@ -183,6 +214,10 @@ int main()
     TEST(global_const_allows_full_uri);
     TEST(global_const_allows_shorthand_uri);
     TEST(global_const_string_can_be_used_in_triple_condition);
+    TEST(global_const_number_can_be_used_in_triple_condition);
+    TEST(global_const_shorthand_uri_can_be_used_in_triple_condition);
+    TEST(global_const_number_can_be_used_in_math_builtin);
+    TEST(global_const_string_can_be_used_in_triple_consequence);
 
     return failed;
 }

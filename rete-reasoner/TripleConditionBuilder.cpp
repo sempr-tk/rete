@@ -5,6 +5,30 @@
 
 namespace rete {
 
+// helper to deal with "QuotedString" as well as string-literals (which are just
+// "Argument"s so far)
+std::string argToStr(const ast::Argument& arg)
+{
+    if (arg.isString())
+    {
+        // .isString -> this is a "QuotedString" argument, which...
+        // is not quoted. The quotes have been removed during parsing,
+        // but we need them here, to allow "QuotedString" in triple stuff,
+        // which.. the grammar... doesn't allow...
+        // Wow. Hacks on so many levels.
+        std::stringstream ss;
+        ss << std::quoted(arg);
+        std::cout << ss.str() << std::endl;
+        return ss.str();
+    }
+    else
+    {
+        std::cout << typeid(arg).name() << " not a quoted string..." << std::endl;
+        return arg;
+    }
+}
+
+
 TripleConditionBuilder::TripleConditionBuilder()
     : NodeBuilder("Triple", BuilderType::ALPHA)
 {
@@ -36,8 +60,9 @@ void TripleConditionBuilder::buildAlpha(ArgumentList& args, std::vector<AlphaNod
     // static checks for non variable parts of the triple.
     if (args[0].isConst())
     {
-        TripleAlpha::Ptr alpha(new TripleAlpha(Triple::SUBJECT, args[0].getAST()));
+        TripleAlpha::Ptr alpha(new TripleAlpha(Triple::SUBJECT, argToStr(args[0].getAST())));
         nodes.push_back(alpha);
+
     }
     // if its variable, it will be bound after these checks.
     else
@@ -49,7 +74,7 @@ void TripleConditionBuilder::buildAlpha(ArgumentList& args, std::vector<AlphaNod
     // same for predicate
     if (args[1].isConst())
     {
-        TripleAlpha::Ptr alpha(new TripleAlpha(Triple::PREDICATE, args[1].getAST()));
+        TripleAlpha::Ptr alpha(new TripleAlpha(Triple::PREDICATE, argToStr(args[1].getAST())));
         nodes.push_back(alpha);
     }
     else
@@ -61,7 +86,7 @@ void TripleConditionBuilder::buildAlpha(ArgumentList& args, std::vector<AlphaNod
     // same for object
     if (args[2].isConst())
     {
-        TripleAlpha::Ptr alpha(new TripleAlpha(Triple::OBJECT, args[2].getAST()));
+        TripleAlpha::Ptr alpha(new TripleAlpha(Triple::OBJECT, argToStr(args[2].getAST())));
         nodes.push_back(alpha);
     }
     else

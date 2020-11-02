@@ -20,11 +20,8 @@
 #define CLONE_METHOD(classname) \
     classname* clone() const override\
     {\
-        std::cout << "cloning " << *this;\
         classname* arg = new classname();\
         *arg = *this;\
-        std::cout << " to " << *arg << std::endl;\
-        std::cout << this->isString() << " | " << arg->isString() << std::endl;\
         return arg;\
     }
 

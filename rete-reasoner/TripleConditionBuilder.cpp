@@ -5,6 +5,7 @@
 
 namespace rete {
 
+namespace {
 // helper to deal with "QuotedString" as well as string-literals (which are just
 // "Argument"s so far)
 std::string argToStr(const ast::Argument& arg)
@@ -18,16 +19,15 @@ std::string argToStr(const ast::Argument& arg)
         // Wow. Hacks on so many levels.
         std::stringstream ss;
         ss << std::quoted(arg);
-        std::cout << ss.str() << std::endl;
         return ss.str();
     }
     else
     {
-        std::cout << typeid(arg).name() << " not a quoted string..." << std::endl;
         return arg;
     }
 }
 
+}
 
 TripleConditionBuilder::TripleConditionBuilder()
     : NodeBuilder("Triple", BuilderType::ALPHA)

@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.7.1] - 2020-11-06
+
+- Allow a single colon in effect names, e.g. foo:bar(...), for namespacing
+  puposes. This was already allowed in builtin names.
+
 ## [0.7.0] - 2020-10-09
 
 - Improved error messages for illformed rules

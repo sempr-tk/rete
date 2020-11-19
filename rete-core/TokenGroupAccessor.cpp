@@ -58,10 +58,28 @@ TokenGroupAccessorForwarder::TokenGroupAccessorForwarder(
     {
         ti.second->parent_ = this;
 
-        // make the wrapped accessor work on the tokengroups entries
-        ti.second->wmeModifier_ =
-            std::bind(&TokenGroupAccessorForwarder::getWMEFromTokenGroup,
-                  this, std::placeholders::_1);
+        // if the wmeModifier is already set we may be stacking
+        // TokenGroupAccessorForwarders! Multiple usage of GROUP BY in a
+        // single rule!
+        // To support this, we need to first extract ourselves, and then
+        // apply the modifier for what we extracted.
+        if (ti.second->wmeModifier_)
+        {
+            auto inner = ti.second->wmeModifier_;
+            ti.second->wmeModifier_ =
+                [inner, this](WME::Ptr wme) -> WME::Ptr
+                {
+                    auto tmp = this->getWMEFromTokenGroup(wme);
+                    return inner(tmp);
+                };
+        }
+        else
+        {
+            // make the wrapped accessor work on the tokengroups entries
+            ti.second->wmeModifier_ =
+                std::bind(&TokenGroupAccessorForwarder::getWMEFromTokenGroup,
+                      this, std::placeholders::_1);
+        }
     }
 }
 

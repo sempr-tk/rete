@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.8.0] - 2020-11-19
+
+- Implemented global constants which can be defined at the top of your rules,
+  but after @PREFIX definitions:
+  ```
+    $varA : "stringvalue"
+    $varB : 42
+    $varC : rdf:type
+  ```
+- Fix TokenGroupAccessors to allow access to variables which are used in
+  successive GROUP BY statements.
+
 ## [0.7.1] - 2020-11-06
 
 - Allow a single colon in effect names, e.g. foo:bar(...), for namespacing

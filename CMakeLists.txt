@@ -14,6 +14,11 @@ if (${DEBUG_AST})
     add_definitions(-DDEBUG_AST_CONSTRUCTION)
 endif()
 
+option(RETE_PARSER_VERBOSE "more output of the rule parser" false)
+if (${RETE_PARSER_VERBOSE})
+    add_definitions(-DRETE_PARSER_VERBOSE)
+endif()
+
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-undefined")
 

@@ -180,11 +180,20 @@ public:
     Rule rule = rtrace("rule", ('['_E >> -(rulename >> ':')
                                       >> -comment >> precondition >> *(',' >> -comment >> precondition) >> -comment >> "->"
                                       >> -comment >> effect >> *(',' >> -comment >> effect) >> -comment >> ']'));
-    Rule rules = rtrace("rules", *(prefixdef | comment)
-                              >> *(globalConstDef | comment)
-                              >> +(rule >> -comment));
 
-    // TODO: Overhaul for builtins, other WMEs than triples, ...
+
+    Rule rules = rtrace("rules",
+                // definitions
+                *(prefixdef | comment)
+                >> *(globalConstDef | comment)
+                // followed by
+                >>
+                (+(rule >> -comment)                // either just some "rule"s
+                 |                                  // or
+                 +("{" >> rules >> "}" >> -comment) // scoped "rules"-blocks
+                )
+            );
+
 };
 
 

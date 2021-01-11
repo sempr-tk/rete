@@ -94,20 +94,8 @@ void RuleParser::registerNodeBuilder(std::unique_ptr<NodeBuilder> builder)
 }
 
 
-std::vector<ParsedRule::Ptr> RuleParser::parseRules(const std::string& rulestring_pre, Network& network)
+std::vector<ParsedRule::Ptr> RuleParser::parseRules(const std::string& rulestring, Network& network)
 {
-    // preprocessing: remove comment-lines.
-    std::stringstream ss(rulestring_pre);
-    std::string line;
-    std::string rulestring;
-    while (std::getline(ss, line))
-    {
-        if (line.empty() || line.at(0) == '#')
-        {
-            continue;
-        }
-        rulestring += line + "\n";
-    }
 #ifdef RETE_PARSER_VERBOSE
     std::cout << "parsing rules:" << std::endl;
     std::cout << rulestring << std::endl;

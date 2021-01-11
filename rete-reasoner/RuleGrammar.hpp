@@ -40,6 +40,7 @@ public:
     Rule num    = "[0-9]"_R;
     Rule alphanum = alpha | num;
     Rule echar  = '\\' >> "tbnrf\"\'\\"_S;
+    Rule comment = rtrace("comments", +rtrace("comment", term("#"_E >> *(!endl >> any()) >> endl)));
 
     /*
     // while num is just a single digit,
@@ -108,7 +109,9 @@ public:
     Modifier to negate joins (forward only when there is no match)
     */
     Rule noValue = rtrace("noValue", "noValue "_E | "no " | "novalue ");
-    Rule triple = rtrace("triple", '('_E >> subject >> predicate >> object >> ')');
+    Rule triple = rtrace("triple", '('_E >> subject >> -comment
+                                         >> predicate >> -comment
+                                         >> object >> -comment >> ')');
 
 
     /*
@@ -131,24 +134,26 @@ public:
     Rule argument = rtrace("argument", term(quotedString | number | variable | uri | globalConstID));
 
     // cannot reuse triple for infertriple, would lead to triple being constructed before infertriple, and the infertriple being empty...
-    Rule inferTriple = rtrace("inferTriple", '('_E >> subject >> predicate >> object >> ')');
+    Rule inferTriple = rtrace("inferTriple", '('_E >> subject >> -comment
+                                                   >> predicate >> -comment
+                                                   >> object >> -comment >> ')');
     /*
         Generic conditions and effects
     */
     // alpha conditions
     Rule alphaConditionName = rtrace("alphaConditionName", !noValue >> term(+(alphanum | "<>"_S)));
     Rule genericAlphaCondition = rtrace("genericAlphaCondition",
-                                         alphaConditionName >> "(" >> *argument >> ")");
+                                         alphaConditionName >> "(" >> *(argument >> -comment) >> ")");
 
     // builtins
     // TODO: distinguish between alpha conditions and builtins?
     //       Not important for the parser to work, only to fail fast during parsing instead of construction. alpha- and builtin-builders reside in the same pool of node builders.
     Rule builtinName = rtrace("builtinName", !noValue >> term(+alphanum) >> -(":"_E >> term(+alphanum)));
-    Rule builtin = rtrace("builtin", builtinName >> "(" >> *argument >> ")");
+    Rule builtin = rtrace("builtin", builtinName >> "(" >> *(argument >> -comment) >> ")");
 
     // effects
     Rule effectName = rtrace("effectName", term(+(alphanum | "<>"_S) >> -(":"_E >> +(alphanum | "<>"_S))));
-    Rule genericEffect = rtrace("genericEffect", effectName >> "(" >> *argument >> ")");
+    Rule genericEffect = rtrace("genericEffect", effectName >> "(" >> *(argument >> -comment) >> ")");
 
 
     /**
@@ -164,7 +169,7 @@ public:
     */
     Rule precondition = rtrace("precondition", triple | builtin | genericAlphaCondition | noValueGroup | groupBy);
     Rule noValueGroup = rtrace("noValueGroup",
-            noValue >> "{" >> precondition >> *(',' >> precondition) >> "}"
+            noValue >> "{" >> precondition >> -comment >> *(',' >> precondition >> -comment) >> "}"
     );
 
 
@@ -172,8 +177,12 @@ public:
 
     // [name: (precondition1), (precondition2) --> (effect1), (effect2)]
     Rule rulename = rtrace("rulename", +alphanum);
-    Rule rule = rtrace("rule", ('['_E >> -(rulename >> ':') >> precondition >> *(',' >> precondition) >> "->" >> effect >> *(',' >> effect) >> ']'));
-    Rule rules = rtrace("rules", *prefixdef >> *globalConstDef >> +rule);
+    Rule rule = rtrace("rule", ('['_E >> -(rulename >> ':')
+                                      >> -comment >> precondition >> *(',' >> -comment >> precondition) >> -comment >> "->"
+                                      >> -comment >> effect >> *(',' >> -comment >> effect) >> -comment >> ']'));
+    Rule rules = rtrace("rules", *(prefixdef | comment)
+                              >> *(globalConstDef | comment)
+                              >> +(rule >> -comment));
 
     // TODO: Overhaul for builtins, other WMEs than triples, ...
 };

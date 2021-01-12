@@ -3,6 +3,7 @@
 
 #define USE_RTTI
 #include <pegmatite/pegmatite.hh>
+#include "Exceptions.hpp"
 
 #include <string>
 #include <sstream>
@@ -40,6 +41,13 @@ namespace rete {
         class PrefixDefinition : public peg::ASTContainer {
         public:
             peg::ASTChild<peg::ASTString> name_, uri_;
+
+            PrefixDefinition* clone() const
+            {
+                PrefixDefinition* arg = new PrefixDefinition();
+                *arg = *this;
+                return arg;
+            }
         };
 
         /**
@@ -223,6 +231,15 @@ namespace rete {
         public:
             peg::ASTChild<peg::ASTString> id_;
             peg::ASTPtr<Argument, false> value_;
+
+            GlobalConstantDefinition* clone() const
+            {
+                GlobalConstantDefinition* arg = new GlobalConstantDefinition();
+                arg->id_ = id_;
+                arg->value_.reset(value_->clone());
+                return arg;
+            }
+
         };
 
 
@@ -459,7 +476,75 @@ namespace rete {
         public:
             peg::ASTList<PrefixDefinition> prefixes_;
             peg::ASTList<GlobalConstantDefinition> constants_;
+
+            /*
+                A "Rules" node consists either of just a bunch of simple
+                "Rule" nodes, or may contain "Rules" nodes itself. These
+                scoped rules are supposed to get access to all the parents
+                PrefixDefinitions and GlobalConstantDefinitions, too.
+            */
             peg::ASTList<Rule> rules_;
+            peg::ASTList<Rules> scopedRules_;
+
+            /**
+                Makes the definitions of the parent (@PREFIX, $value)
+                available to the nested rules.
+            */
+            void propagateDefinitionsToChildren()
+            {
+                for (auto& child : scopedRules_)
+                {
+                    // copy prefixdefinitions to child rules nodes
+                    for (auto& prefixdef : prefixes_)
+                    {
+                        auto it = std::find_if(
+                                child->prefixes_.begin(),
+                                child->prefixes_.end(),
+                                [&prefixdef](auto& pdef) -> bool
+                                {
+                                    return pdef->name_ == prefixdef->name_;
+                                });
+                        if (it != child->prefixes_.end())
+                        {
+                            throw ParserException("Overriding previous definition of " + (*it)->name_);
+                        }
+                        else
+                        {
+                            // only use the parents definition if the child does not define its own
+                            std::unique_ptr<PrefixDefinition> ptr(prefixdef->clone());
+                            child->prefixes_.push_back(std::move(ptr));
+                        }
+                    }
+
+                    // copy global constants to child nodes
+                    for (auto& globalConst : constants_)
+                    {
+                        auto it = std::find_if(
+                                child->constants_.begin(),
+                                child->constants_.end(),
+                                [&globalConst](auto& gconst) -> bool
+                                {
+                                    return gconst->id_ == globalConst->id_;
+                                });
+                        if (it != child->constants_.end())
+                        {
+                            throw ParserException("Warning: Overriding previous definition of " + (*it)->id_);
+                        }
+                        else
+                        {
+                            std::unique_ptr<GlobalConstantDefinition> ptr(globalConst->clone());
+                            child->constants_.push_back(std::move(ptr));
+                        }
+                    }
+
+                    // propagate further down:
+                    child->propagateDefinitionsToChildren();
+
+                    // TODO: test case
+                    // TODO: override flag for prefixdefs and constants to suppress warning/error
+                }
+            }
+
         };
 
     } /* ast */

@@ -156,11 +156,26 @@ std::vector<ParsedRule::Ptr> RuleParser::parseRules(const std::string& rulestrin
       Construct the network
     */
     std::vector<ParsedRule::Ptr> rules;
-    for (auto& rule : root->rules_)
+
+    // quick hack: fancy lambda to add recursive behaviour to parse all
+    // nested rules, too
+    std::function<void(std::unique_ptr<ast::Rules>&)>
+    doParse = [this, &rules, &network, &doParse](std::unique_ptr<ast::Rules>& ast) -> void
     {
-        auto pr = construct(*rule, network);
-        rules.push_back(pr);
-    }
+        for (auto& rule : ast->rules_)
+        {
+            auto pr = this->construct(*rule, network);
+            rules.push_back(pr);
+        }
+
+        for (auto& nested : ast->scopedRules_)
+        {
+            doParse(nested);
+        }
+    };
+
+    doParse(root);
+
     return rules;
 }
 

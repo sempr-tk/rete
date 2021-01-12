@@ -45,6 +45,7 @@ bool no_nested_scopes()
         "[true() -> (<a> <b> $foo)]",
         reasoner.net()
     );
+    reasoner.performInference();
 
     std::ofstream(std::string("scopes__") + to_zero_lead(__LINE__, 4) + "_" + __func__ + ".dot") << reasoner.net().toDot();
 
@@ -64,6 +65,7 @@ bool nested_with_only_global_defs()
         "}",
         reasoner.net()
     );
+    reasoner.performInference();
 
     std::ofstream(std::string("scopes__") + to_zero_lead(__LINE__, 4) + "_" + __func__ + ".dot") << reasoner.net().toDot();
     return containsTriple(reasoner, "<a>", "<b>", "<bar#bar>");
@@ -81,6 +83,7 @@ bool one_nested_with_only_local_defs()
         "}",
         reasoner.net()
     );
+    reasoner.performInference();
 
     std::ofstream(std::string("scopes__") + to_zero_lead(__LINE__, 4) + "_" + __func__ + ".dot") << reasoner.net().toDot();
     return containsTriple(reasoner, "<a>", "<b>", "<bar#bar>");
@@ -103,6 +106,7 @@ bool two_parallel_nested_with_only_local_defs()
         "}",
         reasoner.net()
     );
+    reasoner.performInference();
 
     std::ofstream(std::string("scopes__") + to_zero_lead(__LINE__, 4) + "_" + __func__ + ".dot") << reasoner.net().toDot();
     return
@@ -122,6 +126,7 @@ bool one_nested_using_global_and_local_defs()
         "}\n",
         reasoner.net()
     );
+    reasoner.performInference();
 
     std::ofstream(std::string("scopes__") + to_zero_lead(__LINE__, 4) + "_" + __func__ + ".dot") << reasoner.net().toDot();
     return
@@ -144,6 +149,7 @@ bool two_parallel_nested_using_global_and_local_defs()
         "}",
         reasoner.net()
     );
+    reasoner.performInference();
 
     std::ofstream(std::string("scopes__") + to_zero_lead(__LINE__, 4) + "_" + __func__ + ".dot") << reasoner.net().toDot();
     return
@@ -169,6 +175,7 @@ bool two_depth_nested_using_global_and_local_defs()
         "}",
         reasoner.net()
     );
+    reasoner.performInference();
 
     std::ofstream(std::string("scopes__") + to_zero_lead(__LINE__, 4) + "_" + __func__ + ".dot") << reasoner.net().toDot();
     return
@@ -189,6 +196,7 @@ bool one_nested_overriding_a_global_def()
         "}",
         reasoner.net()
     );
+    reasoner.performInference();
 
     std::ofstream(std::string("scopes__") + to_zero_lead(__LINE__, 4) + "_" + __func__ + ".dot") << reasoner.net().toDot();
     return
@@ -211,6 +219,7 @@ bool two_depth_nested_both_overriding()
         "}",
         reasoner.net()
     );
+    reasoner.performInference();
 
     std::ofstream(std::string("scopes__") + to_zero_lead(__LINE__, 4) + "_" + __func__ + ".dot") << reasoner.net().toDot();
     return

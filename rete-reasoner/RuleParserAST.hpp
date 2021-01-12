@@ -465,6 +465,7 @@ namespace rete {
             peg::ASTList<PreconditionBase> conditions_;
             peg::ASTList<Effect> effects_;
 
+
             bool construct(const peg::InputRange& r, peg::ASTStack& st, const peg::ErrorReporter& err)
             {
                 str_ = r.str();
@@ -545,6 +546,47 @@ namespace rete {
                 }
             }
 
+
+            /**
+                Applies the prefix and constants definitions to the contained
+                rules. Also calls this method on nested Rules-nodes.
+            */
+            void applyPrefixesAndGlobalConstantsDefinitionsToRules()
+            {
+                // collect prefix substs in map
+                std::map<std::string, std::string> prefixReplacements;
+                for (auto& pre : prefixes_)
+                {
+                    const std::string& uri = pre->uri_;
+                    prefixReplacements[pre->name_ + ":"] = uri.substr(1, uri.size()-2); // trim <>
+                }
+
+                // for all rules: apply prefix substs and global consts to all
+                // conditions and effects
+                for (auto& rule : rules_)
+                {
+                    for (auto& condition : rule->conditions_)
+                    {
+                        condition->replaceGlobalConstantReferences(constants_);
+                        condition->substituteArgumentPrefixes(prefixReplacements);
+                    }
+
+                    for (auto& effect : rule->effects_)
+                    {
+                        effect->replaceGlobalConstantReferences(constants_);
+                        for (auto& arg : effect->args_)
+                        {
+                            arg->substitutePrefixes(prefixReplacements);
+                        }
+                    }
+                }
+
+                // for all nested scopes: trigger this process
+                for (auto& nested : scopedRules_)
+                {
+                    nested->applyPrefixesAndGlobalConstantsDefinitionsToRules();
+                }
+            }
         };
 
     } /* ast */

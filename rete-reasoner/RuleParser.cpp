@@ -150,6 +150,7 @@ std::vector<ParsedRule::Ptr> RuleParser::parseRules(const std::string& rulestrin
         Preprocess: Substitute global constants and prefixes in the arguments
                     of conditions and effects
     */
+    root->propagateDefinitionsToChildren();
     root->applyPrefixesAndGlobalConstantsDefinitionsToRules();
 
     /**

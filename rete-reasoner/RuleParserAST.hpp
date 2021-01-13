@@ -40,12 +40,24 @@ namespace rete {
 
         class PrefixDefinition : public peg::ASTContainer {
         public:
+            peg::ASTPtr<peg::ASTString, true> overrideFlag_; // optional
             peg::ASTChild<peg::ASTString> name_, uri_;
+
+            bool isOverride() const
+            {
+                return overrideFlag_ != nullptr;
+            }
 
             PrefixDefinition* clone() const
             {
                 PrefixDefinition* arg = new PrefixDefinition();
-                *arg = *this;
+                arg->name_ = name_;
+                arg->uri_ = uri_;
+                if (overrideFlag_)
+                {
+                    arg->overrideFlag_.reset(new peg::ASTString());
+                    *arg->overrideFlag_ = *overrideFlag_;
+                }
                 return arg;
             }
         };
@@ -229,14 +241,25 @@ namespace rete {
         */
         class GlobalConstantDefinition : public peg::ASTContainer {
         public:
+            peg::ASTPtr<peg::ASTString, true> overrideFlag_;
             peg::ASTChild<peg::ASTString> id_;
             peg::ASTPtr<Argument, false> value_;
+
+            bool isOverride() const
+            {
+                return overrideFlag_ != nullptr;
+            }
 
             GlobalConstantDefinition* clone() const
             {
                 GlobalConstantDefinition* arg = new GlobalConstantDefinition();
                 arg->id_ = id_;
                 arg->value_.reset(value_->clone());
+                if (overrideFlag_)
+                {
+                    arg->overrideFlag_.reset(new peg::ASTString());
+                    *arg->overrideFlag_ = *overrideFlag_;
+                }
                 return arg;
             }
 
@@ -531,7 +554,8 @@ namespace rete {
                                 });
                         if (it != child->prefixes_.end())
                         {
-                            throw ParserException("Overriding previous definition of @PREFIX " + (*it)->name_);
+                            if (!(*it)->isOverride())
+                                throw ParserException("Overriding previous definition of @PREFIX " + (*it)->name_);
                         }
                         else
                         {
@@ -553,7 +577,8 @@ namespace rete {
                                 });
                         if (it != child->constants_.end())
                         {
-                            throw ParserException("Overriding previous definition of " + (*it)->id_);
+                            if (!(*it)->isOverride())
+                                throw ParserException("Overriding previous definition of " + (*it)->id_);
                         }
                         else
                         {

@@ -87,9 +87,10 @@ public:
         );
 
     // e.g.: @PREFIX envire: <http://envire.semantic/>
+    Rule overrideFlag = "override"_E;
     Rule prefixname = rtrace("prefixname", (+alphanum));
     Rule prefixuri = rtrace("prefixuri", iriref);
-    Rule prefixdef = rtrace("prefixdef", "@PREFIX"_E >> prefixname >> ':' >> prefixuri);
+    Rule prefixdef = rtrace("prefixdef", -overrideFlag >> "@PREFIX"_E >> prefixname >> ':' >> prefixuri);
 
     Rule prefixedURI = rtrace("prefixedURI", term(+alphanum >> ':' >> +(alphanum | "_"_E)));
 
@@ -118,7 +119,7 @@ public:
         Definition of global constants
     */
     Rule globalConstID = rtrace("globalConstID", term("$"_E >> +alphanum));
-    Rule globalConstDef = rtrace("globalConstDef", globalConstID >> ":" >> (quotedString | number | uri));
+    Rule globalConstDef = rtrace("globalConstDef", -overrideFlag >> globalConstID >> ":" >> (quotedString | number | uri));
 
     /*
         Here comes the more general stuff: Basically, rules are created from preconditions and

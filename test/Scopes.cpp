@@ -190,7 +190,7 @@ bool one_nested_overriding_a_global_def()
     auto rules = p.parseRules(
         "@PREFIX foo: <foo#>\n"
         "{\n"
-        "  @PREFIX foo: <bar#>\n"
+        "  override @PREFIX foo: <bar#>\n"
         "  $foo : foo:bar\n"
         "  [true() -> (<a> <b> $foo)]\n"
         "}",
@@ -210,10 +210,10 @@ bool two_depth_nested_both_overriding()
     auto rules = p.parseRules(
         "$value : 1\n"
         "{\n"
-        "  $value : 2\n"
+        "  override $value : 2\n"
         "  [true() -> (<a> <b> $value)]\n"
         "  {\n"
-        "    $value : 3\n"
+        "    override $value : 3\n"
         "    [true() -> (<c> <d> $value)]\n"
         "  }\n"
         "}",
@@ -225,6 +225,54 @@ bool two_depth_nested_both_overriding()
     return
         containsTriple(reasoner, "<a>", "<b>", "2") &&
         containsTriple(reasoner, "<c>", "<d>", "3");
+}
+
+bool one_nested_missing_overriding_flag_for_global_prefix_def()
+{
+    RuleParser p;
+    Reasoner reasoner;
+
+    try {
+        auto rules = p.parseRules(
+            "@PREFIX foo: <foo#>\n"
+            "$b : <beee>\n"
+            "{\n"
+            "  @PREFIX foo: <bar#>\n"
+            "  $foo : foo:bar\n"
+            "  override $b : <b>\n"
+            "  [true() -> (<a> $b $foo)]\n"
+            "}",
+            reasoner.net()
+        );
+    } catch (ParserException& ex) {
+        return true;
+    }
+
+    return false;
+}
+
+bool one_nested_missing_overriding_flag_for_global_const_def()
+{
+    RuleParser p;
+    Reasoner reasoner;
+
+    try {
+        auto rules = p.parseRules(
+            "@PREFIX foo: <foo#>\n"
+            "$b : <beee>\n"
+            "{\n"
+            "  override @PREFIX foo: <bar#>\n"
+            "  $foo : foo:bar\n"
+            "  $b : <b>\n"
+            "  [true() -> (<a> $b $foo)]\n"
+            "}",
+            reasoner.net()
+        );
+    } catch (ParserException& ex) {
+        return true;
+    }
+
+    return false;
 }
 
 bool wild_mix_of_plain_and_scoped_rules_without_defs()
@@ -309,6 +357,8 @@ int main()
     TEST(two_depth_nested_using_global_and_local_defs);
     TEST(one_nested_overriding_a_global_def);
     TEST(two_depth_nested_both_overriding);
+    TEST(one_nested_missing_overriding_flag_for_global_prefix_def);
+    TEST(one_nested_missing_overriding_flag_for_global_const_def);
     TEST(wild_mix_of_plain_and_scoped_rules_without_defs);
 
     return failed;

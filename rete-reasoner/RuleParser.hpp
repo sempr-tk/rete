@@ -31,6 +31,7 @@ class RuleParser : peg::ASTParserDelegate {
     peg::BindAST<ast::GlobalConstantReference> globalConstRef = RuleGrammar::get().globalConstID;
     peg::BindAST<ast::GlobalConstantDefinition> globalConstDef = RuleGrammar::get().globalConstDef;
 
+    peg::BindAST<peg::ASTString> overrideFlag = RuleGrammar::get().overrideFlag;
     peg::BindAST<peg::ASTString> prefixname = RuleGrammar::get().prefixname;
     peg::BindAST<ast::PrefixDefinition> prefix = RuleGrammar::get().prefixdef;
 

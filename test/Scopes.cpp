@@ -328,6 +328,26 @@ bool wild_mix_of_plain_and_scoped_rules_without_defs()
 }
 
 
+bool overriding_prefix_does_not_contamine_previously_defined_constants()
+{
+    RuleParser p;
+    Reasoner reasoner;
+    auto rules = p.parseRules(
+        "@PREFIX foo: <foo#>\n"
+        "$value : foo:abc\n"
+        "{\n"
+        "  override @PREFIX foo: <bar#>\n"
+        "  [true() -> (<a> <b> $value)]\n"
+        "}",
+        reasoner.net()
+    );
+    reasoner.performInference();
+
+    std::ofstream(std::string("scopes__") + to_zero_lead(__LINE__, 4) + "_" + __func__ + ".dot") << reasoner.net().toDot();
+
+    return containsTriple(reasoner, "<a>", "<b>", "<foo#abc>");
+}
+
 
 #define TEST(function) \
     { \
@@ -360,6 +380,7 @@ int main()
     TEST(one_nested_missing_overriding_flag_for_global_prefix_def);
     TEST(one_nested_missing_overriding_flag_for_global_const_def);
     TEST(wild_mix_of_plain_and_scoped_rules_without_defs);
+    TEST(overriding_prefix_does_not_contamine_previously_defined_constants);
 
     return failed;
 }

@@ -540,6 +540,30 @@ namespace rete {
             */
             void propagateDefinitionsToChildren()
             {
+                // collect prefix substs in map
+                std::map<std::string, std::string> prefixReplacements;
+                for (auto& pre : prefixes_)
+                {
+                    const std::string& uri = pre->uri_;
+                    prefixReplacements[pre->name_ + ":"] = uri.substr(1, uri.size()-2); // trim <>
+                }
+
+                // apply the prefix defs to the constant definitions which are
+                // already present first. This is needed because otherwise the
+                // definition
+                //      @PREFIX foo: <foo#>
+                //      $value : foo:a
+                // would bind $value to "foo:a" and insert it into all places
+                // where "$value" is used, such that a _later_ redefinition of
+                // "foo:" could change it. But it is more intuitive (I guess)
+                // to bind $value to <foo#a>, and only change the $value if it
+                // is explicitely overridden.
+                for (auto& gconst : constants_)
+                {
+                    gconst->value_->substitutePrefixes(prefixReplacements);
+                }
+
+
                 for (auto& child : scopedRules_)
                 {
                     // copy prefixdefinitions to child rules nodes

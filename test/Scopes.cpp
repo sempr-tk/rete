@@ -227,6 +227,59 @@ bool two_depth_nested_both_overriding()
         containsTriple(reasoner, "<c>", "<d>", "3");
 }
 
+bool wild_mix_of_plain_and_scoped_rules_without_defs()
+{
+    RuleParser p;
+    Reasoner reasoner;
+    auto rules = p.parseRules(
+        "[true() -> (<a> <b> 0)]\n"
+        "{\n"
+        "  [true() -> (<a> <b> 1)]\n"
+        "  {\n"
+        "    [true() -> (<a> <b> 2)]\n"
+        "  }\n"
+        "  [true() -> (<a> <b> 3)]\n"
+        "  {\n"
+        "    {\n"
+        "      [true() -> (<a> <b> 4)]\n"
+        "    }\n"
+        "    {\n"
+        "      [true() -> (<a> <b> 5)]\n"
+        "    }\n"
+        "  }\n"
+        "  [true() -> (<a> <b> 6)]\n"
+        "  {\n"
+        "    [true() -> (<a> <b> 7)]\n"
+        "    [true() -> (<a> <b> 8)]\n"
+        "  }\n"
+        "  {\n"
+        "    {\n"
+        "      {\n"
+        "        {\n"
+        "          [true() -> (<a> <b> 9)]\n"
+        "        }\n"
+        "      }\n"
+        "    }\n"
+        "  }\n"
+        "}",
+        reasoner.net()
+    );
+    reasoner.performInference();
+
+    std::ofstream(std::string("scopes__") + to_zero_lead(__LINE__, 4) + "_" + __func__ + ".dot") << reasoner.net().toDot();
+    return
+        containsTriple(reasoner, "<a>", "<b>", "1") &&
+        containsTriple(reasoner, "<a>", "<b>", "2") &&
+        containsTriple(reasoner, "<a>", "<b>", "3") &&
+        containsTriple(reasoner, "<a>", "<b>", "4") &&
+        containsTriple(reasoner, "<a>", "<b>", "5") &&
+        containsTriple(reasoner, "<a>", "<b>", "6") &&
+        containsTriple(reasoner, "<a>", "<b>", "7") &&
+        containsTriple(reasoner, "<a>", "<b>", "8") &&
+        containsTriple(reasoner, "<a>", "<b>", "9");
+}
+
+
 
 #define TEST(function) \
     { \
@@ -256,6 +309,7 @@ int main()
     TEST(two_depth_nested_using_global_and_local_defs);
     TEST(one_nested_overriding_a_global_def);
     TEST(two_depth_nested_both_overriding);
+    TEST(wild_mix_of_plain_and_scoped_rules_without_defs);
 
     return failed;
 }

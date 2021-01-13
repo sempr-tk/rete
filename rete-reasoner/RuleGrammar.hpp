@@ -184,14 +184,15 @@ public:
 
     Rule rules = rtrace("rules",
                 // definitions
-                *(prefixdef | comment)
+                   *(prefixdef | comment)
                 >> *(globalConstDef | comment)
                 // followed by
                 >>
-                (+(rule >> -comment)                // either just some "rule"s
-                 |                                  // or
-                 +("{" >> rules >> "}" >> -comment) // scoped "rules"-blocks
-                )
+                   +(                                  // multiple (
+                     (rule >> -comment)                // plain rule
+                     |                                 // or
+                     ("{" >> rules >> "}" >> -comment) // scoped "rules"-block
+                    )                                  // )
             );
 
 };

@@ -488,6 +488,30 @@ namespace rete {
             peg::ASTList<Rules> scopedRules_;
 
             /**
+                Default implementation of ASTContainer constructs the members
+                one after the other, in reverse order. This means that the
+                elements must be sorted as they members of this class; but the
+                grammar allows a wild mix of rules and scopedRules.
+                To accommodate for that, the construct method is overridden to
+                parse rules and scopedRules as long as it changes the stack.
+            */
+            bool construct(const peg::InputRange& r, peg::ASTStack& st, const peg::ErrorReporter& err)
+            {
+                bool unchanged = false;
+                while (!unchanged) {
+                    size_t stackSizeBefore = st.size();
+                    scopedRules_.construct(r, st, err);
+                    rules_.construct(r, st, err);
+                    unchanged = (st.size() == stackSizeBefore);
+                }
+
+                constants_.construct(r, st, err);
+                prefixes_.construct(r, st, err);
+                return true;
+            }
+
+
+            /**
                 Makes the definitions of the parent (@PREFIX, $value)
                 available to the nested rules.
             */
@@ -507,7 +531,7 @@ namespace rete {
                                 });
                         if (it != child->prefixes_.end())
                         {
-                            throw ParserException("Overriding previous definition of " + (*it)->name_);
+                            throw ParserException("Overriding previous definition of @PREFIX " + (*it)->name_);
                         }
                         else
                         {
@@ -529,7 +553,7 @@ namespace rete {
                                 });
                         if (it != child->constants_.end())
                         {
-                            throw ParserException("Warning: Overriding previous definition of " + (*it)->id_);
+                            throw ParserException("Overriding previous definition of " + (*it)->id_);
                         }
                         else
                         {

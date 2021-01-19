@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.0] - 2021-01-19
+
+- Added comments as a concept to the grammar, allowing them in many places of
+  rules now, not only at the start of a line.
+- Added scopes in rule definitions, allowing to limit definition of prefixes
+  and constants. Also, definitions can be overridden in nested scopes.
+
 ## [0.8.0] - 2020-11-19
 
 - Implemented global constants which can be defined at the top of your rules,

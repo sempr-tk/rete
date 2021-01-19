@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(rete VERSION 0.8.0)
+project(rete VERSION 0.9.0)
 add_definitions(-Wall -Wextra -pedantic -Wnon-virtual-dtor -Werror=unused-result)
 set(CMAKE_CXX_STANDARD 14)
 

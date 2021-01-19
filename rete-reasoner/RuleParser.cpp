@@ -147,94 +147,36 @@ std::vector<ParsedRule::Ptr> RuleParser::parseRules(const std::string& rulestrin
 
 
     /*
-        Build a map of used URI-prefixes.
+        Preprocess: Substitute global constants and prefixes in the arguments
+                    of conditions and effects
     */
-#ifdef RETE_PARSER_VERBOSE
-    std::cout << "successfully parsed the rules." << std::endl;
-    // std::cout << input.getString() << std::endl;
-    std::cout << "Prefixes: " << root->prefixes_.size() << std::endl;
-#endif
-    std::map<std::string, std::string> prefixes;
-    for (auto& pre : root->prefixes_)
-    {
-#ifdef RETE_PARSER_VERBOSE
-        std::cout << pre->name_ << " --> " << pre->uri_ << std::endl;
-#endif
-        const std::string& uri = pre->uri_;
-        prefixes[pre->name_ + ":"] = uri.substr(1, uri.size() - 2); // trim <>
-    }
-
-#ifdef RETE_PARSER_VERBOSE
-    std::cout << "Global constants: " << root->constants_.size() << std::endl;
-    for (auto& c : root->constants_)
-    {
-        std::cout << c->id_ << " -> " << *c->value_ << " ["
-                  << (c->value_->isString() ? "string" :
-                      (c->value_->isNumber() ? "number" :
-                      (c->value_->isURI() ? "uri" :
-                      std::string("wtf?") + typeid(c->value_).name()
-                      ))) << "]" << std::endl;
-    }
-#endif
-
-    /*
-        Preprocess: Substitute global constants in the arguments of conditions
-                    and effects
-    */
-    for (auto& rule : root->rules_)
-    {
-        for (auto& condition : rule->conditions_)
-        {
-            condition->replaceGlobalConstantReferences(root->constants_);
-        }
-
-        for (auto& effect : rule->effects_)
-        {
-            effect->replaceGlobalConstantReferences(root->constants_);
-        }
-    }
-
-
-    /*
-        Preprocess: Substitute prefixes in the arguments of conditions and effects,
-    */
-    for (auto& rule : root->rules_)
-    {
-#ifdef RETE_PARSER_VERBOSE
-        std::cout << "Rule: ";
-        if (rule->name_) std::cout << *rule->name_;
-        std::cout << std::endl;
-#endif
-        for (auto& condition : rule->conditions_)
-        {
-            condition->substituteArgumentPrefixes(prefixes);
-        }
-
-        for (auto& effect : rule->effects_)
-        {
-#ifdef RETE_PARSER_VERBOSE
-            std::cout << "  Effect: " << effect->type() << std::endl;
-#endif
-            for (auto& arg : effect->args_)
-            {
-                arg->substitutePrefixes(prefixes);
-#ifdef RETE_PARSER_VERBOSE
-                std::cout << "    " << *arg << std::endl;
-#endif
-            }
-        }
-    }
-
+    root->propagateDefinitionsToChildren();
+    root->applyPrefixesAndGlobalConstantsDefinitionsToRules();
 
     /**
       Construct the network
     */
     std::vector<ParsedRule::Ptr> rules;
-    for (auto& rule : root->rules_)
+
+    // quick hack: fancy lambda to add recursive behaviour to parse all
+    // nested rules, too
+    std::function<void(std::unique_ptr<ast::Rules>&)>
+    doParse = [this, &rules, &network, &doParse](std::unique_ptr<ast::Rules>& ast) -> void
     {
-        auto pr = construct(*rule, network);
-        rules.push_back(pr);
-    }
+        for (auto& rule : ast->rules_)
+        {
+            auto pr = this->construct(*rule, network);
+            rules.push_back(pr);
+        }
+
+        for (auto& nested : ast->scopedRules_)
+        {
+            doParse(nested);
+        }
+    };
+
+    doParse(root);
+
     return rules;
 }
 

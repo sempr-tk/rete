@@ -3,6 +3,7 @@
 
 #define USE_RTTI
 #include <pegmatite/pegmatite.hh>
+#include "Exceptions.hpp"
 
 #include <string>
 #include <sstream>
@@ -39,7 +40,26 @@ namespace rete {
 
         class PrefixDefinition : public peg::ASTContainer {
         public:
+            peg::ASTPtr<peg::ASTString, true> overrideFlag_; // optional
             peg::ASTChild<peg::ASTString> name_, uri_;
+
+            bool isOverride() const
+            {
+                return overrideFlag_ != nullptr;
+            }
+
+            PrefixDefinition* clone() const
+            {
+                PrefixDefinition* arg = new PrefixDefinition();
+                arg->name_ = name_;
+                arg->uri_ = uri_;
+                if (overrideFlag_)
+                {
+                    arg->overrideFlag_.reset(new peg::ASTString());
+                    *arg->overrideFlag_ = *overrideFlag_;
+                }
+                return arg;
+            }
         };
 
         /**
@@ -221,8 +241,28 @@ namespace rete {
         */
         class GlobalConstantDefinition : public peg::ASTContainer {
         public:
+            peg::ASTPtr<peg::ASTString, true> overrideFlag_;
             peg::ASTChild<peg::ASTString> id_;
             peg::ASTPtr<Argument, false> value_;
+
+            bool isOverride() const
+            {
+                return overrideFlag_ != nullptr;
+            }
+
+            GlobalConstantDefinition* clone() const
+            {
+                GlobalConstantDefinition* arg = new GlobalConstantDefinition();
+                arg->id_ = id_;
+                arg->value_.reset(value_->clone());
+                if (overrideFlag_)
+                {
+                    arg->overrideFlag_.reset(new peg::ASTString());
+                    *arg->overrideFlag_ = *overrideFlag_;
+                }
+                return arg;
+            }
+
         };
 
 
@@ -448,6 +488,7 @@ namespace rete {
             peg::ASTList<PreconditionBase> conditions_;
             peg::ASTList<Effect> effects_;
 
+
             bool construct(const peg::InputRange& r, peg::ASTStack& st, const peg::ErrorReporter& err)
             {
                 str_ = r.str();
@@ -459,7 +500,166 @@ namespace rete {
         public:
             peg::ASTList<PrefixDefinition> prefixes_;
             peg::ASTList<GlobalConstantDefinition> constants_;
+
+            /*
+                A "Rules" node consists either of just a bunch of simple
+                "Rule" nodes, or may contain "Rules" nodes itself. These
+                scoped rules are supposed to get access to all the parents
+                PrefixDefinitions and GlobalConstantDefinitions, too.
+            */
             peg::ASTList<Rule> rules_;
+            peg::ASTList<Rules> scopedRules_;
+
+            /**
+                Default implementation of ASTContainer constructs the members
+                one after the other, in reverse order. This means that the
+                elements must be sorted as they members of this class; but the
+                grammar allows a wild mix of rules and scopedRules.
+                To accommodate for that, the construct method is overridden to
+                parse rules and scopedRules as long as it changes the stack.
+            */
+            bool construct(const peg::InputRange& r, peg::ASTStack& st, const peg::ErrorReporter& err)
+            {
+                bool unchanged = false;
+                while (!unchanged) {
+                    size_t stackSizeBefore = st.size();
+                    scopedRules_.construct(r, st, err);
+                    rules_.construct(r, st, err);
+                    unchanged = (st.size() == stackSizeBefore);
+                }
+
+                constants_.construct(r, st, err);
+                prefixes_.construct(r, st, err);
+                return true;
+            }
+
+
+            /**
+                Makes the definitions of the parent (@PREFIX, $value)
+                available to the nested rules.
+            */
+            void propagateDefinitionsToChildren()
+            {
+                // collect prefix substs in map
+                std::map<std::string, std::string> prefixReplacements;
+                for (auto& pre : prefixes_)
+                {
+                    const std::string& uri = pre->uri_;
+                    prefixReplacements[pre->name_ + ":"] = uri.substr(1, uri.size()-2); // trim <>
+                }
+
+                // apply the prefix defs to the constant definitions which are
+                // already present first. This is needed because otherwise the
+                // definition
+                //      @PREFIX foo: <foo#>
+                //      $value : foo:a
+                // would bind $value to "foo:a" and insert it into all places
+                // where "$value" is used, such that a _later_ redefinition of
+                // "foo:" could change it. But it is more intuitive (I guess)
+                // to bind $value to <foo#a>, and only change the $value if it
+                // is explicitely overridden.
+                for (auto& gconst : constants_)
+                {
+                    gconst->value_->substitutePrefixes(prefixReplacements);
+                }
+
+
+                for (auto& child : scopedRules_)
+                {
+                    // copy prefixdefinitions to child rules nodes
+                    for (auto& prefixdef : prefixes_)
+                    {
+                        auto it = std::find_if(
+                                child->prefixes_.begin(),
+                                child->prefixes_.end(),
+                                [&prefixdef](auto& pdef) -> bool
+                                {
+                                    return pdef->name_ == prefixdef->name_;
+                                });
+                        if (it != child->prefixes_.end())
+                        {
+                            if (!(*it)->isOverride())
+                                throw ParserException("Overriding previous definition of @PREFIX " + (*it)->name_);
+                        }
+                        else
+                        {
+                            // only use the parents definition if the child does not define its own
+                            std::unique_ptr<PrefixDefinition> ptr(prefixdef->clone());
+                            child->prefixes_.push_back(std::move(ptr));
+                        }
+                    }
+
+                    // copy global constants to child nodes
+                    for (auto& globalConst : constants_)
+                    {
+                        auto it = std::find_if(
+                                child->constants_.begin(),
+                                child->constants_.end(),
+                                [&globalConst](auto& gconst) -> bool
+                                {
+                                    return gconst->id_ == globalConst->id_;
+                                });
+                        if (it != child->constants_.end())
+                        {
+                            if (!(*it)->isOverride())
+                                throw ParserException("Overriding previous definition of " + (*it)->id_);
+                        }
+                        else
+                        {
+                            std::unique_ptr<GlobalConstantDefinition> ptr(globalConst->clone());
+                            child->constants_.push_back(std::move(ptr));
+                        }
+                    }
+
+                    // propagate further down:
+                    child->propagateDefinitionsToChildren();
+
+                    // TODO: test case
+                    // TODO: override flag for prefixdefs and constants to suppress warning/error
+                }
+            }
+
+
+            /**
+                Applies the prefix and constants definitions to the contained
+                rules. Also calls this method on nested Rules-nodes.
+            */
+            void applyPrefixesAndGlobalConstantsDefinitionsToRules()
+            {
+                // collect prefix substs in map
+                std::map<std::string, std::string> prefixReplacements;
+                for (auto& pre : prefixes_)
+                {
+                    const std::string& uri = pre->uri_;
+                    prefixReplacements[pre->name_ + ":"] = uri.substr(1, uri.size()-2); // trim <>
+                }
+
+                // for all rules: apply prefix substs and global consts to all
+                // conditions and effects
+                for (auto& rule : rules_)
+                {
+                    for (auto& condition : rule->conditions_)
+                    {
+                        condition->replaceGlobalConstantReferences(constants_);
+                        condition->substituteArgumentPrefixes(prefixReplacements);
+                    }
+
+                    for (auto& effect : rule->effects_)
+                    {
+                        effect->replaceGlobalConstantReferences(constants_);
+                        for (auto& arg : effect->args_)
+                        {
+                            arg->substitutePrefixes(prefixReplacements);
+                        }
+                    }
+                }
+
+                // for all nested scopes: trigger this process
+                for (auto& nested : scopedRules_)
+                {
+                    nested->applyPrefixesAndGlobalConstantsDefinitionsToRules();
+                }
+            }
         };
 
     } /* ast */

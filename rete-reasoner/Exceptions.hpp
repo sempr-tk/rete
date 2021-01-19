@@ -20,8 +20,11 @@ namespace rete {
     parsers unability to correctly construct the reasoner/network from the given input).
 */
 class ParserException : public std::exception {
+    std::string msg_;
 public:
-    virtual const char* what() const noexcept override { return "ParserException"; }
+    ParserException() : msg_("ParserException") {}
+    ParserException(const std::string& msg) : msg_("ParserException: " + msg) {}
+    virtual const char* what() const noexcept override { return msg_.c_str(); }
 };
 
 

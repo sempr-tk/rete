@@ -1,3 +1,5 @@
+#include <stdexcept>
+
 #include "TokenGroupAccessor.hpp"
 
 namespace rete {

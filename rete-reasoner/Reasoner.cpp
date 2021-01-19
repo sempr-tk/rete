@@ -3,6 +3,7 @@
 #include "InferredEvidence.hpp"
 #include "AssertedEvidence.hpp"
 
+#include <stdexcept>
 #include <iostream>
 #include <algorithm>
 #include <sstream>

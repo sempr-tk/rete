@@ -1,6 +1,8 @@
 #ifndef RETE_BUILTIN_MATHBULK_HPP_
 #define RETE_BUILTIN_MATHBULK_HPP_
 
+#include <stdexcept>
+
 #include "../Builtin.hpp"
 #include "../Accessors.hpp"
 #include "../TokenGroupAccessor.hpp"

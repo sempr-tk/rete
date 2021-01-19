@@ -9,7 +9,7 @@
 #include <functional>
 #include <cassert>
 #include <algorithm>
-#include <exception>
+#include <stdexcept>
 #include <cxxabi.h>
 
 #include "WME.hpp"

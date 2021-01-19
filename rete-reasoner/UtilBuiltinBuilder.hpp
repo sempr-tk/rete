@@ -6,6 +6,8 @@
 #include "../rete-core/TupleWME.hpp"
 #include "../rete-core/builtins/Util.hpp"
 #include "../rete-core/Accessors.hpp"
+
+#include <stdexcept>
 #include <algorithm>
 
 namespace rete {

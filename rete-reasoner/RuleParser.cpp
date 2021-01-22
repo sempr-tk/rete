@@ -106,8 +106,11 @@ std::vector<ParsedRule::Ptr> RuleParser::parseRules(const std::string& rulestrin
     peg::StringInput input(std::move(ruleStringCopy));
     // this->parse(input, g.rules, g.ws, peg::defaultErrorReporter, root);
 
-    auto reporter = [&rulestring](const peg::InputRange& err_in, const std::string& descr)
+    rete::ParserException parserEx;
+    auto reporter = [&rulestring, &parserEx](const peg::InputRange& err_in, const std::string& descr)
     {
+        std::stringstream ss;
+
         // find row of error
         auto numNL = std::count(rulestring.begin(),
                                 rulestring.begin() + err_in.begin().index(),
@@ -120,30 +123,34 @@ std::vector<ParsedRule::Ptr> RuleParser::parseRules(const std::string& rulestrin
                         rulestring.rend(),
                         '\n');
 
-        std::cout << "Error parsing rules, at "
-                  << numNL << ":" << std::distance(rErrIt, column) << std::endl;
 
-        int indent = 0;
-        for (size_t pos = 0; pos <= err_in.begin().index(); pos++)
+        int indent = std::distance(rErrIt, column);
+
+        ss << "Error parsing rules, at "
+           << numNL << ":" << indent << '\n';
+
+        for (size_t pos = 0; pos < err_in.begin().index(); pos++)
         {
             char c = rulestring[pos];
-            std::cout << c;
-            indent++;
-            if (c == '\n') indent = 0;
+            ss << c;
         }
-        std::cout << std::endl;
+        ss << '\n';
 
-        for (int i = 0; i < indent-1; i++)
+        for (int i = 0; i+1 < indent; i++)
         {
-            std::cout << "-";
+            ss << "-";
         }
-        std::cout << "^" << std::endl;
-        std::cout << descr << std::endl;
+        ss << "^" << '\n';
+        ss << descr << '\n';
+
+//        std::cout << ss.str();
+
+        parserEx = rete::ParserException(ss.str());
     };
 
     this->parse(input, g.rules, g.ws, reporter, root);
 
-    if (!root) throw rete::ParserException();
+    if (!root) throw parserEx; // as prepared by the error reporter
 
 
     /*

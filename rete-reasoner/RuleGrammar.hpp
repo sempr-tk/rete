@@ -118,7 +118,7 @@ public:
     /*
         Definition of global constants
     */
-    Rule globalConstID = rtrace("globalConstID", term("$"_E >> +alphanum));
+    Rule globalConstID = rtrace("globalConstID", term("$"_E >> +(alphanum | '_'_E)));
     Rule globalConstDef = rtrace("globalConstDef", -overrideFlag >> globalConstID >> ":" >> (quotedString | number | uri));
 
     /*

@@ -287,6 +287,7 @@ public:
     {
         std::swap(accessor_, other.accessor_);
         std::swap(interpretation_, other.interpretation_);
+        return *this;
     }
 
     /**

@@ -177,7 +177,7 @@ public:
     Rule effect = rtrace("effect", inferTriple | genericEffect);
 
     // [name: (precondition1), (precondition2) --> (effect1), (effect2)]
-    Rule rulename = rtrace("rulename", +alphanum);
+    Rule rulename = rtrace("rulename", +(alphanum | '_'_E));
     Rule rule = rtrace("rule", ('['_E >> -(rulename >> ':')
                                       >> -comment >> precondition >> *(',' >> -comment >> precondition) >> -comment >> "->"
                                       >> -comment >> effect >> *(',' >> -comment >> effect) >> -comment >> ']'));

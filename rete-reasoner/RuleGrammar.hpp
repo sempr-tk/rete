@@ -99,7 +99,7 @@ public:
 
     Rule literal =          (stringliteralquote >> -("^^" >> iriref | langtag));
     Rule blank_node_label = ("_:"_E >> +alphanum);
-    Rule variable =         ("?"_E >> +alphanum);
+    Rule variable =         ("?"_E >> +(alphanum | '_'_E));
     Rule uri =              prefixedURI | iriref;
 
     Rule subject    = rtrace("subject",   term(variable | iriref | prefixedURI | blank_node_label | globalConstID));

@@ -106,7 +106,7 @@ std::vector<ParsedRule::Ptr> RuleParser::parseRules(const std::string& rulestrin
     peg::StringInput input(std::move(ruleStringCopy));
     // this->parse(input, g.rules, g.ws, peg::defaultErrorReporter, root);
 
-    rete::ParserException parserEx;
+    rete::ParserExceptionLocalized parserEx;
     auto reporter = [&rulestring, &parserEx](const peg::InputRange& err_in, const std::string& descr)
     {
         std::stringstream ss;
@@ -145,7 +145,7 @@ std::vector<ParsedRule::Ptr> RuleParser::parseRules(const std::string& rulestrin
 
 //        std::cout << ss.str();
 
-        parserEx = rete::ParserException(ss.str());
+        parserEx = rete::ParserExceptionLocalized(ss.str(), numNL, indent, indent + (err_in.end().index() - err_in.begin().index()));
     };
 
     this->parse(input, g.rules, g.ws, reporter, root);

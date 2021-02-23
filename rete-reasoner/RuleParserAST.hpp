@@ -8,6 +8,7 @@
 #include <string>
 #include <sstream>
 #include <map>
+#include <set>
 
 #include <iostream>
 #include <iomanip>
@@ -43,6 +44,8 @@ namespace rete {
             peg::ASTPtr<peg::ASTString, true> overrideFlag_; // optional
             peg::ASTChild<peg::ASTString> name_, uri_;
 
+            std::string str_;
+
             bool isOverride() const
             {
                 return overrideFlag_ != nullptr;
@@ -60,6 +63,13 @@ namespace rete {
                 }
                 return arg;
             }
+
+            bool construct(const peg::InputRange& r, peg::ASTStack& st, const peg::ErrorReporter& err) override
+            {
+                str_ = r.str();
+                return peg::ASTContainer::construct(r, st, err);
+            }
+
         };
 
         /**
@@ -245,6 +255,8 @@ namespace rete {
             peg::ASTChild<peg::ASTString> id_;
             peg::ASTPtr<Argument, false> value_;
 
+            std::string str_;
+
             bool isOverride() const
             {
                 return overrideFlag_ != nullptr;
@@ -262,6 +274,13 @@ namespace rete {
                 }
                 return arg;
             }
+
+            bool construct(const peg::InputRange& r, peg::ASTStack& st, const peg::ErrorReporter& err) override
+            {
+                str_ = r.str();
+                return peg::ASTContainer::construct(r, st, err);
+            }
+
 
         };
 
@@ -352,7 +371,8 @@ namespace rete {
                         }
                         if (!found)
                         {
-                            throw std::exception();
+                            throw RuleConstructionException("", str_,
+                                    "Undefined constant '" + *arg + "'");
                         }
                     }
                 }
@@ -456,12 +476,21 @@ namespace rete {
                 {
                     if (arg->isGlobalConstRef())
                     {
+                        bool found = false;
                         for (auto& def : defs)
                         {
                             if(*arg == def->id_)
                             {
                                 arg = std::unique_ptr<Argument>(def->value_->clone());
+                                found = true;
+                                break;
                             }
+                        }
+
+                        if (!found)
+                        {
+                            throw RuleConstructionException("", str_,
+                                    "Undefined constant '" + *arg + "'");
                         }
                     }
                 }
@@ -510,6 +539,9 @@ namespace rete {
             peg::ASTList<Rule> rules_;
             peg::ASTList<Rules> scopedRules_;
 
+
+            std::string str_;
+
             /**
                 Default implementation of ASTContainer constructs the members
                 one after the other, in reverse order. This means that the
@@ -520,6 +552,8 @@ namespace rete {
             */
             bool construct(const peg::InputRange& r, peg::ASTStack& st, const peg::ErrorReporter& err)
             {
+                str_ = r.str();
+
                 bool unchanged = false;
                 while (!unchanged) {
                     size_t stackSizeBefore = st.size();
@@ -530,6 +564,36 @@ namespace rete {
 
                 constants_.construct(r, st, err);
                 prefixes_.construct(r, st, err);
+
+                // check for multiple definitions
+                std::set<std::string> c;
+                for (auto& constant : constants_)
+                {
+                    if (c.count(constant->id_))
+                    {
+                        throw RuleConstructionException(r.str(), constant->str_,
+                                "Multiple definition of constant '" + constant->id_ + "'");
+                    }
+                    else
+                    {
+                        c.insert(constant->id_);
+                    }
+                }
+
+                c.clear();
+                for (auto& prefix : prefixes_)
+                {
+                    if (c.count(prefix->name_))
+                    {
+                        throw RuleConstructionException(r.str(), prefix->str_,
+                                "Multiple definition of prefix '" + prefix->name_ + "'");
+                    }
+                    else
+                    {
+                        c.insert(prefix->name_);
+                    }
+                }
+
                 return true;
             }
 
@@ -579,7 +643,8 @@ namespace rete {
                         if (it != child->prefixes_.end())
                         {
                             if (!(*it)->isOverride())
-                                throw ParserException("Overriding previous definition of @PREFIX " + (*it)->name_);
+                                throw RuleConstructionException(str_, (*it)->str_,
+                                        "Overriding previous definition of @PREFIX " + (*it)->name_);
                         }
                         else
                         {
@@ -602,7 +667,8 @@ namespace rete {
                         if (it != child->constants_.end())
                         {
                             if (!(*it)->isOverride())
-                                throw ParserException("Overriding previous definition of " + (*it)->id_);
+                                throw RuleConstructionException(str_, (*it)->str_,
+                                        "Overriding previous definition of " + (*it)->id_);
                         }
                         else
                         {
@@ -640,16 +706,28 @@ namespace rete {
                 {
                     for (auto& condition : rule->conditions_)
                     {
-                        condition->replaceGlobalConstantReferences(constants_);
-                        condition->substituteArgumentPrefixes(prefixReplacements);
+                        try {
+                            condition->replaceGlobalConstantReferences(constants_);
+                            condition->substituteArgumentPrefixes(prefixReplacements);
+                        } catch (RuleConstructionException& e) {
+                            e.setRule(rule->str_);
+                            e.setPart(condition->str_);
+                            throw;
+                        }
                     }
 
                     for (auto& effect : rule->effects_)
                     {
-                        effect->replaceGlobalConstantReferences(constants_);
-                        for (auto& arg : effect->args_)
-                        {
-                            arg->substitutePrefixes(prefixReplacements);
+                        try {
+                            effect->replaceGlobalConstantReferences(constants_);
+                            for (auto& arg : effect->args_)
+                            {
+                                arg->substitutePrefixes(prefixReplacements);
+                            }
+                        } catch (RuleConstructionException& e) {
+                            e.setRule(rule->str_);
+                            e.setPart(effect->str_);
+                            throw;
                         }
                     }
                 }

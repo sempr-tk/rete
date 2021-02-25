@@ -753,4 +753,24 @@ BetaMemory::Ptr RuleParser::constructGroupBy(
 }
 
 
+std::vector<std::string> RuleParser::listAvailableConditions() const
+{
+    std::vector<std::string> result;
+    for (auto& entry : conditionBuilders_)
+    {
+        result.push_back(entry.first);
+    }
+    return result;
+}
+
+std::vector<std::string> RuleParser::listAvailableEffects() const
+{
+    std::vector<std::string> result;
+    for (auto& entry : effectBuilders_)
+    {
+        result.push_back(entry.first);
+    }
+    return result;
+}
+
 } /* rete */

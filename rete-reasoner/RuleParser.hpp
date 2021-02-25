@@ -150,6 +150,19 @@ public:
             Network& network) __attribute__((warn_unused_result));
 
     const RuleGrammar& g = RuleGrammar::get();
+
+    /**
+        Get a list of available conditions --
+        the names registered to NodeBuilders.
+    */
+    std::vector<std::string> listAvailableConditions() const;
+
+    /**
+        Get a list of available effects --
+        the names registered to NodeBuilders.
+    */
+    std::vector<std::string> listAvailableEffects() const;
+
 };
 
 } /* rete */

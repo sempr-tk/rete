@@ -18,13 +18,30 @@ namespace builtin {
 
 
 /**
+    Quickfix to get access to addOperand without concrete type information
+*/
+class MathBuiltinBaseUntyped : public Builtin {
+public:
+    using Ptr = std::shared_ptr<MathBuiltinBaseUntyped>;
+
+    MathBuiltinBaseUntyped(const std::string& name)
+        : Builtin(name)
+    {
+    }
+
+    virtual ~MathBuiltinBaseUntyped() = default;
+    virtual void addOperand(std::unique_ptr<AccessorBase>) = 0;
+};
+
+
+/**
     Base class for math builtins. Allows adding operands.
     All operands are converted to the given NumberType (static_casts!), and the
     result will thus be of NumberType, too.
 */
 template <class NumberType,
           size_t MaxOperands = std::numeric_limits<size_t>::max()>
-class MathBuiltinBase : public Builtin {
+class MathBuiltinBase : public MathBuiltinBaseUntyped {
 protected:
     std::vector<NumberToNumberConversion<NumberType>> operands_;
 
@@ -49,29 +66,30 @@ protected:
         visualization and parsing rules.
     */
     MathBuiltinBase(const std::string& name)
-        : Builtin(name)
+        : MathBuiltinBaseUntyped(name)
     {
     }
 
 public:
     using Ptr = std::shared_ptr<MathBuiltinBase>;
+    virtual ~MathBuiltinBase() = default;
 
     /**
         Add an operand to the list
         \throws if the accessors value cannot be converted to NumberType, and
                 if the maximum number of operands is exceeded
     */
-    void addOperand(std::unique_ptr<AccessorBase> var)
+    void addOperand(std::unique_ptr<AccessorBase> var) override
     {
         if (MaxOperands == operands_.size())
-            throw std::exception();
+            throw std::runtime_error("Max. number of operands exceeded (" + std::to_string(MaxOperands) + ")");
 
         if (!var)
-            throw std::exception();
+            throw std::runtime_error("nullptr as operand");
 
         NumberToNumberConversion<NumberType> conv(std::move(var));
         if (!conv)
-            throw std::exception();
+            throw std::runtime_error("Operand not convertible to number.");
 
         operands_.push_back(std::move(conv));
     }

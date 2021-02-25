@@ -14,20 +14,14 @@ class MulBuiltinBuilder : public MathBuiltinBuilder {
         Consumes the given arguments.
     */
     template <class NumberType>
-    std::pair<Builtin::Ptr, AccessorBase::Ptr>
-    createNodeAndAccessor(
-            std::vector<std::unique_ptr<AccessorBase>>&& args) const
+    std::pair<MathBuiltinBaseUntyped::Ptr, AccessorBase::Ptr>
+    createNodeAndAccessor() const
     {
         auto node = std::make_shared<
                         MathBuiltin<NumberType, std::multiplies<NumberType>>
                     >(this->type(), 1);
         auto acc = std::make_shared<
                     typename TupleWME<NumberType>::template Accessor<0>>();
-
-        for (auto& arg : args)
-        {
-            node->addOperand(std::move(arg));
-        }
 
         return std::make_pair(node, acc);
     }
@@ -41,29 +35,45 @@ public:
     {
         auto accessors = preProcessArguments(args);
 
-        Builtin::Ptr node;
+        MathBuiltinBaseUntyped::Ptr node;
         AccessorBase::Ptr acc;
 
         if (this->isSufficientForOperands<int>(accessors))
         {
-            std::tie(node, acc) = createNodeAndAccessor<int>(std::move(accessors));
+            std::tie(node, acc) = createNodeAndAccessor<int>();
         }
         else if (isSufficientForOperands<long>(accessors))
         {
-            std::tie(node, acc) = createNodeAndAccessor<long>(std::move(accessors));
+            std::tie(node, acc) = createNodeAndAccessor<long>();
         }
         else if (isSufficientForOperands<size_t>(accessors))
         {
-            std::tie(node, acc) = createNodeAndAccessor<size_t>(std::move(accessors));
+            std::tie(node, acc) = createNodeAndAccessor<size_t>();
         }
         else if (isSufficientForOperands<float>(accessors))
         {
-            std::tie(node, acc) = createNodeAndAccessor<float>(std::move(accessors));
+            std::tie(node, acc) = createNodeAndAccessor<float>();
         }
         else // double
         {
-            std::tie(node, acc) = createNodeAndAccessor<double>(std::move(accessors));
+            std::tie(node, acc) = createNodeAndAccessor<double>();
         }
+
+        size_t i = 0;
+        for (auto& arg : accessors)
+        {
+            try {
+                node->addOperand(std::move(arg));
+            } catch (std::exception& e) {
+                throw rete::NodeBuilderException(
+                        e.what() +
+                        std::string(": ") +
+                        args[i+1].getAST().toString());
+            }
+
+            i++;
+        }
+
 
 
         args[0].bind(acc);

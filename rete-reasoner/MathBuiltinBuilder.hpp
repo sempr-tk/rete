@@ -112,6 +112,14 @@ protected:
         for (auto&& op : operands)
         {
             NumberToNumberConversion<NumberType> c(std::move(op));
+
+            if (!c)
+            {
+                // the conversion is invalid. The operand accessor is not of
+                // correct type
+                throw rete::NodeBuilderException("Operand cannot be converted to number");
+            }
+
             conversions.push_back(std::move(c));
         }
 

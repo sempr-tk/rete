@@ -14,7 +14,7 @@ class DivBuiltinBuilder : public MathBuiltinBuilder {
         Consumes the given arguments.
     */
     template <class NumberType>
-    std::pair<Builtin::Ptr, AccessorBase::Ptr>
+    std::pair<MathBuiltinBaseUntyped::Ptr, AccessorBase::Ptr>
     createNodeAndAccessor() const
     {
         auto node = std::make_shared<

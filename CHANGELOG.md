@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.10.0] - 2021-03-04
+
+- Improved thrown exceptions, added retrievable list of supported builtins
+- Allow underscores in identifiers of constants, rules and variables
+
 ## [0.9.0] - 2021-01-19
 
 - Added comments as a concept to the grammar, allowing them in many places of

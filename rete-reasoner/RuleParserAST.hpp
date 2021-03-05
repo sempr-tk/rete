@@ -643,7 +643,7 @@ namespace rete {
                         if (it != child->prefixes_.end())
                         {
                             if (!(*it)->isOverride())
-                                throw RuleConstructionException(str_, (*it)->str_,
+                                throw RuleConstructionException(child->str_, (*it)->str_,
                                         "Overriding previous definition of @PREFIX " + (*it)->name_);
                         }
                         else
@@ -667,7 +667,7 @@ namespace rete {
                         if (it != child->constants_.end())
                         {
                             if (!(*it)->isOverride())
-                                throw RuleConstructionException(str_, (*it)->str_,
+                                throw RuleConstructionException(child->str_, (*it)->str_,
                                         "Overriding previous definition of " + (*it)->id_);
                         }
                         else

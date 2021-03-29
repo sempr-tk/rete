@@ -58,7 +58,7 @@ public:
     // float: optional sign, digites, optional dot+digits,
     //        optional exponent which may be signed.
     // e.g. -1.2e-3 = -0.0012
-    Rule floating = term(-("+-"_S) >> +num >> -('.'_E >> +num) >> -("eE"_S >> -("+-"_S) >> +num));
+    Rule floating = term(-("+-"_S) >> +num >> '.'_E >> -(+num >> -("eE"_S >> -("+-"_S) >> +num)));
 
     Rule number = rtrace("number",
                     rtrace("integer", integer) |

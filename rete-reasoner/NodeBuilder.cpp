@@ -36,4 +36,5 @@ Production::Ptr NodeBuilder::buildEffect(ArgumentList&) const
 {
     throw NodeBuilderException("The method buildEffect has not been implemented!");
 }
+
 } /* rete */

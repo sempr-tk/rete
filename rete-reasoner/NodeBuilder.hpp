@@ -5,6 +5,7 @@
 #include "../rete-core/AlphaNode.hpp"
 #include "../rete-core/Builtin.hpp"
 #include "../rete-core/Production.hpp"
+#include "NodeBuilderHelper.hpp"
 
 namespace rete {
 

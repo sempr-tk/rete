@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.11.0] - 2021-03-31
+
+- Added helper function to simplify the development of new nodes/node builders
+  by _a lot_. They are used to perform checks on the ArgumentList the node
+  builders get as a parameter, and converts the Arguments to
+  PersistentInterpretation\<T\>s or NumberToNumberConversion\<T\>s.
+  ```c++
+  rete::util::requireNumberOfArgs
+  rete::util::requireUnboundVariable
+  rete::util::requireInterpretation<T>
+  rete::util::requireNumberToNumberConversion<T>
+  rete::util::requireNumberToStringConversion<T>
+  ```
+
 ## [0.10.0] - 2021-03-04
 
 - Improved thrown exceptions, added retrievable list of supported builtins

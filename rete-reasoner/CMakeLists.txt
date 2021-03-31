@@ -19,6 +19,7 @@ set(REASONER_SRC
     RuleParserAST.cpp
     MakeSkolemBuilder.cpp
     NodeBuilder.cpp
+    NodeBuilderHelper.cpp
     TripleConditionBuilder.cpp
     TripleEffectBuilder.cpp
     TrueNodeBuilder.cpp

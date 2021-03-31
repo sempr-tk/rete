@@ -45,6 +45,46 @@ void requireUnboundVariable(ArgumentList& args, size_t index)
     }
 }
 
+builtin::NumberToStringConversion
+requireNumberToStringConversion(ArgumentList& args, size_t index)
+{
+    argBoundCheck(args, index);
+    auto& arg = args[index];
 
+    std::unique_ptr<AccessorBase> accessor;
+    if (arg.isConst())
+    {
+        if (arg.getAST().isInt())
+            accessor.reset(new ConstantAccessor<int>(arg.getAST().toInt()));
+        else if (arg.getAST().isFloat())
+            accessor.reset(new ConstantAccessor<float>(arg.getAST().toFloat()));
+        else
+            accessor.reset(new ConstantAccessor<std::string>(arg.getAST().toString()));
+        accessor->index() = 0;
+    }
+    else
+    {
+        if (arg.getAccessor())
+        {
+            accessor.reset(arg.getAccessor()->clone());
+        }
+        else
+        {
+            throw NodeBuilderException(
+                    "Variable '" + arg.getVariableName() +
+                    "' must not be unbound.");
+        }
+    }
+
+    builtin::NumberToStringConversion conv(std::move(accessor));
+    if (!conv)
+    {
+        throw NodeBuilderException(
+                "Argument '" + arg.getAST() +
+                "' cannot be converted to string.");
+    }
+
+    return conv;
+}
 }
 }

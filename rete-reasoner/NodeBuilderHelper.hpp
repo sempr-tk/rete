@@ -4,7 +4,8 @@
 #include <type_traits>
 #include "Argument.hpp"
 #include "../rete-core/Util.hpp"
-
+#include "../rete-core/builtins/NumberToNumberConversion.hpp"
+#include "../rete-core/builtins/NumberToStringConversion.hpp"
 
 namespace rete {
 namespace util {
@@ -166,22 +167,64 @@ PersistentInterpretation<T> requireInterpretation(ArgumentList& args, size_t ind
 /**
     Returns a NumberToNumberConversion based on the given arg
 */
-/*
 template <class T>
 builtin::NumberToNumberConversion<T>
-requireToNumberConversion(ArgumentList& args, size_t index)
+requireNumberToNumberConversion(ArgumentList& args, size_t index)
 {
-    // TODO
+    argBoundCheck(args, index);
+    auto& arg = args[index];
+
+    std::unique_ptr<AccessorBase> accessor;
+    if (arg.isConst())
+    {
+        // need to create an accessor!
+        if (arg.getAST().isInt())
+        {
+            accessor.reset(new ConstantAccessor<int>(arg.getAST().toInt()));
+            accessor->index() = 0;
+        }
+        else if (arg.getAST().isFloat())
+        {
+            accessor.reset(new ConstantAccessor<float>(arg.getAST().toFloat()));
+            accessor->index() = 0;
+        }
+        else
+        {
+            throw rete::NodeBuilderException(
+                    "The given constant is not a number: " +
+                    arg.getAST());
+        }
+    }
+    else
+    {
+        if (arg.getAccessor())
+        {
+            accessor.reset(arg.getAccessor()->clone());
+        }
+        else
+        {
+            throw rete::NodeBuilderException(
+                    "Variable " + arg.getVariableName() +
+                    " must not be unbound.");
+        }
+    }
+
+    builtin::NumberToNumberConversion<T> conv(std::move(accessor));
+    if (!conv)
+    {
+        throw rete::NodeBuilderException(
+                "Argument '" + arg.getAST() + "' cannot be converted to '" +
+                util::beautified_typename<T>().value + "'.");
+    }
+
+    return conv;
 }
-*/
 
 /**
     Returns a NumberToStringConversion based on the given arg
 */
-/*
 builtin::NumberToStringConversion
-requireNumberToStringConversion(ArgumentList& args, size_t index); // TODO
-*/
+requireNumberToStringConversion(ArgumentList& args, size_t index);
 
 }
 }

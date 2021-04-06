@@ -97,6 +97,10 @@ add_executable(Scopes Scopes.cpp)
 target_link_libraries(Scopes rete-core rete-rdf rete-reasoner)
 add_test(NAME Scopes COMMAND Scopes)
 
+add_executable(SubRules SubRules.cpp)
+target_link_libraries(SubRules rete-core rete-rdf rete-reasoner)
+add_test(NAME SubRules COMMAND SubRules)
+
 add_executable(test_rete main.cpp)
 target_link_libraries(test_rete rete-core rete-rdf rete-reasoner)
 add_test(NAME main COMMAND test_rete)

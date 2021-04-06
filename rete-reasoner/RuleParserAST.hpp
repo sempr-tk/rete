@@ -515,6 +515,7 @@ namespace rete {
 
             peg::ASTPtr<peg::ASTString, true> name_;
             peg::ASTList<PreconditionBase> conditions_;
+            peg::ASTList<Rule> subRules_;
             peg::ASTList<Effect> effects_;
 
 

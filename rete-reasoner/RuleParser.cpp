@@ -570,25 +570,34 @@ BetaMemory::Ptr RuleParser::constructNoValueGroup(
 
 
 /**
-    Implement the rule in the given network.
+    Helper to construct sub-rules and append them to an existing beta memory
 */
-ParsedRule::Ptr RuleParser::construct(ast::Rule& rule, Network& net) const
+std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
+        ast::Rule& rule, // the rule to implement
+        Network& net,       // the network in which to put it
+        std::map<std::string, AccessorBase::Ptr>& parentBindings, // the currently available variable bindings
+        BetaMemory::Ptr currentBeta, // the beta memory created by the parent rule
+        const std::string& namePrefix // prefix for the rules name, in case of sub-rules
+    ) const
 {
-    ParsedRule::Ptr ruleInfo = ParsedRule::Ptr(new ParsedRule());
-    ruleInfo->ruleString_ = rule.str_;
+    std::vector<rete::ProductionNode::Ptr> createdEffects;
 
-    // keep track of the last implemented beta memory
-    BetaMemory::Ptr currentBeta = nullptr;
+    // make a copy, dont modify the parents bindings!
+    std::map<std::string, AccessorBase::Ptr> bindings = parentBindings;
 
-    // remember already bound variables
-    std::map<std::string, AccessorBase::Ptr> bindings;
-
-    // construct all the conditions
     for (auto& condition : rule.conditions_)
     {
-      currentBeta = constructCondition(rule, net, currentBeta, bindings, *condition);
-    } // end loop over conditions
+        currentBeta = constructCondition(rule, net, currentBeta, bindings, *condition);
+    }
 
+    std::string ruleName = "_";
+    if (rule.name_) ruleName = *rule.name_;
+
+    for (auto& subRule : rule.subRules_)
+    {
+        auto subEffects = constructSubRule(*subRule, net, bindings, currentBeta, namePrefix + ruleName + ".");
+        createdEffects.insert(createdEffects.end(), subEffects.begin(), subEffects.end());
+    }
 
     //  create productions / effects
     size_t effectNo = 0;
@@ -622,21 +631,11 @@ ParsedRule::Ptr RuleParser::construct(ast::Rule& rule, Network& net) const
             auto production = it->second->buildEffect(args);
             AgendaNode::Ptr agendaNode(new AgendaNode(production, net.getAgenda()));
 
-            if (rule.name_)
-            {
-                ruleInfo->name_ = *rule.name_;
-                agendaNode->setName(*rule.name_);
-                production->setName(*rule.name_ + "[" + std::to_string(effectNo) + "]" );
-            }
-            else
-            {
-                agendaNode->setName("");
-                // use the verbose description of the effect if the rule has no name
-                production->setName(production->toString());
-            }
+            agendaNode->setName(namePrefix + ruleName);
+            production->setName(namePrefix + ruleName + "[" + std::to_string(effectNo) + "]");
+
             SetParent(currentBeta, agendaNode);
-            // net.addProduction(agendaNode);
-            ruleInfo->effectNodes_.push_back(agendaNode);
+            createdEffects.push_back(agendaNode);
 
         } catch (NodeBuilderException& e) {
             // rethrow with more information
@@ -647,6 +646,20 @@ ParsedRule::Ptr RuleParser::construct(ast::Rule& rule, Network& net) const
         effectNo++;
     }
 
+    return createdEffects;
+}
+
+/**
+    Implement the rule in the given network.
+*/
+ParsedRule::Ptr RuleParser::construct(ast::Rule& rule, Network& net) const
+{
+    ParsedRule::Ptr ruleInfo = ParsedRule::Ptr(new ParsedRule());
+    ruleInfo->ruleString_ = rule.str_;
+    if (rule.name_) ruleInfo->name_ = *rule.name_;
+
+    std::map<std::string, AccessorBase::Ptr> bindings;
+    ruleInfo->effectNodes_ = constructSubRule(rule, net, bindings, nullptr);
     return ruleInfo;
 }
 

@@ -178,10 +178,20 @@ public:
 
     // [name: (precondition1), (precondition2) --> (effect1), (effect2)]
     Rule rulename = rtrace("rulename", +(alphanum | '_'_E));
-    Rule rule = rtrace("rule", ('['_E >> -(rulename >> ':')
-                                      >> -comment >> precondition >> *(',' >> -comment >> precondition) >> -comment >> "->"
-                                      >> -comment >> effect >> *(',' >> -comment >> effect) >> -comment >> ']'));
+//    Rule rule = rtrace("rule", ('['_E >> -(rulename >> ':')
+//                                      >> -comment >> precondition >> *(',' >> -comment >> precondition) >> -comment >> "->"
+//                                      >> -comment >> effect >> *(',' >> -comment >> effect) >> -comment >> ']'));
 
+    Rule preconditionPart = -comment >> precondition >> *(',' >> -comment >> precondition) >> -comment;
+    Rule effectPart = -comment >> effect >> *(',' >> -comment >> effect) >> -comment;
+    Rule rule = '['_E >> -(rulename >> ':')
+                   >> (
+                           preconditionPart >>
+                           ((+rule >> -("->" >> effectPart))
+                           |
+                           ("->" >> effectPart))
+                      )
+                   >> ']';
 
     Rule rules = rtrace("rules",
                 // definitions

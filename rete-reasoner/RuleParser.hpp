@@ -100,6 +100,13 @@ class RuleParser : peg::ASTParserDelegate {
             std::map<std::string, AccessorBase::Ptr>& bindings,
             ast::PreconditionBase& condition) const;
 
+    std::vector<rete::ProductionNode::Ptr> constructSubRule(
+            ast::Rule& subRule,
+            Network& net,
+            std::map<std::string, AccessorBase::Ptr>& bindings,
+            BetaMemory::Ptr currentBeta,
+            const std::string& namePrefix = "") const;
+
 
     BetaMemory::Ptr constructPrimitive(
             Network&,

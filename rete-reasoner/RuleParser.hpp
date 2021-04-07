@@ -66,6 +66,10 @@ class RuleParser : peg::ASTParserDelegate {
     // effects
     peg::BindAST<ast::InferTriple> inferTriple = RuleGrammar::get().inferTriple;
 
+    peg::BindAST<ast::EffectIfBranch> effectListIf = RuleGrammar::get().ifBranch;
+    peg::BindAST<peg::ASTString> elseMarker = RuleGrammar::get().elseMarker;
+    peg::BindAST<ast::EffectElseBrach> effectListElse = RuleGrammar::get().elseBranch;
+
     // rules
     peg::BindAST<peg::ASTString> rulename = RuleGrammar::get().rulename;
     peg::BindAST<ast::Rule> rule = RuleGrammar::get().rule;
@@ -99,6 +103,15 @@ class RuleParser : peg::ASTParserDelegate {
             BetaMemory::Ptr currentBeta,
             std::map<std::string, AccessorBase::Ptr>& bindings,
             ast::PreconditionBase& condition) const;
+
+    ProductionNode::Ptr constructEffect(
+            ast::Rule& rule,
+            Network& net,
+            ast::Effect& effect,
+            const std::string& name,
+            BetaMemory::Ptr betaMem,
+            const std::map<std::string, AccessorBase::Ptr>& bindings) const;
+
 
     std::vector<rete::ProductionNode::Ptr> constructSubRule(
             ast::Rule& subRule,

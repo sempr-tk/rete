@@ -637,7 +637,11 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
     std::vector<rete::ProductionNode::Ptr> createdEffects;
 
     // make a copy, dont modify the parents bindings!
-    std::map<std::string, AccessorBase::Ptr> bindings = parentBindings;
+    std::map<std::string, AccessorBase::Ptr> bindings;
+    for (auto& entry : parentBindings)
+    {
+        bindings[entry.first] = AccessorBase::Ptr(entry.second->clone());
+    }
 
     BetaMemory::Ptr oldBeta = currentBeta; // remember for the optional else branch
 
@@ -686,6 +690,16 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
         auto noValueNode = std::make_shared<NoValue>(rule.conditions_.size());
         auto bmem = implementBetaBetaNode(noValueNode, oldBeta, currentBeta);
 
+        // progress the bindings - the noValue node added a WME!
+        // make a copy, dont modify the parents bindings!
+        std::map<std::string, AccessorBase::Ptr> tmpBindings;
+        for (auto& entry : parentBindings)
+        {
+            tmpBindings[entry.first] = AccessorBase::Ptr(entry.second->clone());
+            ++(tmpBindings[entry.first]->index());
+        }
+
+
         // create the effects of the else branch beneath the noValue node
         effectNo = 0;
         for (auto& effect : rule.elseEffects_->effects_)
@@ -693,8 +707,8 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
             auto effectNode = constructEffect(
                     rule, net, *effect,
                     namePrefix + "not-" + ruleName + "[" + std::to_string(effectNo++) + "]",
-                    bmem,
-                    parentBindings);
+                    bmem, tmpBindings);
+
             createdEffects.push_back(effectNode);
         }
     }

@@ -516,7 +516,7 @@ namespace rete {
 
         class EffectElseBrach : public peg::ASTContainer {
         public:
-            peg::ASTPtr<std::string> elseMarker_;
+            peg::ASTChild<peg::ASTString> elseMarker_;
             peg::ASTList<Effect> effects_;
         };
 

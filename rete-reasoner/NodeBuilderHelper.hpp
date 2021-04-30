@@ -209,12 +209,15 @@ requireNumberToNumberConversion(ArgumentList& args, size_t index)
         }
     }
 
+    auto& tmp = *accessor.get();
+    auto accType = util::demangle(typeid(tmp).name());
     builtin::NumberToNumberConversion<T> conv(std::move(accessor));
     if (!conv)
     {
         throw rete::NodeBuilderException(
                 "Argument '" + arg.getAST() + "' cannot be converted to '" +
-                util::beautified_typename<T>().value + "'.");
+                util::beautified_typename<T>().value + "' -- accessor is '" +
+                accType + "'.");
     }
 
     return conv;

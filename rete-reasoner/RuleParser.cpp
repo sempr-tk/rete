@@ -550,6 +550,60 @@ BetaMemory::Ptr RuleParser::constructNoValueGroup(
 }
 
 
+/**
+    Construction of an Effect node beneath the given BetaMemory
+*/
+ProductionNode::Ptr RuleParser::constructEffect(
+        ast::Rule& rule,
+        Network& net,
+        ast::Effect& effect,
+        const std::string& name,
+        BetaMemory::Ptr betaMem,
+        const std::map<std::string, AccessorBase::Ptr>& bindings) const
+{
+    // find the correct builder
+    auto it = effectBuilders_.find(effect.type());
+    if (it == effectBuilders_.end())
+    {
+        std::vector<std::string> knownTypes;
+        for (auto& builder : effectBuilders_) knownTypes.push_back(builder.first);
+        throw NoBuilderException(rule.str_, effect.str_, effect.type(), knownTypes);
+    }
+
+    // create an argument list. The ast::Arguments are consumed.
+    ArgumentList args;
+    for (auto& astArg : effect.args_)
+    {
+        Argument arg = Argument::createFromAST(std::move(astArg), bindings);
+        // all args in the effects MUST be bound variables or constants!
+        if (arg.isVariable() && !arg.getAccessor())
+        {
+            throw RuleConstructionException(rule.str_, effect.str_,
+                "Unbound variable in effect: " + arg.getVariableName()); // unbound variable in rule effect
+        }
+        args.push_back(std::move(arg));
+    }
+
+    // create the production, encapsulate it in an AgendaNode, and add it to the current pattern results (beta memory)
+    try {
+        auto production = it->second->buildEffect(args);
+        AgendaNode::Ptr agendaNode(new AgendaNode(production, net.getAgenda()));
+
+        agendaNode->setName(name);
+        production->setName(name);
+
+        SetParent(betaMem, agendaNode);
+        return agendaNode;
+
+    } catch (NodeBuilderException& e) {
+        // rethrow with more information
+        e.setRule(rule.str_);
+        e.setPart(effect.str_);
+        throw;
+    }
+}
+
+
 
 /*
     To construct the rule in the network, we do the following:
@@ -570,83 +624,109 @@ BetaMemory::Ptr RuleParser::constructNoValueGroup(
 
 
 /**
+    Helper to construct sub-rules and append them to an existing beta memory
+*/
+std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
+        ast::Rule& rule, // the rule to implement
+        Network& net,       // the network in which to put it
+        std::map<std::string, AccessorBase::Ptr>& parentBindings, // the currently available variable bindings
+        BetaMemory::Ptr currentBeta, // the beta memory created by the parent rule
+        const std::string& namePrefix // prefix for the rules name, in case of sub-rules
+    ) const
+{
+    std::vector<rete::ProductionNode::Ptr> createdEffects;
+
+    // make a copy, dont modify the parents bindings!
+    std::map<std::string, AccessorBase::Ptr> bindings;
+    for (auto& entry : parentBindings)
+    {
+        bindings[entry.first] = AccessorBase::Ptr(entry.second->clone());
+    }
+
+    BetaMemory::Ptr oldBeta = currentBeta; // remember for the optional else branch
+
+    for (auto& condition : rule.conditions_)
+    {
+        currentBeta = constructCondition(rule, net, currentBeta, bindings, *condition);
+    }
+
+    std::string ruleName = "_";
+    if (rule.name_) ruleName = *rule.name_;
+
+    for (auto& subRule : rule.subRules_)
+    {
+        auto subEffects = constructSubRule(*subRule, net, bindings, currentBeta, namePrefix + ruleName + ".");
+        createdEffects.insert(createdEffects.end(), subEffects.begin(), subEffects.end());
+    }
+
+    //  create productions / effects
+    size_t effectNo = 0;
+    if (rule.effects_)
+    {
+        for (auto& effect : rule.effects_->effects_)
+        {
+            auto effectNode = constructEffect(
+                    rule, net, *effect,
+                    namePrefix + ruleName + "[" + std::to_string(effectNo) + "]",
+                    currentBeta,
+                    bindings);
+            createdEffects.push_back(effectNode);
+        }
+    }
+
+    // in case of an else-branch in the rule
+    if (rule.elseEffects_)
+    {
+        if (oldBeta == nullptr)
+        {
+            throw RuleConstructionException(
+                    rule.str_, (*rule.elseEffects_->effects_.begin())->str_,
+                    "\"else\" branch can only be used in a sub-rule, as the "
+                    "implicit \"noValue { ... }\" group cannot be the first "
+                    "node in the rete network.");
+        }
+
+        // create a noValue node in between the old beta memory and the current
+        auto noValueNode = std::make_shared<NoValue>(rule.conditions_.size());
+        auto bmem = implementBetaBetaNode(noValueNode, oldBeta, currentBeta);
+
+        // progress the bindings - the noValue node added a WME!
+        // make a copy, dont modify the parents bindings!
+        std::map<std::string, AccessorBase::Ptr> tmpBindings;
+        for (auto& entry : parentBindings)
+        {
+            tmpBindings[entry.first] = AccessorBase::Ptr(entry.second->clone());
+            ++(tmpBindings[entry.first]->index());
+        }
+
+
+        // create the effects of the else branch beneath the noValue node
+        effectNo = 0;
+        for (auto& effect : rule.elseEffects_->effects_)
+        {
+            auto effectNode = constructEffect(
+                    rule, net, *effect,
+                    namePrefix + "not-" + ruleName + "[" + std::to_string(effectNo++) + "]",
+                    bmem, tmpBindings);
+
+            createdEffects.push_back(effectNode);
+        }
+    }
+
+    return createdEffects;
+}
+
+/**
     Implement the rule in the given network.
 */
 ParsedRule::Ptr RuleParser::construct(ast::Rule& rule, Network& net) const
 {
     ParsedRule::Ptr ruleInfo = ParsedRule::Ptr(new ParsedRule());
     ruleInfo->ruleString_ = rule.str_;
+    if (rule.name_) ruleInfo->name_ = *rule.name_;
 
-    // keep track of the last implemented beta memory
-    BetaMemory::Ptr currentBeta = nullptr;
-
-    // remember already bound variables
     std::map<std::string, AccessorBase::Ptr> bindings;
-
-    // construct all the conditions
-    for (auto& condition : rule.conditions_)
-    {
-      currentBeta = constructCondition(rule, net, currentBeta, bindings, *condition);
-    } // end loop over conditions
-
-
-    //  create productions / effects
-    size_t effectNo = 0;
-    for (auto& effect : rule.effects_)
-    {
-        // find the correct builder
-        auto it = effectBuilders_.find(effect->type());
-        if (it == effectBuilders_.end())
-        {
-            std::vector<std::string> knownTypes;
-            for (auto& builder : effectBuilders_) knownTypes.push_back(builder.first);
-            throw NoBuilderException(rule.str_, effect->str_, effect->type(), knownTypes);
-        }
-
-        // create an argument list. The ast::Arguments are consumed.
-        ArgumentList args;
-        for (auto& astArg : effect->args_)
-        {
-            Argument arg = Argument::createFromAST(std::move(astArg), bindings);
-            // all args in the effects MUST be bound variables or constants!
-            if (arg.isVariable() && !arg.getAccessor())
-            {
-                throw RuleConstructionException(rule.str_, effect->str_,
-                        "Unbound variable in effect: " + arg.getVariableName()); // unbound variable in rule effect
-            }
-            args.push_back(std::move(arg));
-        }
-
-        // create the production, encapsulate it in an AgendaNode, and add it to the current pattern results (beta memory)
-        try {
-            auto production = it->second->buildEffect(args);
-            AgendaNode::Ptr agendaNode(new AgendaNode(production, net.getAgenda()));
-
-            if (rule.name_)
-            {
-                ruleInfo->name_ = *rule.name_;
-                agendaNode->setName(*rule.name_);
-                production->setName(*rule.name_ + "[" + std::to_string(effectNo) + "]" );
-            }
-            else
-            {
-                agendaNode->setName("");
-                // use the verbose description of the effect if the rule has no name
-                production->setName(production->toString());
-            }
-            SetParent(currentBeta, agendaNode);
-            // net.addProduction(agendaNode);
-            ruleInfo->effectNodes_.push_back(agendaNode);
-
-        } catch (NodeBuilderException& e) {
-            // rethrow with more information
-            e.setRule(rule.str_);
-            e.setPart(effect->str_);
-            throw;
-        }
-        effectNo++;
-    }
-
+    ruleInfo->effectNodes_ = constructSubRule(rule, net, bindings, nullptr);
     return ruleInfo;
 }
 

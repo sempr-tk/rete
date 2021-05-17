@@ -509,14 +509,87 @@ namespace rete {
         };
 
 
+        class EffectIfBranch : public peg::ASTContainer {
+        public:
+            peg::ASTList<Effect> effects_;
+        };
+
+        class EffectElseBrach : public peg::ASTContainer {
+        public:
+            peg::ASTChild<peg::ASTString> elseMarker_;
+            peg::ASTList<Effect> effects_;
+        };
+
         class Rule : public peg::ASTContainer {
         public:
             std::string str_;
 
             peg::ASTPtr<peg::ASTString, true> name_;
             peg::ASTList<PreconditionBase> conditions_;
-            peg::ASTList<Effect> effects_;
+            peg::ASTList<Rule> subRules_;
+            peg::ASTPtr<EffectIfBranch, true> effects_;
+            peg::ASTPtr<EffectElseBrach, true> elseEffects_;
+            //peg::ASTList<Effect> effects_;
+            //peg::ASTList<Effect> elseEffects_;
 
+            void applyPrefixesAndGlobalConstantsDefinitionsToRules(
+                    std::map<std::string, std::string> prefixReplacements,
+                    peg::ASTList<GlobalConstantDefinition>& constants)
+            {
+                for (auto& condition : conditions_)
+                {
+                    try {
+                        condition->replaceGlobalConstantReferences(constants);
+                        condition->substituteArgumentPrefixes(prefixReplacements);
+                    } catch (RuleConstructionException& e) {
+                        e.setRule(str_);
+                        e.setPart(condition->str_);
+                        throw;
+                    }
+                }
+
+                for (auto& subRule : subRules_)
+                {
+                    subRule->applyPrefixesAndGlobalConstantsDefinitionsToRules(
+                            prefixReplacements, constants);
+                }
+
+                if (effects_)
+                {
+                    for (auto& effect : effects_->effects_)
+                    {
+                        try {
+                            effect->replaceGlobalConstantReferences(constants);
+                            for (auto& arg : effect->args_)
+                            {
+                                arg->substitutePrefixes(prefixReplacements);
+                            }
+                        } catch (RuleConstructionException& e) {
+                            e.setRule(str_);
+                            e.setPart(effect->str_);
+                            throw;
+                        }
+                    }
+                }
+
+                if (elseEffects_)
+                {
+                    for (auto& effect : elseEffects_->effects_)
+                    {
+                        try {
+                            effect->replaceGlobalConstantReferences(constants);
+                            for (auto& arg : effect->args_)
+                            {
+                                arg->substitutePrefixes(prefixReplacements);
+                            }
+                        } catch (RuleConstructionException& e) {
+                            e.setRule(str_);
+                            e.setPart(effect->str_);
+                            throw;
+                        }
+                    }
+                }
+            }
 
             bool construct(const peg::InputRange& r, peg::ASTStack& st, const peg::ErrorReporter& err)
             {
@@ -704,33 +777,10 @@ namespace rete {
                 // conditions and effects
                 for (auto& rule : rules_)
                 {
-                    for (auto& condition : rule->conditions_)
-                    {
-                        try {
-                            condition->replaceGlobalConstantReferences(constants_);
-                            condition->substituteArgumentPrefixes(prefixReplacements);
-                        } catch (RuleConstructionException& e) {
-                            e.setRule(rule->str_);
-                            e.setPart(condition->str_);
-                            throw;
-                        }
-                    }
-
-                    for (auto& effect : rule->effects_)
-                    {
-                        try {
-                            effect->replaceGlobalConstantReferences(constants_);
-                            for (auto& arg : effect->args_)
-                            {
-                                arg->substitutePrefixes(prefixReplacements);
-                            }
-                        } catch (RuleConstructionException& e) {
-                            e.setRule(rule->str_);
-                            e.setPart(effect->str_);
-                            throw;
-                        }
-                    }
+                    rule->applyPrefixesAndGlobalConstantsDefinitionsToRules(
+                            prefixReplacements, constants_);
                 }
+
 
                 // for all nested scopes: trigger this process
                 for (auto& nested : scopedRules_)

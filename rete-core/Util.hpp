@@ -5,6 +5,7 @@
 #include <tuple>
 #include <memory>
 #include <vector>
+#include <functional>
 
 namespace rete {
 namespace util {
@@ -251,7 +252,60 @@ struct one_of<T, H> {
 };
 
 
+// -------------------------------------------------------------------------
+// "apply" the values inside a tuple as arguments to a given function
+// -------------------------------------------------------------------------
+template <class F, size_t... Is>
+constexpr auto index_apply_impl(F f,
+                                std::index_sequence<Is...>)
+{
+    return f(std::integral_constant<size_t, Is>{}...);
+}
 
+template <size_t N, class F>
+constexpr auto index_apply(F f)
+{
+    return index_apply_impl(f, std::make_index_sequence<N>{});
+}
+
+template <class Tuple, class F>
+constexpr auto apply(Tuple& t, F f)
+{
+    return index_apply<std::tuple_size<Tuple>{}>(
+        [&](auto... Is) { return f(std::get<Is>(t)...); });
+}
+
+
+// -------------------------------------------------------------------------
+// "function_traits" - get the std::function<...> equivalent for the given
+// function, member function or functor, as well as the return type and the
+// argument types (packed in a std::tuple<Args...> type)
+// -------------------------------------------------------------------------
+// functors: delegate to 'operator()'
+template <typename T>
+struct function_traits
+    : public function_traits<decltype(&T::operator())>
+{
+};
+
+// pointer to member function
+template <typename ClassType, typename ReturnType, typename... Args>
+struct function_traits<ReturnType (ClassType::*)(Args...) const>
+{
+    typedef std::function<ReturnType(Args...)> f_type;
+    typedef ReturnType return_type;
+    typedef std::tuple<Args...> arg_types;
+};
+
+// function pointers
+template <typename ReturnType, typename... Args>
+struct function_traits<ReturnType (*)(Args...)>
+{
+    typedef std::function<ReturnType(Args...)> f_type;
+    typedef ReturnType return_type;
+    typedef std::tuple<Args...> arg_types;
+};
+    
 } /* util */
 } /* rete */
 

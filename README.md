@@ -62,6 +62,8 @@ make -j8 && make install
   - `noValue` to check for non-existence patterns
   - `makeSkolem` creates an identifier from the given arguments which can be
      used e.g. as the id of a semantic entity in triples.
+  - `GROUP BY` to aggregate partial matches and perform special operators on the result, e.g. to compute the sum of all values or a union of all geometries with the specified properties.
+  - Simple way to add custom callbacks in the rules effects, using `makeCallbackBuilder` and `CallbackEffect`.
 
 
 

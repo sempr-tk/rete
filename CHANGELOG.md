@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.12.0] - 2021-05-31
+
+- allow sub-rules and else-branches
+  ```
+  [parent:
+      (?a <foo> ?b)
+      [child1:
+          (?b <bar> ?c) -> (?a <foobar> ?c) else (?a <notfoobar> ?c)
+      ]
+      [child2:
+          (?b <baz> ?c) -> (?a <boobaz> ?c) else (?a <notfoobaz> ?c)
+      ]
+      # ...
+  ]
+  ```
+- added callback effects
+  ```c++
+  rete::RuleParser p;
+  p.registerNodeBuilder(rete::makeCallbackBuilder("nameOfTheEffect", cb));
+  // where cb fits into a std::function<void(rete::PropagationFlag, ...)>
+  ```
+
 ## [0.11.0] - 2021-03-31
 
 - Added helper function to simplify the development of new nodes/node builders

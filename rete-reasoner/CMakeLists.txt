@@ -3,6 +3,7 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(Pegmatite REQUIRED pegmatite)
 include_directories(${Pegmatite_INCLUDE_DIRS})
 link_directories(${Pegmatite_LIBRARY_DIRS})
+find_package(nlohmann_json REQUIRED) # apt install nlohmann-json-dev
 
 set(REASONER_SRC
     Argument.cpp
@@ -10,6 +11,7 @@ set(REASONER_SRC
     BackedWME.cpp
     EvidenceComparator.cpp
     ExplanationToDotVisitor.cpp
+    ExplanationToJSONVisitor.cpp
     InferenceState.cpp
     InferredEvidence.cpp
     ParsedRule.cpp

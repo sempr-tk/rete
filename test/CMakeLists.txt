@@ -105,6 +105,11 @@ add_executable(Callbacks Callbacks.cpp)
 target_link_libraries(Callbacks rete-core rete-rdf rete-reasoner)
 add_test(NAME Callbacks COMMAND Callbacks)
 
+
+add_executable(ExplanationTest ExplanationTest.cpp)
+target_link_libraries(ExplanationTest rete-core rete-rdf rete-reasoner)
+add_test(NAME ExplanationTest COMMAND ExplanationTest)
+
 add_executable(test_rete main.cpp)
 target_link_libraries(test_rete rete-core rete-rdf rete-reasoner)
 add_test(NAME main COMMAND test_rete)

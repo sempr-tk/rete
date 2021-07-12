@@ -3,8 +3,7 @@ default:
 
 before_script:
     - apt-get update -qq
-    - apt-get install -y -qq git g++ cmake nlohmann-json-dev
-    - export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:/usr/lib/cmake
+    - apt-get install -y -qq git g++ cmake
 # also: setup the private key to access niniemann/debian-pkgs
 # this allows us to install pegmatite from the lates debian package
     - which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )

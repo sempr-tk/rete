@@ -29,9 +29,9 @@ size_t ExplanationToJSONVisitor::getIdOf(WME::Ptr wme)
 }
 
 
-void ExplanationToJSONVisitor::visit(WMESupportedBy& support, size_t depth)
+void ExplanationToJSONVisitor::visit(WMESupportedBy& support, size_t /* depth */)
 {
-    size_t wmeId = getIdOf(support.wme_);
+    getIdOf(support.wme_); // to initialize entry
     nl::json& wmeJson = processedWMEs_[support.wme_];
 
     std::vector<size_t> supported_by_ids;
@@ -44,9 +44,9 @@ void ExplanationToJSONVisitor::visit(WMESupportedBy& support, size_t depth)
     wmeJson["based-on"] = supported_by_ids;
 }
 
-void ExplanationToJSONVisitor::visit(WME::Ptr wme, size_t depth)
+void ExplanationToJSONVisitor::visit(WME::Ptr wme, size_t /* depth */)
 {
-    size_t wmeId = getIdOf(wme);
+    getIdOf(wme); // to initialize entry
     nl::json& wmeJson = processedWMEs_[wme];
 
     wmeJson["type"] = "data";
@@ -62,9 +62,9 @@ void ExplanationToJSONVisitor::visit(Evidence::Ptr, size_t)
     // All evidences are handled as AssertedEvidence or InferredEvidence
 }
 
-void ExplanationToJSONVisitor::visit(AssertedEvidence::Ptr ev, size_t depth)
+void ExplanationToJSONVisitor::visit(AssertedEvidence::Ptr ev, size_t /* depth */)
 {
-    size_t evId = getIdOf(ev);
+    getIdOf(ev); // to initialize entry
     nl::json& evJson = processedEvidences_[ev];
 
     evJson["type"] = "reason";
@@ -74,9 +74,9 @@ void ExplanationToJSONVisitor::visit(AssertedEvidence::Ptr ev, size_t depth)
     };
 }
 
-void ExplanationToJSONVisitor::visit(InferredEvidence::Ptr ev, size_t depth)
+void ExplanationToJSONVisitor::visit(InferredEvidence::Ptr ev, size_t /* depth */)
 {
-    size_t evId = getIdOf(ev);
+    getIdOf(ev); // to initialize entry
     nl::json& evJson = processedEvidences_[ev];
 
     evJson["type"] = "reason";

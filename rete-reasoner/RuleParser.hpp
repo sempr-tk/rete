@@ -70,6 +70,12 @@ class RuleParser : peg::ASTParserDelegate {
     peg::BindAST<peg::ASTString> elseMarker = RuleGrammar::get().elseMarker;
     peg::BindAST<ast::EffectElseBrach> effectListElse = RuleGrammar::get().elseBranch;
 
+    // annotations
+    peg::BindAST<peg::ASTString> varNameInRefInAnnotation = RuleGrammar::get().varNameInRefInAnnotation;
+    peg::BindAST<ast::Annotation> annotationText = RuleGrammar::get().annotationText;
+    peg::BindAST<ast::AnnotatedConditions> annotatedConditions = RuleGrammar::get().annotatedConditions;
+    peg::BindAST<ast::UnannotatedConditions> unannotatedConditions = RuleGrammar::get().unAnnotatedConditions;
+
     // rules
     peg::BindAST<peg::ASTString> rulename = RuleGrammar::get().rulename;
     peg::BindAST<ast::Rule> rule = RuleGrammar::get().rule;

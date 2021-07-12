@@ -520,31 +520,89 @@ namespace rete {
             peg::ASTList<Effect> effects_;
         };
 
+
+        /**
+         * Annotation is just a string, but with a list of referenced variables.
+         */
+        class Annotation : public peg::ASTContainer {
+        public:
+            std::string str_; // e.g. "On {date} there were {sun} hours of sunshine."
+            peg::ASTList<peg::ASTString> variablesRefs_; // e.g. ["date", "sun", ...]
+
+            bool construct(const peg::InputRange& r, peg::ASTStack& st, const peg::ErrorReporter& err) override
+            {
+                str_ = r.str();
+                return this->peg::ASTContainer::construct(r, st, err);
+            }
+        };
+
+        /**
+         * Base class for groups of conditions, either annotated or not.
+         */
+        class ConditionGroup : public peg::ASTContainer {
+        public:
+            peg::ASTList<PreconditionBase> conditions_;
+
+            virtual ~ConditionGroup() = default;
+            virtual const Annotation& annotation() const = 0;
+        };
+
+        // Annotation parsed from rule
+        class AnnotatedConditions : public ConditionGroup {
+        public:
+            peg::ASTPtr<Annotation, false> annotation_;
+            const Annotation& annotation() const override { return *annotation_; }
+        };
+
+        // Annotation default-constructed (empty)
+        class UnannotatedConditions : public ConditionGroup {
+        public:
+            const Annotation& annotation() const override
+            {
+                static const Annotation annotation;
+                return annotation;
+            }
+        };
+
+
         class Rule : public peg::ASTContainer {
         public:
             std::string str_;
 
             peg::ASTPtr<peg::ASTString, true> name_;
-            peg::ASTList<PreconditionBase> conditions_;
+            peg::ASTList<ConditionGroup> conditionGroups_;
             peg::ASTList<Rule> subRules_;
             peg::ASTPtr<EffectIfBranch, true> effects_;
             peg::ASTPtr<EffectElseBrach, true> elseEffects_;
             //peg::ASTList<Effect> effects_;
             //peg::ASTList<Effect> elseEffects_;
 
+            size_t numConditions() const
+            {
+                size_t num = 0;
+                for (auto& group : conditionGroups_)
+                {
+                    num += group->conditions_.size();
+                }
+                return num;
+            }
+
             void applyPrefixesAndGlobalConstantsDefinitionsToRules(
                     std::map<std::string, std::string> prefixReplacements,
                     peg::ASTList<GlobalConstantDefinition>& constants)
             {
-                for (auto& condition : conditions_)
+                for (auto& group : conditionGroups_)
                 {
-                    try {
-                        condition->replaceGlobalConstantReferences(constants);
-                        condition->substituteArgumentPrefixes(prefixReplacements);
-                    } catch (RuleConstructionException& e) {
-                        e.setRule(str_);
-                        e.setPart(condition->str_);
-                        throw;
+                    for (auto& condition : group->conditions_)
+                    {
+                        try {
+                            condition->replaceGlobalConstantReferences(constants);
+                            condition->substituteArgumentPrefixes(prefixReplacements);
+                        } catch (RuleConstructionException& e) {
+                            e.setRule(str_);
+                            e.setPart(condition->str_);
+                            throw;
+                        }
                     }
                 }
 

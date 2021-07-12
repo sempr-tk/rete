@@ -645,9 +645,22 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
 
     BetaMemory::Ptr oldBeta = currentBeta; // remember for the optional else branch
 
-    for (auto& condition : rule.conditions_)
+    for (auto& cGroup : rule.conditionGroups_)
     {
-        currentBeta = constructCondition(rule, net, currentBeta, bindings, *condition);
+        // DEBUG output
+        std::cout << "constructing conditions group" << std::endl;
+        std::cout << "annotation:" << std::endl;
+        std::cout << " -- \"" << cGroup->annotation().str_ << "\"" << std::endl;
+        std::cout << "refrenced vars:" << std::endl;
+        for (auto& var : cGroup->annotation().variablesRefs_)
+        {
+            std::cout << *var << std::endl;
+        }
+
+        for (auto& condition : cGroup->conditions_)
+        {
+            currentBeta = constructCondition(rule, net, currentBeta, bindings, *condition);
+        }
     }
 
     std::string ruleName = "_";
@@ -687,7 +700,7 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
         }
 
         // create a noValue node in between the old beta memory and the current
-        auto noValueNode = std::make_shared<NoValue>(rule.conditions_.size());
+        auto noValueNode = std::make_shared<NoValue>(rule.numConditions());
         auto bmem = implementBetaBetaNode(noValueNode, oldBeta, currentBeta);
 
         // progress the bindings - the noValue node added a WME!

@@ -179,16 +179,30 @@ public:
     // [name: (precondition1), (precondition2) --> (effect1), (effect2)]
     Rule rulename = rtrace("rulename", +(alphanum | '_'_E));
 
-    Rule preconditionPart = -comment >> precondition >> *(',' >> -comment >> precondition) >> -comment;
-    Rule effectPart = -comment >> effect >> *(',' >> -comment >> effect) >> -comment;
-    Rule ifBranch = rtrace("ifBranch", effectPart);
+    Rule preconditionsWithComments = -comment >> precondition >> *(',' >> -comment >> precondition) >> -comment;
+    Rule effectsWithComments = -comment >> effect >> *(',' >> -comment >> effect) >> -comment;
+    Rule ifBranch = rtrace("ifBranch", effectsWithComments);
     Rule elseMarker = rtrace("elseMarker", "else"_E);
-    Rule elseBranch = rtrace("elseBranch", elseMarker >> effectPart);
+    Rule elseBranch = rtrace("elseBranch", elseMarker >> effectsWithComments);
+
+    // anything within /* */ is considered an annotation
+    Rule varNameInRefInAnnotation = +alphanum;
+    Rule variableRefInAnnotation = "{"_E >> varNameInRefInAnnotation >> "}"_E;
+    Rule annotationText = *(variableRefInAnnotation | (!"*/"_E >> any()));
+    Rule annotation = "/*"_E >> annotationText >> "*/"_E;
+    // preconditions can be grouped together with an annotation that describes
+    // them as one more complex/abstract piece of knowledge/information/...
+    Rule annotatedConditions = "{"_E >> preconditionsWithComments >> annotation >> "}"_E;
+    // an explicit name for conditions without an annotation
+    Rule unAnnotatedConditions = preconditionsWithComments;
+
+    // condition-groups can be annotated or unannotated
+    Rule conditiongroup = (annotatedConditions | unAnnotatedConditions);
 
     Rule rule = rtrace("rule",
                 '['_E >> -(rulename >> ':')
                    >> (
-                           preconditionPart >>
+                           +(conditiongroup >> -","_E) >>
                            ((+rule >> -("->" >> ifBranch >> -elseBranch))
                            |
                            ("->" >> ifBranch >> -elseBranch))

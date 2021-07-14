@@ -38,6 +38,18 @@ int main()
                 (<zip> <zap> <zup>)
             ]
 
+            [with_subgroup:
+                {
+                    (?a <subClassOf> ?b)
+                    /* {a} is a subclass of {b} */
+                }
+                [sub:
+                    { (?x <type> ?a) /* {x} is of type {a} */ }
+                    ->
+                    (?x <type> ?b)
+                ]
+            ]
+
             [two_groups:
                 {
                     (?x <bar> 5)

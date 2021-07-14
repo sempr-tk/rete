@@ -634,7 +634,9 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
         const std::string& namePrefix // prefix for the rules name, in case of sub-rules
     ) const
 {
-    std::vector<rete::ProductionNode::Ptr> createdEffects;
+    size_t currentTokenLength = 0; // incremented with each created condition
+
+    std::vector<rete::ProductionNode::Ptr> createdEffects; // return value
 
     // make a copy, dont modify the parents bindings!
     std::map<std::string, AccessorBase::Ptr> bindings;
@@ -645,13 +647,23 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
 
     BetaMemory::Ptr oldBeta = currentBeta; // remember for the optional else branch
 
+    std::vector<Annotation> annotations;
     for (auto& cGroup : rule.conditionGroups_)
     {
+        // create an annotation object that will be attached to the productions.
+        // they are later used in explanations to group WMEs together and give
+        // a description (the annotation) of what they mean.
+        Annotation a;
+        a.annotation_ = cGroup->annotation().str_;
+        a.tokenIndexBegin_ = currentTokenLength;
+        a.tokenIndexEnd_ = currentTokenLength + cGroup->conditions_.size();
+        annotations.push_back(a);
+
         // DEBUG output
         std::cout << "constructing conditions group" << std::endl;
         std::cout << "annotation:" << std::endl;
         std::cout << " -- \"" << cGroup->annotation().str_ << "\"" << std::endl;
-        std::cout << "refrenced vars:" << std::endl;
+        std::cout << "referenced vars:" << std::endl;
         for (auto& var : cGroup->annotation().variablesRefs_)
         {
             std::cout << *var << std::endl;
@@ -660,6 +672,7 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
         for (auto& condition : cGroup->conditions_)
         {
             currentBeta = constructCondition(rule, net, currentBeta, bindings, *condition);
+            currentTokenLength++;
         }
     }
 
@@ -724,6 +737,18 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
 
             createdEffects.push_back(effectNode);
         }
+    }
+
+
+    // attach the annotation groups to all effects, including those of sub-rules
+    // etc.
+    for (auto& effect : createdEffects)
+    {
+        effect->getProduction()->annotations_.insert(
+            effect->getProduction()->annotations_.end(),
+            annotations.begin(),
+            annotations.end()
+        );
     }
 
     return createdEffects;

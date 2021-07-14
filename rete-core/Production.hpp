@@ -6,6 +6,7 @@
 
 #include "Token.hpp"
 #include "defs.hpp"
+#include "Annotation.hpp"
 
 namespace rete {
 
@@ -17,6 +18,9 @@ class Production {
     std::string name_;
 public:
     using Ptr = std::shared_ptr<Production>;
+
+    std::vector<Annotation> annotations_; // why hide it...
+
     /**
         The priority of the ProductionNode influences their order on the agenda.
         The name is only used for visualization purposes.

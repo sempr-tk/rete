@@ -671,8 +671,8 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
         // a description (the annotation) of what they mean.
         Annotation a;
         a.annotation_ = cGroup->annotation().str_;
-        a.tokenIndexBegin_ = currentTokenLength;
-        a.tokenIndexEnd_ = currentTokenLength + cGroup->conditions_.size();
+        a.tokenIndexBegin_ = currentTokenLength - cGroup->conditions_.size();
+        a.tokenIndexEnd_ = currentTokenLength;
 
         // DEBUG output
         std::cout << "constructing conditions group" << std::endl;
@@ -713,8 +713,11 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
     // the token)
     for (auto& a : annotations)
     {
+        std::cout << "uncorrected token indices: " << a.tokenIndexBegin_ << " - " << a.tokenIndexEnd_ << std::endl;
+        std::cout << "currentTokenLength: " << currentTokenLength << std::endl;
         size_t begin = currentTokenLength - a.tokenIndexEnd_;
         size_t end = currentTokenLength - a.tokenIndexBegin_;
+        std::cout << "corrected token indices:   " << begin << " - " << end << std::endl;
 
         a.tokenIndexBegin_ = begin;
         a.tokenIndexEnd_ = end;

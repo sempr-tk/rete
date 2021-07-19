@@ -16,6 +16,8 @@ namespace rete {
 class ExplanationToJSONVisitor : public ExplanationVisitor {
     std::map<Evidence::Ptr, nlohmann::json> processedEvidences_;
     std::map<WME::Ptr, nlohmann::json> processedWMEs_;
+    std::vector<nlohmann::json> groups_; // WMEs grouped and annotated
+
     size_t lastId_ = 0;
 
     // helper to create json instances with an assigned id.

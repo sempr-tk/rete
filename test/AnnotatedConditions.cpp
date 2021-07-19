@@ -5,6 +5,7 @@
 #include "../rete-reasoner/RuleParser.hpp"
 #include "../rete-reasoner/AssertedEvidence.hpp"
 #include "../rete-rdf/Triple.hpp"
+#include "../rete-reasoner/ExplanationToJSONVisitor.hpp"
 
 using namespace rete;
 
@@ -80,6 +81,23 @@ int main()
         )foo",
         reasoner.net()
     );
+
+    {
+        // test data
+        auto datarules = p.parseRules(
+            "[data: true() -> (<Entity_0> <bar> 5), (<Entity_0> <baz> 2)]",
+            reasoner.net()
+        );
+
+        reasoner.performInference();
+
+        auto triple = std::make_shared<rete::Triple>("<zip>", "<zap>", "<zup>");
+
+        ExplanationToJSONVisitor visitor;
+        reasoner.getCurrentState().traverseExplanation(triple, visitor);
+
+        std::ofstream("annotated_explain_0.json") << visitor.json().dump(4);
+    }
 
     return 0;
 }

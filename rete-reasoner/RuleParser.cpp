@@ -650,6 +650,22 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
     std::vector<Annotation> annotations;
     for (auto& cGroup : rule.conditionGroups_)
     {
+        // construct conditions
+        for (auto& condition : cGroup->conditions_)
+        {
+            currentBeta = constructCondition(rule, net, currentBeta, bindings, *condition);
+            currentTokenLength++;
+
+            // update accessors that are stored in annotations!
+            for (auto& a : annotations)
+            {
+                for (auto& varEntry : a.variables_)
+                {
+                    varEntry.second->index() += 1;
+                }
+            }
+        }
+
         // create an annotation object that will be attached to the productions.
         // they are later used in explanations to group WMEs together and give
         // a description (the annotation) of what they mean.
@@ -657,7 +673,6 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
         a.annotation_ = cGroup->annotation().str_;
         a.tokenIndexBegin_ = currentTokenLength;
         a.tokenIndexEnd_ = currentTokenLength + cGroup->conditions_.size();
-        annotations.push_back(a);
 
         // DEBUG output
         std::cout << "constructing conditions group" << std::endl;
@@ -667,13 +682,42 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
         for (auto& var : cGroup->annotation().variablesRefs_)
         {
             std::cout << *var << std::endl;
+            // bindings are constantly updated, but also sometimes *REPLACED*
+            // when a new accessor for the same variable is created.
+            // if we hold an old accessor here that then no longer is updated
+            // to the new token lengths... we have a problem. damn.
+            // so...
+            // a) annotate variables only at the end of this method, or
+            // b) clone the accessors and increment them with each new condition
+
+            // I'll choose b) here, to make sure the accessor provided to the
+            // explanation is the same as the one used by the condition
+            // (accesses the same wme)
+            auto accIt = bindings.find("?" + *var);
+            if (accIt != bindings.end())
+            {
+                auto clone = AccessorBase::Ptr(accIt->second->clone());
+                a.variables_[*var] = clone;
+                std::cout << "inserted var " << *var << " in annotation" << std::endl;
+            }
+            else
+            {
+                std::cout << "unbound variable " << *var << " in annotation!" << std::endl;
+            }
         }
 
-        for (auto& condition : cGroup->conditions_)
-        {
-            currentBeta = constructCondition(rule, net, currentBeta, bindings, *condition);
-            currentTokenLength++;
-        }
+        annotations.push_back(a);
+    }
+
+    // final loop to correct indices (0 is always the top of the stack that is
+    // the token)
+    for (auto& a : annotations)
+    {
+        size_t begin = currentTokenLength - a.tokenIndexEnd_;
+        size_t end = currentTokenLength - a.tokenIndexBegin_;
+
+        a.tokenIndexBegin_ = begin;
+        a.tokenIndexEnd_ = end;
     }
 
     std::string ruleName = "_";

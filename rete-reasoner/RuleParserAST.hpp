@@ -545,6 +545,7 @@ namespace rete {
 
             virtual ~ConditionGroup() = default;
             virtual const Annotation& annotation() const = 0;
+            virtual bool isAnnotated() const = 0;
         };
 
         // Annotation parsed from rule
@@ -552,6 +553,7 @@ namespace rete {
         public:
             peg::ASTPtr<Annotation, false> annotation_;
             const Annotation& annotation() const override { return *annotation_; }
+            bool isAnnotated() const override { return true; }
         };
 
         // Annotation default-constructed (empty)
@@ -562,6 +564,8 @@ namespace rete {
                 static const Annotation annotation;
                 return annotation;
             }
+
+            bool isAnnotated() const override { return false; }
         };
 
 

@@ -666,6 +666,8 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
             }
         }
 
+        if (!cGroup->isAnnotated()) continue; // skip annotation part
+
         // create an annotation object that will be attached to the productions.
         // they are later used in explanations to group WMEs together and give
         // a description (the annotation) of what they mean.

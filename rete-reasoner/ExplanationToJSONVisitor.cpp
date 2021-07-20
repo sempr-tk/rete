@@ -30,6 +30,34 @@ size_t ExplanationToJSONVisitor::getIdOf(WME::Ptr wme)
     return wmeJson["id"];
 }
 
+ExplanationToJSONVisitor::ExplanationToJSONVisitor()
+{
+    this->addToJSONConverter(
+        std::make_shared<DefaultToJSONConverter>()
+    );
+
+    this->addToJSONConverter(
+        std::make_shared<TripleToJSONConverter>()
+    );
+}
+
+
+void ExplanationToJSONVisitor::addToJSONConverter(std::shared_ptr<WMEToJSONConverter> conv)
+{
+    this->toJsonConverters_.insert(toJsonConverters_.begin(), conv);
+}
+
+
+nl::json ExplanationToJSONVisitor::wmeToJson(WME::Ptr wme) const
+{
+    std::string tmp;
+    for(auto conv : this->toJsonConverters_)
+    {
+        if (conv->convert(wme, tmp)) break;
+    }
+
+    return nl::json::parse(tmp);
+}
 
 void ExplanationToJSONVisitor::visit(WMESupportedBy& support, size_t /* depth */)
 {
@@ -52,10 +80,7 @@ void ExplanationToJSONVisitor::visit(WME::Ptr wme, size_t /* depth */)
     nl::json& wmeJson = processedWMEs_[wme];
 
     wmeJson["type"] = "data";
-    wmeJson["value"] = {
-        {"description", "Well, some WME. Not sure what it is. TODO!"},
-        {"toString", wme->toString()}
-    };
+    wmeJson["value"] = wmeToJson(wme);
 }
 
 void ExplanationToJSONVisitor::visit(Evidence::Ptr, size_t)

@@ -2,6 +2,8 @@
 #define RETE_REASONER_EXPLANATION_TO_JSON_VISITOR_HPP_
 
 #include "ExplanationVisitor.hpp"
+#include "WMEToJSONConverter.hpp"
+
 #include <nlohmann/json.hpp>
 
 #include <map>
@@ -17,6 +19,7 @@ class ExplanationToJSONVisitor : public ExplanationVisitor {
     std::map<Evidence::Ptr, nlohmann::json> processedEvidences_;
     std::map<WME::Ptr, nlohmann::json> processedWMEs_;
     std::vector<nlohmann::json> groups_; // WMEs grouped and annotated
+    std::vector<std::shared_ptr<WMEToJSONConverter>> toJsonConverters_;
 
     size_t lastId_ = 0;
 
@@ -25,7 +28,12 @@ class ExplanationToJSONVisitor : public ExplanationVisitor {
     // to be filled later.
     size_t getIdOf(Evidence::Ptr);
     size_t getIdOf(WME::Ptr);
+
+    nlohmann::json wmeToJson(WME::Ptr wme) const;
 public:
+    ExplanationToJSONVisitor();
+    void addToJSONConverter(std::shared_ptr<WMEToJSONConverter> conv);
+
     void visit(WMESupportedBy&, size_t) override;
     void visit(WME::Ptr, size_t) override;
     void visit(Evidence::Ptr, size_t) override;

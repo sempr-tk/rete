@@ -25,6 +25,7 @@ set(REASONER_SRC
     TripleEffectBuilder.cpp
     TrueNodeBuilder.cpp
     UtilBuiltinBuilder.cpp
+    WMEToJSONConverter.cpp
 
     # ebnf parsing
     # parserlib/source/ast.cpp

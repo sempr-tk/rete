@@ -738,14 +738,19 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
     size_t effectNo = 0;
     if (rule.effects_)
     {
-        for (auto& effect : rule.effects_->effects_)
+        for (auto& effectGroup : rule.effects_->effectGroups_)
         {
-            auto effectNode = constructEffect(
-                    rule, net, *effect,
-                    namePrefix + ruleName + "[" + std::to_string(effectNo) + "]",
-                    currentBeta,
-                    bindings);
-            createdEffects.push_back(effectNode);
+            for (auto& effect : effectGroup->effects_)
+            {
+                auto effectNode = constructEffect(
+                        rule, net, *effect,
+                        namePrefix + ruleName + "[" + std::to_string(effectNo) + "]",
+                        currentBeta,
+                        bindings);
+                createdEffects.push_back(effectNode);
+            }
+
+            // TODO: add annotation to production stored in effect node!
         }
     }
 
@@ -755,7 +760,7 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
         if (oldBeta == nullptr)
         {
             throw RuleConstructionException(
-                    rule.str_, (*rule.elseEffects_->effects_.begin())->str_,
+                    rule.str_, (*rule.elseEffects_->effectGroups_.begin())->str_,
                     "\"else\" branch can only be used in a sub-rule, as the "
                     "implicit \"noValue { ... }\" group cannot be the first "
                     "node in the rete network.");
@@ -777,14 +782,19 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
 
         // create the effects of the else branch beneath the noValue node
         effectNo = 0;
-        for (auto& effect : rule.elseEffects_->effects_)
+        for (auto& effectGroup : rule.elseEffects_->effectGroups_)
         {
-            auto effectNode = constructEffect(
-                    rule, net, *effect,
-                    namePrefix + "not-" + ruleName + "[" + std::to_string(effectNo++) + "]",
-                    bmem, tmpBindings);
+            for (auto& effect : effectGroup->effects_)
+            {
+                auto effectNode = constructEffect(
+                        rule, net, *effect,
+                        namePrefix + "not-" + ruleName + "[" + std::to_string(effectNo++) + "]",
+                        bmem, tmpBindings);
 
-            createdEffects.push_back(effectNode);
+                createdEffects.push_back(effectNode);
+
+                // TODO add annotation to effect nodes production
+            }
         }
     }
 

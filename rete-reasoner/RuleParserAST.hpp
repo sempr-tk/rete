@@ -509,17 +509,6 @@ namespace rete {
         };
 
 
-        class EffectIfBranch : public peg::ASTContainer {
-        public:
-            peg::ASTList<Effect> effects_;
-        };
-
-        class EffectElseBrach : public peg::ASTContainer {
-        public:
-            peg::ASTChild<peg::ASTString> elseMarker_;
-            peg::ASTList<Effect> effects_;
-        };
-
 
         /**
          * Annotation is just a string, but with a list of referenced variables.
@@ -566,6 +555,53 @@ namespace rete {
             }
 
             bool isAnnotated() const override { return false; }
+        };
+
+        class EffectGroup : public peg::ASTContainer {
+        public:
+            std::string str_;
+
+            peg::ASTList<Effect> effects_;
+
+            virtual ~EffectGroup() = default;
+            virtual const Annotation& annotation() const = 0;
+            virtual bool isAnnotated() const = 0;
+
+            bool construct(const peg::InputRange& r, peg::ASTStack& st, const peg::ErrorReporter& err) override
+            {
+                str_ = r.str();
+                return this->peg::ASTContainer::construct(r, st, err);
+            }
+        };
+
+        class AnnotatedEffects : public EffectGroup {
+        public:
+            peg::ASTPtr<Annotation, false> annotation_;
+            const Annotation& annotation() const override { return *annotation_; }
+            bool isAnnotated() const override { return true; }
+        };
+
+        class UnannotatedEffects : public EffectGroup {
+        public:
+            const Annotation& annotation() const override
+            {
+                static const Annotation annotation;
+                return annotation;
+            }
+
+            bool isAnnotated() const override { return false; }
+        };
+
+
+        class EffectIfBranch : public peg::ASTContainer {
+        public:
+            peg::ASTList<EffectGroup> effectGroups_;
+        };
+
+        class EffectElseBrach : public peg::ASTContainer {
+        public:
+            peg::ASTChild<peg::ASTString> elseMarker_;
+            peg::ASTList<EffectGroup> effectGroups_;
         };
 
 
@@ -618,36 +654,42 @@ namespace rete {
 
                 if (effects_)
                 {
-                    for (auto& effect : effects_->effects_)
+                    for (auto& effectGroup : effects_->effectGroups_)
                     {
-                        try {
-                            effect->replaceGlobalConstantReferences(constants);
-                            for (auto& arg : effect->args_)
-                            {
-                                arg->substitutePrefixes(prefixReplacements);
+                        for (auto& effect : effectGroup->effects_)
+                        {
+                            try {
+                                effect->replaceGlobalConstantReferences(constants);
+                                for (auto& arg : effect->args_)
+                                {
+                                    arg->substitutePrefixes(prefixReplacements);
+                                }
+                            } catch (RuleConstructionException& e) {
+                                e.setRule(str_);
+                                e.setPart(effect->str_);
+                                throw;
                             }
-                        } catch (RuleConstructionException& e) {
-                            e.setRule(str_);
-                            e.setPart(effect->str_);
-                            throw;
                         }
                     }
                 }
 
                 if (elseEffects_)
                 {
-                    for (auto& effect : elseEffects_->effects_)
+                    for (auto& effectGroup : elseEffects_->effectGroups_)
                     {
-                        try {
-                            effect->replaceGlobalConstantReferences(constants);
-                            for (auto& arg : effect->args_)
-                            {
-                                arg->substitutePrefixes(prefixReplacements);
+                        for (auto& effect : effectGroup->effects_)
+                        {
+                            try {
+                                effect->replaceGlobalConstantReferences(constants);
+                                for (auto& arg : effect->args_)
+                                {
+                                    arg->substitutePrefixes(prefixReplacements);
+                                }
+                            } catch (RuleConstructionException& e) {
+                                e.setRule(str_);
+                                e.setPart(effect->str_);
+                                throw;
                             }
-                        } catch (RuleConstructionException& e) {
-                            e.setRule(str_);
-                            e.setPart(effect->str_);
-                            throw;
                         }
                     }
                 }

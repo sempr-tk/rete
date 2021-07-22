@@ -676,11 +676,6 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
         a.tokenIndexBegin_ = currentTokenLength - cGroup->conditions_.size();
         a.tokenIndexEnd_ = currentTokenLength;
 
-        // DEBUG output
-        std::cout << "constructing conditions group" << std::endl;
-        std::cout << "annotation:" << std::endl;
-        std::cout << " -- \"" << cGroup->annotation().str_ << "\"" << std::endl;
-        std::cout << "referenced vars:" << std::endl;
         for (auto& var : cGroup->annotation().variablesRefs_)
         {
             std::cout << *var << std::endl;
@@ -740,6 +735,30 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
     {
         for (auto& effectGroup : rule.effects_->effectGroups_)
         {
+            std::shared_ptr<Annotation> effectAnnotation;
+            if (effectGroup->isAnnotated())
+            {
+                effectAnnotation = std::make_shared<Annotation>();
+                effectAnnotation->annotation_ = effectGroup->annotation().str_;
+                effectAnnotation->tokenIndexBegin_ = 0;
+                effectAnnotation->tokenIndexEnd_ = currentTokenLength;
+
+                for (auto& var : effectGroup->annotation().variablesRefs_)
+                {
+                    auto accIt = bindings.find("?" + *var);
+                    if (accIt != bindings.end())
+                    {
+                        auto clone = AccessorBase::Ptr(accIt->second->clone());
+                        effectAnnotation->variables_[*var] = clone;
+                    }
+                    else
+                    {
+                        // TODO raise exception
+                        std::cout << "unbound variable " << *var << " in annotation!" << std::endl;
+                    }
+                }
+            }
+
             for (auto& effect : effectGroup->effects_)
             {
                 auto effectNode = constructEffect(
@@ -748,6 +767,7 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
                         currentBeta,
                         bindings);
                 createdEffects.push_back(effectNode);
+                effectNode->getProduction()->effectAnnotation_ = effectAnnotation;
             }
 
             // TODO: add annotation to production stored in effect node!
@@ -784,6 +804,30 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
         effectNo = 0;
         for (auto& effectGroup : rule.elseEffects_->effectGroups_)
         {
+            std::shared_ptr<Annotation> effectAnnotation;
+            if (effectGroup->isAnnotated())
+            {
+                effectAnnotation = std::make_shared<Annotation>();
+                effectAnnotation->annotation_ = effectGroup->annotation().str_;
+                effectAnnotation->tokenIndexBegin_ = 0;
+                effectAnnotation->tokenIndexEnd_ = currentTokenLength;
+
+                for (auto& var : effectGroup->annotation().variablesRefs_)
+                {
+                    auto accIt = bindings.find("?" + *var);
+                    if (accIt != bindings.end())
+                    {
+                        auto clone = AccessorBase::Ptr(accIt->second->clone());
+                        effectAnnotation->variables_[*var] = clone;
+                    }
+                    else
+                    {
+                        // TODO raise exception
+                        std::cout << "unbound variable " << *var << " in annotation!" << std::endl;
+                    }
+                }
+            }
+
             for (auto& effect : effectGroup->effects_)
             {
                 auto effectNode = constructEffect(
@@ -794,6 +838,7 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
                 createdEffects.push_back(effectNode);
 
                 // TODO add annotation to effect nodes production
+                effectNode->getProduction()->effectAnnotation_ = effectAnnotation;
             }
         }
     }
@@ -803,8 +848,8 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
     // etc.
     for (auto& effect : createdEffects)
     {
-        effect->getProduction()->annotations_.insert(
-            effect->getProduction()->annotations_.end(),
+        effect->getProduction()->conditionAnnotations_.insert(
+            effect->getProduction()->conditionAnnotations_.end(),
             annotations.begin(),
             annotations.end()
         );

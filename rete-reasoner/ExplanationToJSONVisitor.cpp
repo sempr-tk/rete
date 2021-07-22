@@ -8,9 +8,41 @@ namespace nl = nlohmann;
 
 namespace rete {
 
-size_t ExplanationToJSONVisitor::getIdOf(Evidence::Ptr ev)
+/**
+ * Special treatment for inferred evidences:
+ * Instead of creating one explanation-element for every production of a rule,
+ * only create one for each annotated-effect-group. But keep in mind that there
+ * need to be different instances in case different tokens are used!
+ */
+size_t ExplanationToJSONVisitor::getIdOf(InferredEvidence::Ptr ev)
 {
-   nl::json& evJson = processedEvidences_[ev];
+    if (ev->production()->effectAnnotation_)
+    {
+        auto key = std::make_pair(ev->token(), ev->production()->effectAnnotation_);
+        nl::json& evJson = processedEffectAnnotations_[key];
+        if (evJson.find("id") == evJson.end())
+        {
+            evJson["id"] = ++lastId_;
+        }
+
+        return evJson["id"];
+    }
+    else
+    {
+        // no annotation -> create one explanation element each
+        nl::json& evJson = processedUngroupedEffects_[ev];
+        if (evJson.find("id") == evJson.end())
+        {
+            evJson["id"] = ++lastId_;
+        }
+
+        return evJson["id"];
+    }
+}
+
+size_t ExplanationToJSONVisitor::getIdOf(AssertedEvidence::Ptr ev)
+{
+   nl::json& evJson = processedAssertions_[ev];
    if (evJson.find("id") == evJson.end())
    {
        evJson["id"] = ++lastId_;
@@ -67,8 +99,18 @@ void ExplanationToJSONVisitor::visit(WMESupportedBy& support, size_t /* depth */
     std::vector<size_t> supported_by_ids;
     for (auto& ev : support.evidences_)
     {
-        size_t evId = getIdOf(ev);
-        supported_by_ids.push_back(evId);
+        auto assertedEv = std::dynamic_pointer_cast<AssertedEvidence>(ev);
+        if (assertedEv)
+        {
+            size_t evId = getIdOf(assertedEv);
+            supported_by_ids.push_back(evId);
+        }
+        else
+        {
+            auto inferredEv = std::dynamic_pointer_cast<InferredEvidence>(ev);
+            size_t evId = getIdOf(inferredEv);
+            supported_by_ids.push_back(evId);
+        }
     }
 
     wmeJson["based-on"] = supported_by_ids;
@@ -92,7 +134,7 @@ void ExplanationToJSONVisitor::visit(Evidence::Ptr, size_t)
 void ExplanationToJSONVisitor::visit(AssertedEvidence::Ptr ev, size_t /* depth */)
 {
     getIdOf(ev); // to initialize entry
-    nl::json& evJson = processedEvidences_[ev];
+    nl::json& evJson = processedAssertions_[ev];
 
     evJson["type"] = "reason";
     evJson["value"] = {
@@ -104,13 +146,52 @@ void ExplanationToJSONVisitor::visit(AssertedEvidence::Ptr ev, size_t /* depth *
 void ExplanationToJSONVisitor::visit(InferredEvidence::Ptr ev, size_t /* depth */)
 {
     getIdOf(ev); // to initialize entry
-    nl::json& evJson = processedEvidences_[ev];
+    auto getJson = [this](InferredEvidence::Ptr ev) -> nl::json&
+    {
+        if (ev->production()->effectAnnotation_)
+        {
+            auto key = std::make_pair(ev->token(), ev->production()->effectAnnotation_);
+            return this->processedEffectAnnotations_[key];
+        }
+        else
+        {
+            return this->processedUngroupedEffects_[ev];
+        }
+    };
+
+    nl::json& evJson = getJson(ev);
 
     evJson["type"] = "reason";
-    evJson["value"] = {
-        {"description", ev->toString()},
-        {"production name", ev->production()->getName()}
-    };
+    nl::json value;
+
+    auto effectAnnotation = ev->production()->effectAnnotation_;
+    if (effectAnnotation)
+    {
+        value["description"] = effectAnnotation->annotation_;
+        for (auto& varMapping : effectAnnotation->variables_)
+        {
+            std::string var = varMapping.first;
+            auto acc = varMapping.second;
+            if (auto inter = acc->getInterpretation<std::string>())
+            {
+                std::string varValue;
+                inter->getValue(ev->token(), varValue);
+                value["variables"][var] = varValue;
+            }
+            else
+            {
+                // TODO: This should be catched early, when parsing the rule
+                value["variables"][var] = "<no string representation available>";
+            }
+        }
+    }
+    else
+    {
+        value["description"] = ev->production()->getName();
+    }
+
+    evJson["value"] = value;
+
 
     // remember which WMEs have already been dealt with in an annotation group
     std::set<WME::Ptr> wmesInGroups;
@@ -118,7 +199,7 @@ void ExplanationToJSONVisitor::visit(InferredEvidence::Ptr ev, size_t /* depth *
     // traverse groups of annotated conditions and create groups of annotated
     // data from it.
     std::vector<size_t> createdGroupIds;
-    for (auto& annotation : ev->production()->annotations_)
+    for (auto& annotation : ev->production()->conditionAnnotations_)
     {
         nl::json value;
         value["description"] = annotation.annotation_;
@@ -213,7 +294,17 @@ nl::json ExplanationToJSONVisitor::json() const
         json.push_back(group);
     }
 
-    for (auto& entry : processedEvidences_)
+    for (auto& entry : processedEffectAnnotations_)
+    {
+        json.push_back(entry.second);
+    }
+
+    for (auto& entry : processedUngroupedEffects_)
+    {
+        json.push_back(entry.second);
+    }
+
+    for (auto& entry : processedAssertions_)
     {
         json.push_back(entry.second);
     }
@@ -223,7 +314,7 @@ nl::json ExplanationToJSONVisitor::json() const
 
 void ExplanationToJSONVisitor::clear()
 {
-    processedEvidences_.clear();
+    processedAssertions_.clear();
     processedWMEs_.clear();
     groups_.clear();
     lastId_ = 0;

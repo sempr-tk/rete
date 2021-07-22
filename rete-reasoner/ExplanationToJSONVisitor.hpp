@@ -16,8 +16,14 @@ namespace rete {
  * general. See: https://git.ni.dfki.de/explain/data-design
  */
 class ExplanationToJSONVisitor : public ExplanationVisitor {
-    std::map<Evidence::Ptr, nlohmann::json> processedEvidences_;
+    std::map<AssertedEvidence::Ptr, nlohmann::json> processedAssertions_;
     std::map<WME::Ptr, nlohmann::json> processedWMEs_;
+    std::map<
+        std::pair<Token::Ptr, std::shared_ptr<Annotation>>,
+        nlohmann::json
+    > processedEffectAnnotations_;
+    std::map<InferredEvidence::Ptr, nlohmann::json> processedUngroupedEffects_;
+
     std::vector<nlohmann::json> groups_; // WMEs grouped and annotated
     std::vector<std::shared_ptr<WMEToJSONConverter>> toJsonConverters_;
 
@@ -26,7 +32,8 @@ class ExplanationToJSONVisitor : public ExplanationVisitor {
     // helper to create json instances with an assigned id.
     // will not add any other data, only make sure there is a json instance
     // to be filled later.
-    size_t getIdOf(Evidence::Ptr);
+    size_t getIdOf(InferredEvidence::Ptr);
+    size_t getIdOf(AssertedEvidence::Ptr);
     size_t getIdOf(WME::Ptr);
 
     nlohmann::json wmeToJson(WME::Ptr wme) const;

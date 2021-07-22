@@ -106,9 +106,9 @@ target_link_libraries(Callbacks rete-core rete-rdf rete-reasoner)
 add_test(NAME Callbacks COMMAND Callbacks)
 
 
-add_executable(AnnotatedConditions AnnotatedConditions.cpp)
-target_link_libraries(AnnotatedConditions rete-core rete-rdf rete-reasoner)
-add_test(NAME AnnotatedConditions COMMAND AnnotatedConditions)
+add_executable(AnnotatedRules AnnotatedRules.cpp)
+target_link_libraries(AnnotatedRules rete-core rete-rdf rete-reasoner)
+add_test(NAME AnnotatedRules COMMAND AnnotatedRules)
 
 add_executable(ExplanationTest ExplanationTest.cpp)
 target_link_libraries(ExplanationTest rete-core rete-rdf rete-reasoner)

@@ -19,7 +19,8 @@ class Production {
 public:
     using Ptr = std::shared_ptr<Production>;
 
-    std::vector<Annotation> annotations_; // why hide it...
+    std::vector<Annotation> conditionAnnotations_; // why hide it...
+    std::shared_ptr<Annotation> effectAnnotation_;
 
     /**
         The priority of the ProductionNode influences their order on the agenda.

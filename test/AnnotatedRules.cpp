@@ -36,7 +36,11 @@ int main()
                     /* {x} is a foo with its <bar> ({bar}) greater or equal its <baz> ({baz}). */
                 }
                 ->
-                (<zip> <zap> <zup>)
+                {
+                    (<zip> <zap> <zup>)
+                    /* Because {x} has a bar-value of {bar} which is less than
+                       its baz-value of {baz}, we follow zip-zap-zup! Obvious, right? */
+                }
             ]
 
             [with_subgroup:
@@ -47,7 +51,10 @@ int main()
                 [sub:
                     { (?x <type> ?a) /* {x} is of type {a} */ }
                     ->
-                    (?x <type> ?b)
+                    {
+                        (?x <type> ?b)
+                        /* Because {x} is of type {a}, which is a subclass of {b}, {x} is also of type {b} */
+                    }
                 ]
             ]
 
@@ -61,7 +68,12 @@ int main()
                     /* <baz> of {x} is < 5 */
                 }
                 ->
-                (<zip> <zap> <zup>)
+                {
+                    (<zip> <zap> <zup>)
+                    /* Because there is an instance ({x}) with a bar-value of exactly 5
+                       which also has a baz-value which is less than 5, namely {baz}, we
+                       can infer zip-zap-zup. */
+                }
             ]
 
             [two_groups_and_some_unannotated:

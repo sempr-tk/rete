@@ -603,7 +603,21 @@ ProductionNode::Ptr RuleParser::constructEffect(
     }
 }
 
-
+/**
+ * Helper function that updates the variables within an annotation with the
+ * newest accessors from the given bindings.
+ */
+void updateVariables(Annotation& a, std::map<std::string, AccessorBase::Ptr> bindings)
+{
+    for (auto& varEntry : a.variables_)
+    {
+        auto bindingIt = bindings.find("?" + varEntry.first);
+        if (bindingIt != bindings.end())
+        {
+            varEntry.second = AccessorBase::Ptr(bindingIt->second->clone());
+        }
+    }
+}
 
 /*
     To construct the rule in the network, we do the following:
@@ -630,6 +644,7 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
         ast::Rule& rule, // the rule to implement
         Network& net,       // the network in which to put it
         std::map<std::string, AccessorBase::Ptr>& parentBindings, // the currently available variable bindings
+        std::vector<Annotation> conditionAnnotations, // copy of already existing annotations from parent rule
         BetaMemory::Ptr currentBeta, // the beta memory created by the parent rule
         const std::string& namePrefix // prefix for the rules name, in case of sub-rules
     ) const
@@ -648,13 +663,14 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
     BetaMemory::Ptr oldBeta = currentBeta; // remember for the optional else branch
 
     std::vector<Annotation> annotations;
+
+    // first, create all conditions
     for (auto& cGroup : rule.conditionGroups_)
     {
         // construct conditions
         for (auto& condition : cGroup->conditions_)
         {
             currentBeta = constructCondition(rule, net, currentBeta, bindings, *condition);
-            currentTokenLength++;
 
             // update accessors that are stored in annotations!
             for (auto& a : annotations)
@@ -665,9 +681,14 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
                 }
             }
         }
+    }
+
+    // then, iterate once again to create the annotations using the most recent accessors
+    for (auto& cGroup : rule.conditionGroups_)
+    {
+        currentTokenLength += cGroup->conditions_.size();
 
         if (!cGroup->isAnnotated()) continue; // skip annotation part
-
         // create an annotation object that will be attached to the productions.
         // they are later used in explanations to group WMEs together and give
         // a description (the annotation) of what they mean.
@@ -678,7 +699,6 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
 
         for (auto& var : cGroup->annotation().variablesRefs_)
         {
-            std::cout << *var << std::endl;
             // bindings are constantly updated, but also sometimes *REPLACED*
             // when a new accessor for the same variable is created.
             // if we hold an old accessor here that then no longer is updated
@@ -687,15 +707,15 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
             // a) annotate variables only at the end of this method, or
             // b) clone the accessors and increment them with each new condition
 
-            // I'll choose b) here, to make sure the accessor provided to the
-            // explanation is the same as the one used by the condition
-            // (accesses the same wme)
+            // I have chosen a) here, even though I like the locality of b) very
+            // much, because a) is way less error prone and b) will fail in case
+            // of GROUP BY statements.
+
             auto accIt = bindings.find("?" + *var);
             if (accIt != bindings.end())
             {
                 auto clone = AccessorBase::Ptr(accIt->second->clone());
                 a.variables_[*var] = clone;
-                std::cout << "inserted var " << *var << " in annotation" << std::endl;
             }
             else
             {
@@ -706,18 +726,30 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
         annotations.push_back(a);
     }
 
-    // final loop to correct indices (0 is always the top of the stack that is
+
+    // correct indices (0 is always the top of the stack that is
     // the token)
     for (auto& a : annotations)
     {
         std::cout << "uncorrected token indices: " << a.tokenIndexBegin_ << " - " << a.tokenIndexEnd_ << std::endl;
         std::cout << "currentTokenLength: " << currentTokenLength << std::endl;
+
         size_t begin = currentTokenLength - a.tokenIndexEnd_;
-        size_t end = currentTokenLength - a.tokenIndexBegin_;
+        size_t end = begin + (a.tokenIndexEnd_ - a.tokenIndexBegin_);
+
         std::cout << "corrected token indices:   " << begin << " - " << end << std::endl;
 
         a.tokenIndexBegin_ = begin;
         a.tokenIndexEnd_ = end;
+    }
+
+    // add annotations copied from the parents rule, adjusted for the longer token
+    for (auto a : conditionAnnotations)
+    {
+        a.tokenIndexBegin_ += currentTokenLength;
+        a.tokenIndexEnd_ += currentTokenLength;
+        updateVariables(a, bindings);
+        annotations.push_back(a);
     }
 
     std::string ruleName = "_";
@@ -725,7 +757,7 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
 
     for (auto& subRule : rule.subRules_)
     {
-        auto subEffects = constructSubRule(*subRule, net, bindings, currentBeta, namePrefix + ruleName + ".");
+        auto subEffects = constructSubRule(*subRule, net, bindings, annotations, currentBeta, namePrefix + ruleName + ".");
         createdEffects.insert(createdEffects.end(), subEffects.begin(), subEffects.end());
     }
 
@@ -767,10 +799,17 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
                         currentBeta,
                         bindings);
                 createdEffects.push_back(effectNode);
-                effectNode->getProduction()->effectAnnotation_ = effectAnnotation;
-            }
 
-            // TODO: add annotation to production stored in effect node!
+                // store effect annotation at production
+                effectNode->getProduction()->effectAnnotation_ = effectAnnotation;
+
+                // store condition-annotations at production
+                effectNode->getProduction()->conditionAnnotations_.insert(
+                    effectNode->getProduction()->conditionAnnotations_.end(),
+                    annotations.begin(),
+                    annotations.end()
+                );
+            }
         }
     }
 
@@ -837,22 +876,17 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
 
                 createdEffects.push_back(effectNode);
 
-                // TODO add annotation to effect nodes production
+                // store condition-annotations at production
+                effectNode->getProduction()->conditionAnnotations_.insert(
+                    effectNode->getProduction()->conditionAnnotations_.end(),
+                    annotations.begin(),
+                    annotations.end()
+                );
+
+                // store effect annotation at production
                 effectNode->getProduction()->effectAnnotation_ = effectAnnotation;
             }
         }
-    }
-
-
-    // attach the annotation groups to all effects, including those of sub-rules
-    // etc.
-    for (auto& effect : createdEffects)
-    {
-        effect->getProduction()->conditionAnnotations_.insert(
-            effect->getProduction()->conditionAnnotations_.end(),
-            annotations.begin(),
-            annotations.end()
-        );
     }
 
     return createdEffects;
@@ -868,7 +902,8 @@ ParsedRule::Ptr RuleParser::construct(ast::Rule& rule, Network& net) const
     if (rule.name_) ruleInfo->name_ = *rule.name_;
 
     std::map<std::string, AccessorBase::Ptr> bindings;
-    ruleInfo->effectNodes_ = constructSubRule(rule, net, bindings, nullptr);
+    std::vector<Annotation> annotations;
+    ruleInfo->effectNodes_ = constructSubRule(rule, net, bindings, annotations, nullptr);
     return ruleInfo;
 }
 

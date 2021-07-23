@@ -126,6 +126,7 @@ class RuleParser : peg::ASTParserDelegate {
             ast::Rule& subRule,
             Network& net,
             std::map<std::string, AccessorBase::Ptr>& bindings,
+            std::vector<Annotation> conditionAnnotations,
             BetaMemory::Ptr currentBeta,
             const std::string& namePrefix = "") const;
 

@@ -13,9 +13,10 @@ bool TripleToJSONConverter::convert(WME::Ptr wme, std::string& json)
 
     nlohmann::json j;
     j["type"] = "triple";
-    j["subject"] = triple->getField(Triple::SUBJECT);
-    j["predicate"] = triple->getField(Triple::PREDICATE);
-    j["object"] = triple->getField(Triple::OBJECT);
+    j["description"] = triple->description_;
+    j["value"]["subject"] = triple->getField(Triple::SUBJECT);
+    j["value"]["predicate"] = triple->getField(Triple::PREDICATE);
+    j["value"]["object"] = triple->getField(Triple::OBJECT);
 
     json = j.dump();
     return true;
@@ -26,7 +27,8 @@ bool DefaultToJSONConverter::convert(WME::Ptr wme, std::string& json)
 {
     nlohmann::json j;
     j["type"] = "unknown";
-    j["str"] = wme->toString();
+    j["value"] = wme->toString();
+    j["description"] = wme->description_;
 
     json = j.dump();
     return true;

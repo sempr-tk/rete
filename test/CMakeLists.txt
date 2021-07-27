@@ -110,6 +110,10 @@ add_executable(AnnotatedRules AnnotatedRules.cpp)
 target_link_libraries(AnnotatedRules rete-core rete-rdf rete-reasoner)
 add_test(NAME AnnotatedRules COMMAND AnnotatedRules)
 
+add_executable(AnnotatedNoValue AnnotatedNoValue.cpp)
+target_link_libraries(AnnotatedNoValue rete-core rete-rdf rete-reasoner)
+add_test(NAME AnnotatedNoValue COMMAND AnnotatedNoValue)
+
 add_executable(ExplanationTest ExplanationTest.cpp)
 target_link_libraries(ExplanationTest rete-core rete-rdf rete-reasoner)
 add_test(NAME ExplanationTest COMMAND ExplanationTest)

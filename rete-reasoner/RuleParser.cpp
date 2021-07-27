@@ -773,7 +773,7 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
                 effectAnnotation = std::make_shared<Annotation>();
                 effectAnnotation->annotation_ = effectGroup->annotation().str_;
                 effectAnnotation->tokenIndexBegin_ = 0;
-                effectAnnotation->tokenIndexEnd_ = currentTokenLength;
+                effectAnnotation->tokenIndexEnd_ = currentTokenLength; // wrong... (else branch!!), but unused?
 
                 for (auto& var : effectGroup->annotation().variablesRefs_)
                 {
@@ -853,8 +853,8 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
 
                 for (auto& var : effectGroup->annotation().variablesRefs_)
                 {
-                    auto accIt = bindings.find("?" + *var);
-                    if (accIt != bindings.end())
+                    auto accIt = tmpBindings.find("?" + *var);
+                    if (accIt != tmpBindings.end())
                     {
                         auto clone = AccessorBase::Ptr(accIt->second->clone());
                         effectAnnotation->variables_[*var] = clone;
@@ -877,11 +877,16 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
                 createdEffects.push_back(effectNode);
 
                 // store condition-annotations at production
-                effectNode->getProduction()->conditionAnnotations_.insert(
-                    effectNode->getProduction()->conditionAnnotations_.end(),
-                    annotations.begin(),
-                    annotations.end()
-                );
+                // -- NO! "elseBranch" means there is a big, fat NO VALUE { }
+                //    around the conditions-part of this rule! There won't be a
+                //    wme in the token to get the values from for the annotation.
+                //    NO VALUE, after all!
+                // --
+                //effectNode->getProduction()->conditionAnnotations_.insert(
+                //    effectNode->getProduction()->conditionAnnotations_.end(),
+                //    annotations.begin(),
+                //    annotations.end()
+                //);
 
                 // store effect annotation at production
                 effectNode->getProduction()->effectAnnotation_ = effectAnnotation;

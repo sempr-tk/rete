@@ -173,6 +173,69 @@ int main()
         std::ofstream("annotated_explain_1.json") << visitor.json().dump(4);
     }
 
+    {
+        auto rules = p.parseRules(
+            R"foo(
+                [
+                    {
+                        (<global> <today> ?date)
+                        /* Today is {date}. */
+                    },
+                    {
+                        (?weatherData <type> <WeatherData>),
+                        (?weatherData <date> ?date),
+                        (?weatherData <weather> ?weather)
+                        /* The weather on {date} is {weather}. */
+                    },
+                    {
+                        (?activityData <type> <Activity>),
+                        (?activityData <applicableInWeather> ?weather),
+                        (?activityData <name> ?activity)
+                        /* {activity} is possible when it is {weather}. */
+                    }
+                    ->
+                    {
+                        (<global> <recommend> ?activity)
+                        /* Since it is {weather} today, we recommend {activity}. */
+                    }
+                ]
+            )foo",
+            reasoner.net()
+        );
+
+        auto data = p.parseRules(
+            R"foo(
+                [data:
+                    true()
+                    ->
+                    {
+                        (<global> <today> "27.07.2021")
+                        /* Just the current date */
+                    },
+                    {
+                        (<w1> <type> <WeatherData>), (<w1> <date> "26.07.2021"), (<w1> <weather> "sunny"),
+                        (<w2> <type> <WeatherData>), (<w2> <date> "27.07.2021"), (<w2> <weather> "rainy")
+                        /* Weather forecast for a few days */
+                    },
+                    {
+                        (<a1> <type> <Activity>), (<a1> <applicableInWeather> "sunny"), (<a1> <name> "cycling"),
+                        (<a2> <type> <Activity>), (<a2> <applicableInWeather> "rainy"), (<a2> <name> "reading a book")
+                        /* Basic activity information */
+                    }
+                ]
+            )foo",
+            reasoner.net()
+        );
+
+        reasoner.performInference();
+        auto triple = std::make_shared<rete::Triple>("<global>", "<recommend>", "\"reading a book\"");
+
+        ExplanationToJSONVisitor visitor;
+        reasoner.getCurrentState().traverseExplanation(triple, visitor);
+
+        std::ofstream("annotated_explain_2.json") << visitor.json().dump(4);
+    }
+
 
     return 0;
 }

@@ -137,6 +137,7 @@ public:
 
     WME::Ptr process(Token::Ptr token) override
     {
+        std::string description = this->name() + " ";
         NumberType result(identity_);
         for (auto& operand : this->operands_)
         {
@@ -144,9 +145,13 @@ public:
             operand.getValue(token, val);
 
             result = this->operator_(result, val);
+            description += std::to_string(val) + " ";
         }
+        description += "= " + std::to_string(result);
 
-        return std::make_shared<TupleWME<NumberType>>(result);
+        auto wme = std::make_shared<TupleWME<NumberType>>(result);
+        wme->description_ = description;
+        return wme;
     }
 };
 
@@ -168,7 +173,10 @@ public:
         this->operands_[0].getValue(token, a);
         this->operands_[1].getValue(token, b);
 
-        return std::make_shared<TupleWME<NumberType>>(a/b);
+        NumberType result = a/b;
+        auto wme = std::make_shared<TupleWME<NumberType>>(result);
+        wme->description_ = std::to_string(a) + " / " + std::to_string(b) + " = " + std::to_string(result);
+        return wme;
     }
 };
 

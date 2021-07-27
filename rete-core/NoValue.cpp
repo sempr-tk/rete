@@ -71,6 +71,7 @@ void NoValue::leftActivate(Token::Ptr token, PropagationFlag flag)
     // if we get here, there has been no match in the right memory.
     // so, there is "noValue".
     auto empty = std::make_shared<EmptyWME>();
+    empty->description_ = "noValue";
     bmem->leftActivate(token, empty, flag);
 }
 
@@ -122,6 +123,7 @@ void NoValue::rightActivate(Token::Ptr token, PropagationFlag flag)
             {
                 // assert it now.
                 auto empty = std::make_shared<EmptyWME>();
+                empty->description_ = "noValue";
                 bmem->leftActivate(leftToken, empty, PropagationFlag::ASSERT);
                 return; // there can be only one such token, as we check by ptr
             }

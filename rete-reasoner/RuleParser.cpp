@@ -795,7 +795,7 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
             {
                 auto effectNode = constructEffect(
                         rule, net, *effect,
-                        namePrefix + ruleName + "[" + std::to_string(effectNo) + "]",
+                        namePrefix + ruleName + "[" + std::to_string(effectNo++) + "]",
                         currentBeta,
                         bindings);
                 createdEffects.push_back(effectNode);

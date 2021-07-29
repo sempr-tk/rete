@@ -619,6 +619,22 @@ void updateVariables(Annotation& a, std::map<std::string, AccessorBase::Ptr> bin
     }
 }
 
+void updateVariables(std::vector<Annotation>& as, std::map<std::string, AccessorBase::Ptr> bindings)
+{
+    for (auto& a : as) updateVariables(a, bindings);
+}
+
+void incrementTokenIndices(Annotation& a)
+{
+    a.tokenIndexBegin_++;
+    a.tokenIndexEnd_++;
+}
+
+void incrementTokenIndices(std::vector<Annotation>& as)
+{
+    for (auto& a : as) incrementTokenIndices(a);
+}
+
 /*
     To construct the rule in the network, we do the following:
         1. Create the first condition in the alpha network
@@ -644,12 +660,13 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
         ast::Rule& rule, // the rule to implement
         Network& net,       // the network in which to put it
         std::map<std::string, AccessorBase::Ptr>& parentBindings, // the currently available variable bindings
-        std::vector<Annotation> conditionAnnotations, // copy of already existing annotations from parent rule
+        std::vector<Annotation> parentConditionAnnotations, // copy of already existing annotations from parent rule
+        std::shared_ptr<GroupByAnnotation> parentGroupAnnotation,
         BetaMemory::Ptr currentBeta, // the beta memory created by the parent rule
         const std::string& namePrefix // prefix for the rules name, in case of sub-rules
     ) const
 {
-    size_t currentTokenLength = 0; // incremented with each created condition
+    //size_t currentTokenLength = 0; // incremented with each created condition
 
     std::vector<rete::ProductionNode::Ptr> createdEffects; // return value
 
@@ -662,7 +679,8 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
 
     BetaMemory::Ptr oldBeta = currentBeta; // remember for the optional else branch
 
-    std::vector<Annotation> annotations;
+    std::vector<Annotation> conditionAnnotations = parentConditionAnnotations; // copy
+    std::shared_ptr<GroupByAnnotation> groupAnnotation = parentGroupAnnotation; // ref
 
     // first, create all conditions
     for (auto& cGroup : rule.conditionGroups_)
@@ -670,86 +688,41 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
         // construct conditions
         for (auto& condition : cGroup->conditions_)
         {
-            currentBeta = constructCondition(rule, net, currentBeta, bindings, *condition);
-
-            // update accessors that are stored in annotations!
-            for (auto& a : annotations)
+            // gather annotations created so far
+            if (condition->isGroupBy())
             {
-                for (auto& varEntry : a.variables_)
-                {
-                    varEntry.second->index() += 1;
-                }
+                auto newGroupAnnotation = std::make_shared<GroupByAnnotation>();
+                newGroupAnnotation->annotations_ = conditionAnnotations;
+                conditionAnnotations.clear();
+                newGroupAnnotation->parent_ = groupAnnotation;
+                groupAnnotation = newGroupAnnotation;
             }
-        }
-    }
 
-    // then, iterate once again to create the annotations using the most recent accessors
-    for (auto& cGroup : rule.conditionGroups_)
-    {
-        currentTokenLength += cGroup->conditions_.size();
+            currentBeta = constructCondition(rule, net, currentBeta, bindings, *condition);
+            incrementTokenIndices(conditionAnnotations);
+            updateVariables(conditionAnnotations, bindings);
+        }
 
         if (!cGroup->isAnnotated()) continue; // skip annotation part
+
         // create an annotation object that will be attached to the productions.
         // they are later used in explanations to group WMEs together and give
         // a description (the annotation) of what they mean.
         Annotation a;
         a.annotation_ = cGroup->annotation().str_;
-        a.tokenIndexBegin_ = currentTokenLength - cGroup->conditions_.size();
-        a.tokenIndexEnd_ = currentTokenLength;
+        a.tokenIndexBegin_ = 0;
+        a.tokenIndexEnd_ = cGroup->conditions_.size();
 
+        // init map entries
         for (auto& var : cGroup->annotation().variablesRefs_)
         {
-            // bindings are constantly updated, but also sometimes *REPLACED*
-            // when a new accessor for the same variable is created.
-            // if we hold an old accessor here that then no longer is updated
-            // to the new token lengths... we have a problem. damn.
-            // so...
-            // a) annotate variables only at the end of this method, or
-            // b) clone the accessors and increment them with each new condition
-
-            // I have chosen a) here, even though I like the locality of b) very
-            // much, because a) is way less error prone and b) will fail in case
-            // of GROUP BY statements.
-
-            auto accIt = bindings.find("?" + *var);
-            if (accIt != bindings.end())
-            {
-                auto clone = AccessorBase::Ptr(accIt->second->clone());
-                a.variables_[*var] = clone;
-            }
-            else
-            {
-                std::cout << "unbound variable " << *var << " in annotation!" << std::endl;
-            }
+            a.variables_[*var] = nullptr;
         }
 
-        annotations.push_back(a);
-    }
-
-
-    // correct indices (0 is always the top of the stack that is
-    // the token)
-    for (auto& a : annotations)
-    {
-        std::cout << "uncorrected token indices: " << a.tokenIndexBegin_ << " - " << a.tokenIndexEnd_ << std::endl;
-        std::cout << "currentTokenLength: " << currentTokenLength << std::endl;
-
-        size_t begin = currentTokenLength - a.tokenIndexEnd_;
-        size_t end = begin + (a.tokenIndexEnd_ - a.tokenIndexBegin_);
-
-        std::cout << "corrected token indices:   " << begin << " - " << end << std::endl;
-
-        a.tokenIndexBegin_ = begin;
-        a.tokenIndexEnd_ = end;
-    }
-
-    // add annotations copied from the parents rule, adjusted for the longer token
-    for (auto a : conditionAnnotations)
-    {
-        a.tokenIndexBegin_ += currentTokenLength;
-        a.tokenIndexEnd_ += currentTokenLength;
+        // update with current accessors
         updateVariables(a, bindings);
-        annotations.push_back(a);
+        // and remember it
+        conditionAnnotations.push_back(a);
     }
 
     std::string ruleName = "_";
@@ -757,7 +730,7 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
 
     for (auto& subRule : rule.subRules_)
     {
-        auto subEffects = constructSubRule(*subRule, net, bindings, annotations, currentBeta, namePrefix + ruleName + ".");
+        auto subEffects = constructSubRule(*subRule, net, bindings, conditionAnnotations, groupAnnotation, currentBeta, namePrefix + ruleName + ".");
         createdEffects.insert(createdEffects.end(), subEffects.begin(), subEffects.end());
     }
 
@@ -772,23 +745,17 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
             {
                 effectAnnotation = std::make_shared<Annotation>();
                 effectAnnotation->annotation_ = effectGroup->annotation().str_;
+                // tokenIndex are unused in effect annotations
                 effectAnnotation->tokenIndexBegin_ = 0;
-                effectAnnotation->tokenIndexEnd_ = currentTokenLength; // wrong... (else branch!!), but unused?
+                effectAnnotation->tokenIndexEnd_ = 0;
 
                 for (auto& var : effectGroup->annotation().variablesRefs_)
                 {
-                    auto accIt = bindings.find("?" + *var);
-                    if (accIt != bindings.end())
-                    {
-                        auto clone = AccessorBase::Ptr(accIt->second->clone());
-                        effectAnnotation->variables_[*var] = clone;
-                    }
-                    else
-                    {
-                        // TODO raise exception
-                        std::cout << "unbound variable " << *var << " in annotation!" << std::endl;
-                    }
+                    // just init the map entry.
+                    effectAnnotation->variables_[*var];
                 }
+                // update with current bindings
+                updateVariables(*effectAnnotation, bindings);
             }
 
             for (auto& effect : effectGroup->effects_)
@@ -806,9 +773,12 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
                 // store condition-annotations at production
                 effectNode->getProduction()->conditionAnnotations_.insert(
                     effectNode->getProduction()->conditionAnnotations_.end(),
-                    annotations.begin(),
-                    annotations.end()
+                    conditionAnnotations.begin(),
+                    conditionAnnotations.end()
                 );
+
+                // store group-by-annotation at production
+                effectNode->getProduction()->groupByAnnotation_ = groupAnnotation;
             }
         }
     }
@@ -848,23 +818,15 @@ std::vector<rete::ProductionNode::Ptr> RuleParser::constructSubRule(
             {
                 effectAnnotation = std::make_shared<Annotation>();
                 effectAnnotation->annotation_ = effectGroup->annotation().str_;
+                // indices not used at effect annotations
                 effectAnnotation->tokenIndexBegin_ = 0;
-                effectAnnotation->tokenIndexEnd_ = currentTokenLength;
+                effectAnnotation->tokenIndexEnd_ = 0;
 
                 for (auto& var : effectGroup->annotation().variablesRefs_)
                 {
-                    auto accIt = tmpBindings.find("?" + *var);
-                    if (accIt != tmpBindings.end())
-                    {
-                        auto clone = AccessorBase::Ptr(accIt->second->clone());
-                        effectAnnotation->variables_[*var] = clone;
-                    }
-                    else
-                    {
-                        // TODO raise exception
-                        std::cout << "unbound variable " << *var << " in annotation!" << std::endl;
-                    }
+                    effectAnnotation->variables_[*var];
                 }
+                updateVariables(*effectAnnotation, tmpBindings);
             }
 
             for (auto& effect : effectGroup->effects_)
@@ -908,7 +870,7 @@ ParsedRule::Ptr RuleParser::construct(ast::Rule& rule, Network& net) const
 
     std::map<std::string, AccessorBase::Ptr> bindings;
     std::vector<Annotation> annotations;
-    ruleInfo->effectNodes_ = constructSubRule(rule, net, bindings, annotations, nullptr);
+    ruleInfo->effectNodes_ = constructSubRule(rule, net, bindings, annotations, nullptr, nullptr);
     return ruleInfo;
 }
 

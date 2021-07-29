@@ -7,6 +7,7 @@
 #include "Token.hpp"
 #include "defs.hpp"
 #include "Annotation.hpp"
+#include "GroupByAnnotation.hpp"
 
 namespace rete {
 
@@ -21,6 +22,13 @@ public:
 
     std::vector<Annotation> conditionAnnotations_; // why hide it...
     std::shared_ptr<Annotation> effectAnnotation_;
+
+    /**
+     * if the conditions contain one ore more GROUP BY statements, this
+     * variable is set and contains the conditionAnnotations that refer to
+     * the contents of the group by.
+     */
+    std::shared_ptr<GroupByAnnotation> groupByAnnotation_;
 
     /**
         The priority of the ProductionNode influences their order on the agenda.

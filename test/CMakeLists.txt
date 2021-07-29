@@ -114,6 +114,10 @@ add_executable(AnnotatedNoValue AnnotatedNoValue.cpp)
 target_link_libraries(AnnotatedNoValue rete-core rete-rdf rete-reasoner)
 add_test(NAME AnnotatedNoValue COMMAND AnnotatedNoValue)
 
+add_executable(AnnotatedGroupBy AnnotatedGroupBy.cpp)
+target_link_libraries(AnnotatedGroupBy rete-core rete-rdf rete-reasoner)
+add_test(NAME AnnotatedGroupBy COMMAND AnnotatedGroupBy)
+
 add_executable(ExplanationTest ExplanationTest.cpp)
 target_link_libraries(ExplanationTest rete-core rete-rdf rete-reasoner)
 add_test(NAME ExplanationTest COMMAND ExplanationTest)

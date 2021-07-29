@@ -8,6 +8,7 @@
 #include "RuleParserAST.hpp"
 #include "NodeBuilder.hpp"
 #include "ParsedRule.hpp"
+#include "../rete-core/GroupByAnnotation.hpp"
 
 #define USE_RTTI
 #include <pegmatite/pegmatite.hh>
@@ -127,6 +128,7 @@ class RuleParser : peg::ASTParserDelegate {
             Network& net,
             std::map<std::string, AccessorBase::Ptr>& bindings,
             std::vector<Annotation> conditionAnnotations,
+            std::shared_ptr<GroupByAnnotation> parentGroupAnnotation,
             BetaMemory::Ptr currentBeta,
             const std::string& namePrefix = "") const;
 

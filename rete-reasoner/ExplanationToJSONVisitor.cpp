@@ -352,29 +352,29 @@ size_t ExplanationToJSONVisitor::processTokenGroup(TokenGroup::Ptr tg, std::shar
         tokenIDs.push_back(tJSON["id"]);
 
         std::vector<size_t> createdGroupIds;
+        std::set<WME::Ptr> wmesInGroups;
         // search for nested token-groups first
-        {
-            auto t = token;
-            while (t)
-            {
-                auto wme = t->wme;
-                auto nestedTG = std::dynamic_pointer_cast<TokenGroup>(wme);
-                if (nestedTG)
-                {
-                    size_t tgId;
-                    if (annotation)
-                        tgId = processTokenGroup(nestedTG, annotation->parent_);
-                    else
-                        tgId = processTokenGroup(nestedTG, nullptr);
-                    createdGroupIds.push_back(tgId);
-                }
+        // {
+        //     auto t = token;
+        //     while (t)
+        //     {
+        //         auto wme = t->wme;
+        //         auto nestedTG = std::dynamic_pointer_cast<TokenGroup>(wme);
+        //         if (nestedTG)
+        //         {
+        //             size_t tgId;
+        //             if (annotation)
+        //                 tgId = processTokenGroup(nestedTG, annotation->parent_);
+        //             else
+        //                 tgId = processTokenGroup(nestedTG, nullptr);
+        //             createdGroupIds.push_back(tgId);
+        //         }
 
-                t = t->parent;
-            }
-        }
+        //         t = t->parent;
+        //     }
+        // }
 
         // handle annotated groups of wmes
-        std::set<WME::Ptr> wmesInGroups;
         if (annotation)
         {
             for (auto& a : annotation->annotations_)
@@ -402,8 +402,8 @@ size_t ExplanationToJSONVisitor::processTokenGroup(TokenGroup::Ptr tg, std::shar
                         else
                         {
                             wmeIds.push_back(this->getIdOf(wme));
-                            wmesInGroups.insert(wme);
                         }
+                        wmesInGroups.insert(wme);
                     }
                 );
 
@@ -421,9 +421,14 @@ size_t ExplanationToJSONVisitor::processTokenGroup(TokenGroup::Ptr tg, std::shar
         {
             if (wmesInGroups.find(t->wme) == wmesInGroups.end())
             {
+                // token groups are processed and connected separately
                 if (auto tg = std::dynamic_pointer_cast<TokenGroup>(t->wme))
                 {
-                    size_t tgId = processTokenGroup(tg, annotation->parent_);
+                    size_t tgId;
+                    if (annotation)
+                        tgId = processTokenGroup(tg, annotation->parent_);
+                    else
+                        tgId = processTokenGroup(tg, nullptr);
                     based_on_wme_ids.push_back(tgId);
                 }
                 else

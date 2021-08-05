@@ -93,6 +93,9 @@ nl::json ExplanationToJSONVisitor::wmeToJson(WME::Ptr wme) const
 
 void ExplanationToJSONVisitor::visit(WMESupportedBy& support, size_t /* depth */)
 {
+    if (std::dynamic_pointer_cast<TokenGroup>(support.wme_))
+        return;
+
     getIdOf(support.wme_); // to initialize entry
     nl::json& wmeJson = processedWMEs_[support.wme_];
 
@@ -118,6 +121,10 @@ void ExplanationToJSONVisitor::visit(WMESupportedBy& support, size_t /* depth */
 
 void ExplanationToJSONVisitor::visit(WME::Ptr wme, size_t /* depth */)
 {
+    // skip TokenGroups, they are handled separately when needed
+    if (std::dynamic_pointer_cast<TokenGroup>(wme))
+        return;
+
     getIdOf(wme); // to initialize entry
     nl::json& wmeJson = processedWMEs_[wme];
 
@@ -142,6 +149,57 @@ void ExplanationToJSONVisitor::visit(AssertedEvidence::Ptr ev, size_t /* depth *
         {"name", ev->toString()}
     };
 }
+
+
+
+void setupVarMapping(nl::json& json, Annotation& annotation, Token::Ptr token)
+{
+    std::cout << "VAR MAPPING SIZE " << annotation.variables_.size() << std::endl;
+    for (auto& varMapping : annotation.variables_)
+    {
+        std::cout << "VAR MAPPING " << varMapping.first << std::endl;
+        std::string var = varMapping.first;
+        auto acc = varMapping.second;
+        if (auto inter = acc->getInterpretation<std::string>())
+        {
+            std::string varValue;
+            inter->getValue(token, varValue);
+            json["variables"][var] = varValue;
+        }
+        else
+        {
+            // TODO: This case should be catched early, when parsing the
+            // annotation there should be a check if the accessor has a
+            // string representation
+            json["variables"][var] = "<no string representation available>";
+        }
+    }
+}
+
+
+std::vector<WME::Ptr> getReferencedWMEs(const Annotation& annotation, Token::Ptr token)
+{
+    // traverse token and reference all WMEs that belong to this annotation
+    std::vector<WME::Ptr> wmes;
+    size_t index = 0;
+    size_t indexBegin = annotation.tokenIndexBegin_;
+    size_t indexEnd = annotation.tokenIndexEnd_;
+
+    std::cout << "getting based-on wme-ids. range " << indexBegin << " - " << indexEnd << std::endl;
+
+    while (token && index < indexEnd)
+    {
+        if (index >= indexBegin)
+        {
+            wmes.push_back(token->wme);
+        }
+        index++;
+        token = token->parent;
+    }
+
+    return wmes;
+}
+
 
 void ExplanationToJSONVisitor::visit(InferredEvidence::Ptr ev, size_t /* depth */)
 {
@@ -203,26 +261,7 @@ void ExplanationToJSONVisitor::visit(InferredEvidence::Ptr ev, size_t /* depth *
     {
         nl::json value;
         value["description"] = annotation.annotation_;
-        std::cout << "VAR MAPPING SIZE " << annotation.variables_.size() << std::endl;
-        for (auto& varMapping : annotation.variables_)
-        {
-            std::cout << "VAR MAPPING " << varMapping.first << std::endl;
-            std::string var = varMapping.first;
-            auto acc = varMapping.second;
-            if (auto inter = acc->getInterpretation<std::string>())
-            {
-                std::string varValue;
-                inter->getValue(ev->token(), varValue);
-                value["variables"][var] = varValue;
-            }
-            else
-            {
-                // TODO: This case should be catched early, when parsing the
-                // annotation there should be a check if the accessor has a
-                // string representation
-                value["variables"][var] = "<no string representation available>";
-            }
-        }
+        setupVarMapping(value, annotation, ev->token());
 
         nl::json group;
         group["type"] = "group";
@@ -230,27 +269,24 @@ void ExplanationToJSONVisitor::visit(InferredEvidence::Ptr ev, size_t /* depth *
         group["id"] = ++lastId_;
         createdGroupIds.push_back(lastId_);
 
-        // traverse token and reference all WMEs that belong to this annotation
+        auto referencedWMEs = getReferencedWMEs(annotation, ev->token());
         std::vector<size_t> wmeIds;
-        Token::Ptr token = ev->token();
-        size_t index = 0;
-        size_t indexBegin = annotation.tokenIndexBegin_;
-        size_t indexEnd = annotation.tokenIndexEnd_;
-
-        std::cout << "getting based-on wme-ids. range " << indexBegin << " - " << indexEnd << std::endl;
-
-        while (token && index < indexEnd)
-        {
-            if (index >= indexBegin)
+        std::for_each(referencedWMEs.begin(), referencedWMEs.end(),
+            [&](WME::Ptr wme)
             {
-                wmesInGroups.insert(token->wme);
-                size_t id = getIdOf(token->wme);
-                wmeIds.push_back(id);
+                // check if it is a tokengroup
+                if (auto tg = std::dynamic_pointer_cast<TokenGroup>(wme))
+                {
+                    size_t tgId = this->processTokenGroup(tg, ev->production()->groupByAnnotation_);
+                    wmeIds.push_back(tgId);
+                }
+                else
+                {
+                    wmeIds.push_back(this->getIdOf(wme));
+                }
+                wmesInGroups.insert(wme);
             }
-
-            index++;
-            token = token->parent;
-        }
+        );
 
         group["based-on"] = wmeIds;
 
@@ -265,8 +301,17 @@ void ExplanationToJSONVisitor::visit(InferredEvidence::Ptr ev, size_t /* depth *
         // only add "based-on" for wmes that are not in a group
         if (wmesInGroups.find(token->wme) == wmesInGroups.end())
         {
-            size_t wmeId = getIdOf(token->wme);
-            based_on_wme_ids.push_back(wmeId);
+            // check if it is a tokengroup
+            if (auto tg = std::dynamic_pointer_cast<TokenGroup>(token->wme))
+            {
+                size_t tgId = this->processTokenGroup(tg, ev->production()->groupByAnnotation_);
+                based_on_wme_ids.push_back(tgId);
+            }
+            else
+            {
+                size_t wmeId = getIdOf(token->wme);
+                based_on_wme_ids.push_back(wmeId);
+            }
         }
         token = token->parent;
     }
@@ -280,6 +325,129 @@ void ExplanationToJSONVisitor::visit(InferredEvidence::Ptr ev, size_t /* depth *
 
     evJson["based-on"] = based_on_wme_ids;
 }
+
+
+size_t ExplanationToJSONVisitor::processTokenGroup(TokenGroup::Ptr tg, std::shared_ptr<GroupByAnnotation> annotation)
+{
+    // check if this combination has been processed before
+    auto key = std::make_pair(annotation, tg);
+    auto jsonIt = processedTokenGroups_.find(key);
+    if (jsonIt != processedTokenGroups_.end())
+    {
+        return jsonIt->second["id"];
+    }
+
+    nl::json& tgJSON = processedTokenGroups_[key];
+    tgJSON["id"] = ++lastId_;
+    tgJSON["type"] = "group";
+    tgJSON["value"] = "TokenGroup";
+
+    std::vector<size_t> tokenIDs;
+    for (auto& token : tg->token_)
+    {
+        nl::json tJSON;
+        tJSON["id"] = ++lastId_;
+        tJSON["type"] = "Group";
+        tJSON["value"] = "Token";
+        tokenIDs.push_back(tJSON["id"]);
+
+        std::vector<size_t> createdGroupIds;
+        // search for nested token-groups first
+        {
+            auto t = token;
+            while (t)
+            {
+                auto wme = t->wme;
+                auto nestedTG = std::dynamic_pointer_cast<TokenGroup>(wme);
+                if (nestedTG)
+                {
+                    size_t tgId;
+                    if (annotation)
+                        tgId = processTokenGroup(nestedTG, annotation->parent_);
+                    else
+                        tgId = processTokenGroup(nestedTG, nullptr);
+                    createdGroupIds.push_back(tgId);
+                }
+
+                t = t->parent;
+            }
+        }
+
+        // handle annotated groups of wmes
+        std::set<WME::Ptr> wmesInGroups;
+        if (annotation)
+        {
+            for (auto& a : annotation->annotations_)
+            {
+                nl::json group;
+                group["type"] = "group";
+                group["id"] = ++lastId_;
+
+                nl::json value;
+                value["description"] = a.annotation_;
+                setupVarMapping(value, a, token);
+
+                group["value"] = value;
+
+                auto refWME = getReferencedWMEs(a, token);
+                std::vector<size_t> wmeIds;
+                std::for_each(refWME.begin(), refWME.end(),
+                    [&](WME::Ptr wme)
+                    {
+                        if (auto tg = std::dynamic_pointer_cast<TokenGroup>(wme))
+                        {
+                            size_t tgId = this->processTokenGroup(tg, annotation->parent_);
+                            wmeIds.push_back(tgId);
+                        }
+                        else
+                        {
+                            wmeIds.push_back(this->getIdOf(wme));
+                            wmesInGroups.insert(wme);
+                        }
+                    }
+                );
+
+                group["based-on"] = wmeIds;
+
+                createdGroupIds.push_back(group["id"]);
+                this->groups_.push_back(group);
+            }
+        }
+
+        // handle unannotated wmes
+        std::vector<size_t> based_on_wme_ids;
+        auto t = token;
+        while (t)
+        {
+            if (wmesInGroups.find(t->wme) == wmesInGroups.end())
+            {
+                if (auto tg = std::dynamic_pointer_cast<TokenGroup>(t->wme))
+                {
+                    size_t tgId = processTokenGroup(tg, annotation->parent_);
+                    based_on_wme_ids.push_back(tgId);
+                }
+                else
+                {
+                    size_t wmeId = getIdOf(t->wme);
+                    based_on_wme_ids.push_back(wmeId);
+                }
+            }
+            t = t->parent;
+        }
+        based_on_wme_ids.insert(
+            based_on_wme_ids.end(),
+            createdGroupIds.begin(),
+            createdGroupIds.end()
+        );
+
+        tJSON["based-on"] = based_on_wme_ids;
+        this->groups_.push_back(tJSON);
+    }
+
+    tgJSON["based-on"] = tokenIDs;
+    return tgJSON["id"];
+}
+
 
 nl::json ExplanationToJSONVisitor::json() const
 {
@@ -300,6 +468,11 @@ nl::json ExplanationToJSONVisitor::json() const
     }
 
     for (auto& entry : processedUngroupedEffects_)
+    {
+        json.push_back(entry.second);
+    }
+
+    for (auto& entry : processedTokenGroups_)
     {
         json.push_back(entry.second);
     }

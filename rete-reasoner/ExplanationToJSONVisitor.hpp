@@ -26,6 +26,11 @@ class ExplanationToJSONVisitor : public ExplanationVisitor {
 
     std::vector<nlohmann::json> groups_; // WMEs grouped and annotated
     std::vector<std::shared_ptr<WMEToJSONConverter>> toJsonConverters_;
+    std::map<
+        std::pair<std::shared_ptr<GroupByAnnotation>, TokenGroup::Ptr>,
+        nlohmann::json
+    > processedTokenGroups_;
+
 
     size_t lastId_ = 0;
 
@@ -36,10 +41,14 @@ class ExplanationToJSONVisitor : public ExplanationVisitor {
     size_t getIdOf(AssertedEvidence::Ptr);
     size_t getIdOf(WME::Ptr);
 
+    size_t processTokenGroup(TokenGroup::Ptr, std::shared_ptr<GroupByAnnotation>);
+
     nlohmann::json wmeToJson(WME::Ptr wme) const;
 public:
     ExplanationToJSONVisitor();
     void addToJSONConverter(std::shared_ptr<WMEToJSONConverter> conv);
+
+    bool wantsTokenGroups() const override { return true; }
 
     void visit(WMESupportedBy&, size_t) override;
     void visit(WME::Ptr, size_t) override;

@@ -110,7 +110,11 @@ WME::Ptr Compare::process(Token::Ptr token)
 
         if (compare(mode_, l, r))
         {
-            return std::make_shared<EmptyWME>();
+            auto wme = std::make_shared<EmptyWME>();
+            wme->description_ = std::to_string(l) + " " +
+                                Compare::ModeName(mode_ ) + " " +
+                                std::to_string(r);
+            return wme;
         }
     }
     else
@@ -121,7 +125,9 @@ WME::Ptr Compare::process(Token::Ptr token)
 
         if (compare(mode_, l, r))
         {
-            return std::make_shared<EmptyWME>();
+            auto wme = std::make_shared<EmptyWME>();
+            wme->description_ = l + " " + Compare::ModeName(mode_ ) + " " + r;
+            return wme;
         }
     }
 
@@ -148,7 +154,9 @@ WME::Ptr Print::process(Token::Ptr token)
     }
     std::cout << "\b\b  \b\b" << std::endl;
 
-    return std::make_shared<EmptyWME>();
+    auto wme = std::make_shared<EmptyWME>();
+    wme->description_ = "printed to cout";
+    return wme;
 }
 
 bool Print::operator == (const BetaNode& other) const
@@ -229,7 +237,9 @@ WME::Ptr PrintGroup::process(Token::Ptr token)
     }
     std::cout << "End of group." << std::endl;
 
-    return std::make_shared<EmptyWME>();
+    auto wme = std::make_shared<EmptyWME>();
+    wme->description_ = "printed token group to cout";
+    return wme;
 }
 
 void PrintGroup::add(std::unique_ptr<TokenGroupAccessor> acc)
@@ -325,6 +335,8 @@ WME::Ptr CountEntriesInGroup::process(Token::Ptr token)
     group_.interpretation->getValue(token, group);
 
     auto result = std::make_shared<TupleWME<int>>(group->token_.size());
+    result->description_ = "counted " + std::to_string(group->token_.size()) +
+                            " entries in group";
     return result;
 }
 

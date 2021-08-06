@@ -22,6 +22,8 @@ endif()
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-undefined")
 
+include_directories(external)
+
 add_subdirectory(rete-core)
 add_subdirectory(rete-rdf)
 add_subdirectory(rete-reasoner)

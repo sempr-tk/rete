@@ -20,6 +20,18 @@ class WME {
     friend class JoinNode; // negative joins add empty tuples that need to be marked as computed
     friend class TrueNode; // the TrueNode propagates a single EmptyWME that is not asserted but shall always hold
 public:
+
+    /**
+     * An optional description of the WME.
+     * Introduced to allow checks and computations to annotate their otherwise
+     * rather non-descriptive results. E.g., "le(?x 5)" results in "TupleWME<>()",
+     * but can annotate it with the description "3 <= 5"
+     * (assuming that ?x is bound to 3 in this example).
+     *
+     * This attribute is NOT considered in equality checks of WMEs.
+     */
+    std::string description_;
+
     using Ptr = std::shared_ptr<WME>;
     WME();
     virtual ~WME() {};

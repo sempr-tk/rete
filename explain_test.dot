@@ -1,0 +1,38 @@
+digraph {
+ rankdir=RL
+node [fontname="Ubuntu Mono", fontsize=13]
+"0x5555557b4100"[label="(\<a\> \<type\> \<C\>)", peripheries=2];
+"0x5555557b8cc0"[style=filled, color=lightgrey, shape=polygon, sides=6, label="subclass.type[0]"];
+"0x5555557af530" -> "0x5555557b8cc0";
+"0x5555557b99c0" -> "0x5555557b8cc0";
+"0x5555557b66d0"[style=filled, color=lightgrey, shape=polygon, sides=6, label="subclass.type[0]"];
+"0x5555557afe70" -> "0x5555557b66d0";
+"0x5555557acfc0" -> "0x5555557b66d0";
+"0x5555557b8cc0" -> "0x5555557b4100";
+"0x5555557b66d0" -> "0x5555557b4100";
+"0x5555557af530"[label="(\<a\> \<type\> \<B\>)"];
+"0x5555557b99c0"[label="(\<B\> \<subClassOf\> \<C\>)"];
+"0x5555557afe70"[label="(\<a\> \<type\> \<A\>)"];
+"0x5555557acfc0"[label="(\<A\> \<subClassOf\> \<C\>)"];
+"0x5555557ba220"[style=filled, color=lightgrey, shape=polygon, sides=6, label="subclass.type[0]"];
+"0x5555557afe70" -> "0x5555557ba220";
+"0x5555557b3710" -> "0x5555557ba220";
+"0x5555557ba220" -> "0x5555557af530";
+"0x5555557b0410"[style=filled, color=lightgrey, shape=polygon, sides=6, label="ontology[0]"];
+"0x5555557b19d0" -> "0x5555557b0410";
+"0x5555557b0410" -> "0x5555557b99c0";
+"0x5555557b2e40"[style=filled, color=lightgrey, shape=polygon, sides=6, label="data[0]"];
+"0x5555557b19d0" -> "0x5555557b2e40";
+"0x5555557b2e40" -> "0x5555557afe70";
+"0x5555557b5ab0"[style=filled, color=lightgrey, shape=polygon, sides=6, label="subclass.transitive[0]"];
+"0x5555557b99c0" -> "0x5555557b5ab0";
+"0x5555557b3710" -> "0x5555557b5ab0";
+"0x5555557b5ab0" -> "0x5555557acfc0";
+"0x5555557b3710"[label="(\<A\> \<subClassOf\> \<B\>)"];
+"0x5555557b19d0"[label="TupleWME()"];
+"0x5555557b2af0"[style=filled, color=lightgrey, shape=polygon, sides=6, label="ontology[0]"];
+"0x5555557b19d0" -> "0x5555557b2af0";
+"0x5555557b2af0" -> "0x5555557b3710";
+
+
+}

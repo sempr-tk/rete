@@ -33,6 +33,12 @@ std::string rete::ProductionNode::getName() const
     return name_;
 }
 
+
+rete::Production::Ptr rete::ProductionNode::getProduction() const
+{
+    return this->production_;
+}
+
 std::string rete::ProductionNode::getDOTAttr() const
 {
     return "[label=\"ProductionNode \'" + getName() + "\'\\n" + production_->getName() + "\"]";

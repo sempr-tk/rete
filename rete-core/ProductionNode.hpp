@@ -44,6 +44,8 @@ public:
     void setName(const std::string&);
     std::string getName() const;
 
+    Production::Ptr getProduction() const;
+
     /**
         Connect a ProductionNode to its beta-memory parent
     */

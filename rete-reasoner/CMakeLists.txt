@@ -10,6 +10,7 @@ set(REASONER_SRC
     BackedWME.cpp
     EvidenceComparator.cpp
     ExplanationToDotVisitor.cpp
+    ExplanationToJSONVisitor.cpp
     InferenceState.cpp
     InferredEvidence.cpp
     ParsedRule.cpp
@@ -24,6 +25,7 @@ set(REASONER_SRC
     TripleEffectBuilder.cpp
     TrueNodeBuilder.cpp
     UtilBuiltinBuilder.cpp
+    WMEToJSONConverter.cpp
 
     # ebnf parsing
     # parserlib/source/ast.cpp

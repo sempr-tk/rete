@@ -78,6 +78,8 @@ void InferenceState::traverseExplanation(WME::Ptr toExplain, ExplanationVisitor&
     // as long as there are still WMEs to process (chains always end in evidences!)
     while (!currentWMELayer.empty())
     {
+        std::vector<std::pair<WME::Ptr, size_t>> unrolledTokenGroupWMEs;
+
         // process all the WMEs
         for (auto entry : currentWMELayer)
         {
@@ -95,10 +97,37 @@ void InferenceState::traverseExplanation(WME::Ptr toExplain, ExplanationVisitor&
             // remember to visit the evidences after visiting all wmes in this layer
             auto support = this->explain(wme);
             currentEvidenceLayer.push_back({support, depth+1});
+
+
+            // if the wme is a token-group, process that, too!
+            if (visitor.wantsTokenGroups())
+            {
+                auto tg = std::dynamic_pointer_cast<TokenGroup>(wme);
+                if (tg)
+                {
+                    visitor.visit(tg);
+                    for (auto& token : tg->token_)
+                    {
+                        visitor.visit(tg, token);
+                        auto t = token;
+                        while (t)
+                        {
+                            visitor.visit(tg, token, t->wme);
+
+                            // also remember to visit the wmes just like the others
+                            // (and find nested token groups etc)
+                            unrolledTokenGroupWMEs.push_back({t->wme, depth+1});
+
+                            t = t->parent;
+                        }
+                    }
+                }
+            }
         }
 
         // wme layer fully processed, reset:
         currentWMELayer.clear();
+        currentWMELayer.swap(unrolledTokenGroupWMEs);
 
         // next level: evidences, and record new WMEs to process
         for (auto supportEntry : currentEvidenceLayer)

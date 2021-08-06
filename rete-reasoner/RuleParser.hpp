@@ -8,6 +8,7 @@
 #include "RuleParserAST.hpp"
 #include "NodeBuilder.hpp"
 #include "ParsedRule.hpp"
+#include "../rete-core/GroupByAnnotation.hpp"
 
 #define USE_RTTI
 #include <pegmatite/pegmatite.hh>
@@ -70,6 +71,15 @@ class RuleParser : peg::ASTParserDelegate {
     peg::BindAST<peg::ASTString> elseMarker = RuleGrammar::get().elseMarker;
     peg::BindAST<ast::EffectElseBrach> effectListElse = RuleGrammar::get().elseBranch;
 
+    peg::BindAST<ast::AnnotatedEffects> annotatedEffects = RuleGrammar::get().annotatedEffects;
+    peg::BindAST<ast::UnannotatedEffects> unannotatedEffects = RuleGrammar::get().unannotatedEffects;
+
+    // annotations
+    peg::BindAST<peg::ASTString> varNameInRefInAnnotation = RuleGrammar::get().varNameInRefInAnnotation;
+    peg::BindAST<ast::Annotation> annotationText = RuleGrammar::get().annotationText;
+    peg::BindAST<ast::AnnotatedConditions> annotatedConditions = RuleGrammar::get().annotatedConditions;
+    peg::BindAST<ast::UnannotatedConditions> unannotatedConditions = RuleGrammar::get().unAnnotatedConditions;
+
     // rules
     peg::BindAST<peg::ASTString> rulename = RuleGrammar::get().rulename;
     peg::BindAST<ast::Rule> rule = RuleGrammar::get().rule;
@@ -117,6 +127,8 @@ class RuleParser : peg::ASTParserDelegate {
             ast::Rule& subRule,
             Network& net,
             std::map<std::string, AccessorBase::Ptr>& bindings,
+            std::vector<Annotation> conditionAnnotations,
+            std::shared_ptr<GroupByAnnotation> parentGroupAnnotation,
             BetaMemory::Ptr currentBeta,
             const std::string& namePrefix = "") const;
 

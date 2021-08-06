@@ -105,6 +105,23 @@ add_executable(Callbacks Callbacks.cpp)
 target_link_libraries(Callbacks rete-core rete-rdf rete-reasoner)
 add_test(NAME Callbacks COMMAND Callbacks)
 
+
+add_executable(AnnotatedRules AnnotatedRules.cpp)
+target_link_libraries(AnnotatedRules rete-core rete-rdf rete-reasoner)
+add_test(NAME AnnotatedRules COMMAND AnnotatedRules)
+
+add_executable(AnnotatedNoValue AnnotatedNoValue.cpp)
+target_link_libraries(AnnotatedNoValue rete-core rete-rdf rete-reasoner)
+add_test(NAME AnnotatedNoValue COMMAND AnnotatedNoValue)
+
+add_executable(AnnotatedGroupBy AnnotatedGroupBy.cpp)
+target_link_libraries(AnnotatedGroupBy rete-core rete-rdf rete-reasoner)
+add_test(NAME AnnotatedGroupBy COMMAND AnnotatedGroupBy)
+
+add_executable(ExplanationTest ExplanationTest.cpp)
+target_link_libraries(ExplanationTest rete-core rete-rdf rete-reasoner)
+add_test(NAME ExplanationTest COMMAND ExplanationTest)
+
 add_executable(test_rete main.cpp)
 target_link_libraries(test_rete rete-core rete-rdf rete-reasoner)
 add_test(NAME main COMMAND test_rete)

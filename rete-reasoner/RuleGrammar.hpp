@@ -153,7 +153,7 @@ public:
     Rule builtin = rtrace("builtin", builtinName >> "(" >> *(argument >> -comment) >> ")");
 
     // effects
-    Rule effectName = rtrace("effectName", term(+(alphanum | "<>"_S) >> -(":"_E >> +(alphanum | "<>"_S))));
+    Rule effectName = rtrace("effectName", !elseMarker >> term(+(alphanum | "<>"_S) >> -(":"_E >> +(alphanum | "<>"_S))));
     Rule genericEffect = rtrace("genericEffect", effectName >> "(" >> *(argument >> -comment) >> ")");
 
 
@@ -179,16 +179,37 @@ public:
     // [name: (precondition1), (precondition2) --> (effect1), (effect2)]
     Rule rulename = rtrace("rulename", +(alphanum | '_'_E));
 
-    Rule preconditionPart = -comment >> precondition >> *(',' >> -comment >> precondition) >> -comment;
-    Rule effectPart = -comment >> effect >> *(',' >> -comment >> effect) >> -comment;
-    Rule ifBranch = rtrace("ifBranch", effectPart);
+    Rule preconditionsWithComments = -comment >> precondition >> *(',' >> -comment >> precondition) >> -comment;
+    Rule effectsWithComments = -comment >> effect >> *(',' >> -comment >> effect) >> -comment;
+
+    // anything within /* */ is considered an annotation
+    Rule varNameInRefInAnnotation = +alphanum;
+    Rule variableRefInAnnotation = "{"_E >> varNameInRefInAnnotation >> "}"_E;
+    Rule annotationText = *(variableRefInAnnotation | (!"*/"_E >> any()));
+    Rule annotation = "/*"_E >> annotationText >> "*/"_E;
+    // preconditions can be grouped together with an annotation that describes
+    // them as one more complex/abstract piece of knowledge/information/...
+    Rule annotatedConditions = "{"_E >> preconditionsWithComments >> annotation >> "}"_E;
+    // an explicit name for conditions without an annotation
+    Rule unAnnotatedConditions = preconditionsWithComments;
+
+    // condition-groups can be annotated or unannotated
+    Rule conditiongroup = (annotatedConditions | unAnnotatedConditions);
+
+
+    Rule annotatedEffects = "{"_E >> effectsWithComments >> annotation >> "}"_E;
+    Rule unannotatedEffects = effectsWithComments;
+    Rule effectGroup = (annotatedEffects | unannotatedEffects);
+
+    Rule ifBranch = rtrace("ifBranch", +(effectGroup >> -","_E));
     Rule elseMarker = rtrace("elseMarker", "else"_E);
-    Rule elseBranch = rtrace("elseBranch", elseMarker >> effectPart);
+    Rule elseBranch = rtrace("elseBranch", elseMarker >> +(effectGroup >> -","_E));
+
 
     Rule rule = rtrace("rule",
                 '['_E >> -(rulename >> ':')
                    >> (
-                           preconditionPart >>
+                           +(conditiongroup >> -","_E) >>
                            ((+rule >> -("->" >> ifBranch >> -elseBranch))
                            |
                            ("->" >> ifBranch >> -elseBranch))

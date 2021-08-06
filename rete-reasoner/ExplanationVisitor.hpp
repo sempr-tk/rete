@@ -5,6 +5,7 @@
 #include "Evidence.hpp"
 #include "AssertedEvidence.hpp"
 #include "InferredEvidence.hpp"
+#include "../rete-core/TokenGroup.hpp"
 
 namespace rete {
 
@@ -27,6 +28,12 @@ public:
 
     /** Process WMEs */
     virtual void visit(WME::Ptr, size_t depth) = 0;
+
+    /** Optional: Process TokenGroups **/
+    virtual bool wantsTokenGroups() const { return false; }
+    virtual void visit(TokenGroup::Ptr) {}
+    virtual void visit(TokenGroup::Ptr, Token::Ptr) {}
+    virtual void visit(TokenGroup::Ptr, Token::Ptr, WME::Ptr) {}
 
     /** Process Evidences */
     virtual void visit(Evidence::Ptr, size_t depth) = 0;

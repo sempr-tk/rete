@@ -72,6 +72,7 @@ public:
 
     WME::Ptr process(Token::Ptr token) override
     {
+        std::string description = "sum( ";
         TokenGroup::Ptr group;
         this->input_.interpretation->getValue(token, group);
         NumberType sum = 0;
@@ -80,9 +81,13 @@ public:
             NumberType val;
             this->childInput_->getValue(entry, val);
             sum += val;
+            description += std::to_string(val) + " ";
         }
+        description += ") = " + std::to_string(sum);
 
-        return std::make_shared<TupleWME<NumberType>>(sum);
+        auto wme = std::make_shared<TupleWME<NumberType>>(sum);
+        wme->description_ = description;
+        return wme;
     }
 };
 
@@ -96,6 +101,7 @@ public:
 
     WME::Ptr process(Token::Ptr token) override
     {
+        std::string description = "mul( ";
         TokenGroup::Ptr group;
         this->input_.interpretation->getValue(token, group);
         NumberType product = 1;
@@ -104,9 +110,13 @@ public:
             NumberType val;
             this->childInput_->getValue(entry, val);
             product *= val;
+            description += std::to_string(val) + " ";
         }
+        description += ") = " + std::to_string(product);
 
-        return std::make_shared<TupleWME<NumberType>>(product);
+        auto wme = std::make_shared<TupleWME<NumberType>>(product);
+        wme->description_ = description;
+        return wme;
     }
 };
 

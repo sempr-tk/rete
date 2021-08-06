@@ -11,6 +11,7 @@ TrueNode::TrueNode()
     // not keep information that is inferred from a rule that makes use of
     // this EmptyWME.
     true_->isComputed_ = true;
+    true_->description_ = "unconditional/true";
 }
 
 std::string TrueNode::getDOTAttr() const

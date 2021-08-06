@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.13.0] - 2021-08-06
+
+- added possibility to annotate groups of conditions and annotations
+- overhaul of explanation generation. Implemented `ExplanationToJSONVisitor`
+- added `WMEToJSONConverter` for custom representation of WMEs in explanations
+- added meta-`description` field to WMEs. This is used e.g. by builtin checks
+  that only return an `EmptyWME` to describe their result (for explanations).
+- explanations now also follow the contents of `TokenGroup`s
+  (only propertly implemented in `ExplanationToJSONVisitor`, the `ToDOT`-variant
+  is not updated)
+
+
 ## [0.12.0] - 2021-05-31
 
 - allow sub-rules and else-branches

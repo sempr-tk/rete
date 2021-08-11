@@ -4,7 +4,7 @@
 #include "ExplanationVisitor.hpp"
 #include "WMEToJSONConverter.hpp"
 
-#include <nlohmann/json.hpp>
+#include "external/nlohmann/json.hpp"
 
 #include <map>
 

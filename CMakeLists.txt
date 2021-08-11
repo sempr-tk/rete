@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(rete VERSION 0.13.0)
+project(rete VERSION 0.13.1)
 add_definitions(-Wall -Wextra -pedantic -Wnon-virtual-dtor -Werror=unused-result)
 set(CMAKE_CXX_STANDARD 14)
 
@@ -21,8 +21,6 @@ endif()
 
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-undefined")
-
-include_directories(external)
 
 add_subdirectory(rete-core)
 add_subdirectory(rete-rdf)

@@ -1,5 +1,5 @@
 #include "WMEToJSONConverter.hpp"
-#include <nlohmann/json.hpp>
+#include "external/nlohmann/json.hpp"
 
 #include "../rete-rdf/Triple.hpp"
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.13.1] - 2021-08-11
+
+- fixed nlohmann/json dependency
+
 ## [0.13.0] - 2021-08-06
 
 - added possibility to annotate groups of conditions and annotations

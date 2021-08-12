@@ -116,7 +116,7 @@ void ExplanationToJSONVisitor::visit(WMESupportedBy& support, size_t /* depth */
         }
     }
 
-    wmeJson["based-on"] = supported_by_ids;
+    wmeJson["based_on"] = supported_by_ids;
 }
 
 void ExplanationToJSONVisitor::visit(WME::Ptr wme, size_t /* depth */)
@@ -185,7 +185,7 @@ std::vector<WME::Ptr> getReferencedWMEs(const Annotation& annotation, Token::Ptr
     size_t indexBegin = annotation.tokenIndexBegin_;
     size_t indexEnd = annotation.tokenIndexEnd_;
 
-    std::cout << "getting based-on wme-ids. range " << indexBegin << " - " << indexEnd << std::endl;
+    std::cout << "getting based_on wme-ids. range " << indexBegin << " - " << indexEnd << std::endl;
 
     while (token && index < indexEnd)
     {
@@ -288,7 +288,7 @@ void ExplanationToJSONVisitor::visit(InferredEvidence::Ptr ev, size_t /* depth *
             }
         );
 
-        group["based-on"] = wmeIds;
+        group["based_on"] = wmeIds;
 
         // remember annotation group
         this->groups_.push_back(group);
@@ -298,7 +298,7 @@ void ExplanationToJSONVisitor::visit(InferredEvidence::Ptr ev, size_t /* depth *
     rete::Token::Ptr token = ev->token();
     while (token)
     {
-        // only add "based-on" for wmes that are not in a group
+        // only add "based_on" for wmes that are not in a group
         if (wmesInGroups.find(token->wme) == wmesInGroups.end())
         {
             // check if it is a tokengroup
@@ -316,14 +316,14 @@ void ExplanationToJSONVisitor::visit(InferredEvidence::Ptr ev, size_t /* depth *
         token = token->parent;
     }
 
-    // add all created group-ids to the based-on attribute
+    // add all created group-ids to the based_on attribute
     based_on_wme_ids.insert(
         based_on_wme_ids.end(),
         createdGroupIds.begin(),
         createdGroupIds.end()
     );
 
-    evJson["based-on"] = based_on_wme_ids;
+    evJson["based_on"] = based_on_wme_ids;
 }
 
 
@@ -407,7 +407,7 @@ size_t ExplanationToJSONVisitor::processTokenGroup(TokenGroup::Ptr tg, std::shar
                     }
                 );
 
-                group["based-on"] = wmeIds;
+                group["based_on"] = wmeIds;
 
                 createdGroupIds.push_back(group["id"]);
                 this->groups_.push_back(group);
@@ -445,11 +445,11 @@ size_t ExplanationToJSONVisitor::processTokenGroup(TokenGroup::Ptr tg, std::shar
             createdGroupIds.end()
         );
 
-        tJSON["based-on"] = based_on_wme_ids;
+        tJSON["based_on"] = based_on_wme_ids;
         this->groups_.push_back(tJSON);
     }
 
-    tgJSON["based-on"] = tokenIDs;
+    tgJSON["based_on"] = tokenIDs;
     return tgJSON["id"];
 }
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.13.2] - 2021-08-12
+
+- renamed 'based-on' to 'based_on' in json explanations
+- added 'name' field to the value of reasons in json explanations,
+  containing the name of the rule
+
 ## [0.13.1] - 2021-08-11
 
 - fixed nlohmann/json dependency

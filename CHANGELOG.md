@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.13.3] - 2021-08-12
+
+- use a builtins name as the default description of its results
+
 ## [0.13.2] - 2021-08-12
 
 - renamed 'based-on' to 'based_on' in json explanations

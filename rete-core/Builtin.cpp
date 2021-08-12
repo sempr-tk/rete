@@ -52,9 +52,11 @@ void Builtin::leftActivate(Token::Ptr token, PropagationFlag flag)
         // process the submatch
         auto computed = process(token);
 
-
         if (computed)
         {
+            // use the name of the builtin as the default description of the result
+            if (computed->description_.empty()) computed->description_ = this->name();
+
             // mark the WME as a computed one --> does not need evidence to hold inside a token.
             computed->isComputed_ = true;
             bmem->leftActivate(token, computed, flag);
@@ -70,6 +72,7 @@ void Builtin::leftActivate(Token::Ptr token, PropagationFlag flag)
 
         if (computed)
         {
+            if (computed->description_.empty()) computed->description_ = this->name();
             computed->isComputed_ = true;
             bmem->leftActivate(token, computed, PropagationFlag::UPDATE);
         }

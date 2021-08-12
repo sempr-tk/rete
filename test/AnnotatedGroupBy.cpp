@@ -52,7 +52,7 @@ int main()
             // test data
             auto datarules = p.parseRules(
                 R"foo(
-                    [data: true()
+                    [createTestData: true()
                         ->
                         (<TeamRed> <type> <Team>),
                         (<r1> <inTeam> <TeamRed>), (<r1> <score> 1),
@@ -218,12 +218,21 @@ int main()
             // test data
             auto datarules = p.parseRules(
                 R"foo(
-                    [data: true()
+                    [createTestData: true()
                         ->
                         (<TeamRed> <type> <Team>),
-                        (<r1> <inTeam> <TeamRed>), (<r1> <score> 0.7), (<r1> <score> 0.3),
-                        (<r2> <inTeam> <TeamRed>), (<r2> <score> 1.5), (<r2> <score> 0.3), (<r2> <score> 0.2),
-                        (<r3> <inTeam> <TeamRed>), (<r3> <score> 2), (<r3> <score> 1)
+                        {
+                            (<r1> <inTeam> <TeamRed>), (<r1> <score> 0.7), (<r1> <score> 0.3)
+                            /* Scores of r1 */
+                        },
+                        {
+                            (<r2> <inTeam> <TeamRed>), (<r2> <score> 1.5), (<r2> <score> 0.3), (<r2> <score> 0.2)
+                            /* Scores of r2 */
+                        },
+                        {
+                            (<r3> <inTeam> <TeamRed>), (<r3> <score> 2), (<r3> <score> 1)
+                            /* And here, the scores of r3 */
+                        }
                     ]
                 )foo",
                 reasoner.net()

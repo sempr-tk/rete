@@ -225,6 +225,15 @@ void ExplanationToJSONVisitor::visit(InferredEvidence::Ptr ev, size_t /* depth *
     auto effectAnnotation = ev->production()->effectAnnotation_;
     if (effectAnnotation)
     {
+        std::string reasonName = ev->production()->getName();
+        // dont confuse the user with indices
+        auto indexPosition = reasonName.rfind('[');
+        if (indexPosition != std::string::npos)
+        {
+            reasonName = reasonName.substr(0, indexPosition);
+        }
+
+        value["name"] = reasonName;
         value["description"] = effectAnnotation->annotation_;
         for (auto& varMapping : effectAnnotation->variables_)
         {
@@ -245,7 +254,16 @@ void ExplanationToJSONVisitor::visit(InferredEvidence::Ptr ev, size_t /* depth *
     }
     else
     {
-        value["description"] = ev->production()->getName();
+        std::string reasonName = ev->production()->getName();
+        // dont confuse the user with indices
+        auto indexPosition = reasonName.rfind('[');
+        if (indexPosition != std::string::npos)
+        {
+            reasonName = reasonName.substr(0, indexPosition);
+        }
+
+        value["name"] = reasonName;
+        value["description"] = "";
     }
 
     evJson["value"] = value;

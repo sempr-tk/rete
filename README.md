@@ -1,5 +1,3 @@
-[![pipeline status](https://git.ni.dfki.de/sempr/rete/badges/master/pipeline.svg)](https://git.ni.dfki.de/sempr/rete/commits/master)
-
 # Rete Algorithm & Reasoner in C++
 
 Rete is an algorithm for efficient pattern matching. Patterns are represented by a graph structure in which every node implements a small check on the incoming data. By storing intermediate results in memory nodes the algorithm is able to work with incremental updates. Also, nodes can be reused for multiple patterns, which is one reason for its efficiency.
@@ -8,7 +6,7 @@ This project provides an implementation of the rete algorithm in C++. The algori
 
 Furthermore this project contains a rule based forward reasoner that uses the mentioned rete implementation to check the preconditions of its rules.
 
-For a detailed documentation please **[visit the WIKI](https://git.ni.dfki.de/sempr/rete/wikis/home)**.
+For a detailed documentation please **[visit the WIKI](https://github.com/sempr-tk/rete/wiki)**.
 
 
 
